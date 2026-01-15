@@ -15,7 +15,7 @@ categories = ["parsing", "web-programming"]
 [workspace.dependencies]
 criterion = { version = "0.8", default-features = false }
 cssparser = "0.36"
-html5ever = "0.36"
+html5ever = "0.37"
 precomputed-hash = "0.1"
 js-sys = "0.3"
 markup5ever = "0.36"
