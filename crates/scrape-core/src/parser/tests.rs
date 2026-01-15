@@ -212,9 +212,7 @@ fn test_parse_sibling_relationships() {
         // Should have li children with proper sibling links
         let li_children: Vec<_> = doc
             .children(ul_id)
-            .filter(|id| {
-                doc.get(*id).is_some_and(|n| n.kind.as_element_name() == Some("li"))
-            })
+            .filter(|id| doc.get(*id).is_some_and(|n| n.kind.as_element_name() == Some("li")))
             .collect();
 
         assert!(li_children.len() >= 3, "Should have at least 3 li children");
