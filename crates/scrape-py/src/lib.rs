@@ -80,10 +80,7 @@ impl PySoup {
 #[allow(unused_variables)]
 fn parse_batch(documents: Vec<String>, n_threads: Option<usize>) -> Vec<PySoup> {
     // TODO: implement parallel batch parsing with rayon
-    documents
-        .into_iter()
-        .map(|html| PySoup { inner: scrape_core::Soup::parse(&html) })
-        .collect()
+    documents.into_iter().map(|html| PySoup { inner: scrape_core::Soup::parse(&html) }).collect()
 }
 
 /// Python module definition.
