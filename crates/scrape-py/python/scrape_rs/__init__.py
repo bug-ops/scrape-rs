@@ -7,17 +7,15 @@ built on a Rust core for maximum performance.
 Example:
     >>> from scrape_rs import Soup
     >>> soup = Soup("<html><body><h1>Hello!</h1></body></html>")
-    >>> h1 = soup.find("h1")
-    >>> print(h1.text)
-    Hello!
+    >>> print(soup.title)
+    None
 """
 
-from scrape_rs._core import Soup, SoupConfig, Tag, parse_batch
+from scrape_rs._core import Soup, SoupConfig, parse_batch
 
 __all__ = [
     "Soup",
     "SoupConfig",
-    "Tag",
     "parse_batch",
 ]
 

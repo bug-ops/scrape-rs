@@ -30,4 +30,4 @@ codegen-units = 1
 panic = "abort"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--enable-simd", "--enable-bulk-memory"]
+wasm-opt = ["-Oz", "--enable-simd", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
