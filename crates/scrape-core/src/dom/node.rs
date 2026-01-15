@@ -49,9 +49,25 @@ pub enum NodeKind {
 impl NodeKind {
     /// Returns the tag name if this is an element node.
     #[must_use]
-    pub fn as_element_name(&self) -> Option<&str> {
+    pub fn tag_name(&self) -> Option<&str> {
         match self {
             Self::Element { name, .. } => Some(name),
+            _ => None,
+        }
+    }
+
+    /// Alias for [`tag_name`](Self::tag_name) for backwards compatibility.
+    #[must_use]
+    #[deprecated(since = "0.2.0", note = "use `tag_name()` instead")]
+    pub fn as_element_name(&self) -> Option<&str> {
+        self.tag_name()
+    }
+
+    /// Returns the attributes if this is an element node.
+    #[must_use]
+    pub fn attributes(&self) -> Option<&HashMap<String, String>> {
+        match self {
+            Self::Element { attributes, .. } => Some(attributes),
             _ => None,
         }
     }
@@ -174,7 +190,7 @@ mod tests {
         assert!(kind.is_element());
         assert!(!kind.is_text());
         assert!(!kind.is_comment());
-        assert_eq!(kind.as_element_name(), Some("div"));
+        assert_eq!(kind.tag_name(), Some("div"));
     }
 
     #[test]

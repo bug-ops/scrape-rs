@@ -11,12 +11,13 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+cssparser.workspace = true
 html5ever.workspace = true
 markup5ever.workspace = true
 markup5ever_rcdom.workspace = true
 memchr.workspace = true
-# TODO: add selectors when actually implementing CSS selector support
-# selectors.workspace = true
+precomputed-hash.workspace = true
+selectors.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

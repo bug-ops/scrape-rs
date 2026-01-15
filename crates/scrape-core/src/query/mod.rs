@@ -3,88 +3,78 @@
 //! This module provides various ways to query the DOM tree:
 //!
 //! - **CSS Selectors**: Standard CSS selector syntax via the `selectors` crate
-//! - **Tag name**: Simple tag name matching
-//! - **Attribute filters**: Query by attribute presence/value
+//! - **Filters**: BeautifulSoup-style attribute filtering
 //!
-//! # Architecture
+//! # CSS Selectors
 //!
-//! The query engine compiles CSS selectors into an efficient representation
-//! and matches them against DOM nodes. Results are returned as iterators
-//! for lazy evaluation.
+//! Use [`find`] and [`find_all`] to query by CSS selector:
+//!
+//! ```rust
+//! use scrape_core::{
+//!     Html5everParser, Parser,
+//!     query::{find, find_all},
+//! };
+//!
+//! let parser = Html5everParser;
+//! let doc = parser.parse("<div class=\"item\"><span>A</span></div>").unwrap();
+//!
+//! // Find first element matching selector
+//! let span = find(&doc, "div.item span").unwrap();
+//!
+//! // Find all matching elements
+//! let items = find_all(&doc, ".item").unwrap();
+//! ```
+//!
+//! # Attribute Filters
+//!
+//! Use [`Filter`] for BeautifulSoup-style queries:
+//!
+//! ```rust
+//! use scrape_core::{
+//!     Html5everParser, Parser,
+//!     query::{Filter, find_by_filter},
+//! };
+//!
+//! let parser = Html5everParser;
+//! let doc = parser.parse("<div class=\"item\" data-id=\"123\">text</div>").unwrap();
+//!
+//! let filter = Filter::new().tag("div").class("item").attr("data-id", "123");
+//!
+//! let results = find_by_filter(&doc, &filter);
+//! ```
+//!
+//! # Supported CSS Selectors
+//!
+//! | Selector | Example | Description |
+//! |----------|---------|-------------|
+//! | Type | `div` | Matches elements by tag name |
+//! | Class | `.foo` | Matches elements with class |
+//! | ID | `#bar` | Matches element by ID |
+//! | Universal | `*` | Matches all elements |
+//! | Attribute | `[href]` | Matches elements with attribute |
+//! | Attribute value | `[type="text"]` | Matches attribute with value |
+//! | Descendant | `div span` | Matches descendants |
+//! | Child | `div > span` | Matches direct children |
+//! | Adjacent sibling | `h1 + p` | Matches adjacent sibling |
+//! | General sibling | `h1 ~ p` | Matches following siblings |
+//! | :first-child | `li:first-child` | First child element |
+//! | :last-child | `li:last-child` | Last child element |
+//! | :nth-child | `li:nth-child(2n)` | Nth child element |
+//! | :empty | `div:empty` | Elements with no children |
+//! | :not() | `div:not(.hidden)` | Negation |
 
-// TODO: implement query submodules
-// mod filter;
-// mod find;
-// mod selector;
+mod error;
+mod filter;
+mod find;
+mod selector;
 
-use crate::Result;
-
-/// A compiled CSS selector.
-///
-/// Selectors are compiled once and can be reused for multiple queries.
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// use scrape_core::query::Selector;
-///
-/// let selector = Selector::parse("div.container > span.item")?;
-/// // Use selector for multiple queries...
-/// ```
-#[derive(Debug)]
-pub struct Selector {
-    raw: String,
-}
-
-impl Selector {
-    /// Parses a CSS selector string.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the selector syntax is invalid.
-    #[allow(clippy::unnecessary_wraps)]
-    pub fn parse(selector: &str) -> Result<Self> {
-        // TODO: implement actual selector parsing with proper error handling
-        Ok(Self { raw: selector.to_string() })
-    }
-
-    /// Returns the original selector string.
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.raw
-    }
-}
-
-/// Attribute filter for element queries.
-#[derive(Debug, Clone)]
-pub enum AttrFilter {
-    /// Attribute must exist.
-    Exists(String),
-    /// Attribute must equal value.
-    Equals(String, String),
-    /// Attribute must contain value.
-    Contains(String, String),
-    /// Attribute must start with value.
-    StartsWith(String, String),
-    /// Attribute must end with value.
-    EndsWith(String, String),
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_selector_parse() {
-        let selector = Selector::parse("div.test").unwrap();
-        assert_eq!(selector.as_str(), "div.test");
-    }
-
-    #[test]
-    fn test_attr_filter() {
-        let filter = AttrFilter::Equals("class".to_string(), "test".to_string());
-        assert!(
-            matches!(filter, AttrFilter::Equals(name, value) if name == "class" && value == "test")
-        );
-    }
-}
+pub use error::{QueryError, QueryResult};
+pub use filter::{Filter, find_by_filter, find_first_by_filter};
+pub use find::{
+    find, find_all, find_all_with_selector, find_all_within, find_all_within_with_selector,
+    find_with_selector, find_within, find_within_with_selector,
+};
+pub use selector::{
+    ElementWrapper, NonTSPseudoClass, PseudoElement, ScrapeSelector, matches_selector,
+    matches_selector_with_caches, parse_selector,
+};

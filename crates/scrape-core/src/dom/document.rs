@@ -380,7 +380,7 @@ mod tests {
 
         let node = doc.get(id).unwrap();
         assert!(node.kind.is_element());
-        assert_eq!(node.kind.as_element_name(), Some("div"));
+        assert_eq!(node.kind.tag_name(), Some("div"));
     }
 
     #[test]
@@ -461,8 +461,8 @@ mod tests {
         let first = doc.first_child(root).unwrap();
         let last = doc.last_child(root).unwrap();
 
-        assert_eq!(doc.get(first).unwrap().kind.as_element_name(), Some("head"));
-        assert_eq!(doc.get(last).unwrap().kind.as_element_name(), Some("body"));
+        assert_eq!(doc.get(first).unwrap().kind.tag_name(), Some("head"));
+        assert_eq!(doc.get(last).unwrap().kind.tag_name(), Some("body"));
     }
 
     #[test]
@@ -553,10 +553,8 @@ mod tests {
         doc.append_child(a, a1);
         doc.append_child(a, a2);
 
-        let names: Vec<_> = doc
-            .descendants(root)
-            .map(|id| doc.get(id).unwrap().kind.as_element_name().unwrap())
-            .collect();
+        let names: Vec<_> =
+            doc.descendants(root).map(|id| doc.get(id).unwrap().kind.tag_name().unwrap()).collect();
 
         // Depth-first pre-order: a -> a1 -> a2 -> b
         assert_eq!(names, vec!["a", "a1", "a2", "b"]);
