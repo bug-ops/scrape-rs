@@ -142,17 +142,18 @@ jobs:
       - run: cargo nextest run --workspace
 
   # ==========================================================================
-  # STAGE 3: Bindings (run in parallel after tests pass)
+  # STAGE 2 (parallel): Bindings (run in parallel with Rust tests)
   # ==========================================================================
 
   build-python:
     name: Python
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, test]
+    needs: [changes, fmt, clippy]
     if: |
       always() &&
-      needs.test.result == 'success' &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
       (needs.changes.outputs.python == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
     steps:
       - uses: actions/checkout@v6
@@ -178,10 +179,11 @@ jobs:
     name: Node.js
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, test]
+    needs: [changes, fmt, clippy]
     if: |
       always() &&
-      needs.test.result == 'success' &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
       (needs.changes.outputs.node == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
     steps:
       - uses: actions/checkout@v6
@@ -207,10 +209,11 @@ jobs:
     name: WASM
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [changes, test]
+    needs: [changes, fmt, clippy]
     if: |
       always() &&
-      needs.test.result == 'success' &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
       (needs.changes.outputs.wasm == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
     steps:
       - uses: actions/checkout@v6
@@ -237,17 +240,18 @@ jobs:
         run: wasm-pack build crates/scrape-wasm --target web --release
 
   # ==========================================================================
-  # STAGE 3 (parallel): Coverage
+  # STAGE 2 (parallel): Coverage (runs in parallel with tests)
   # ==========================================================================
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [changes, test]
+    needs: [changes, fmt, clippy]
     if: |
       always() &&
-      needs.test.result == 'success' &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
       (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
     steps:
       - uses: actions/checkout@v6
