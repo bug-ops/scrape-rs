@@ -67,7 +67,6 @@ impl From<SoupConfig> for scrape_core::SoupConfig {
 /// A parsed HTML document.
 #[wasm_bindgen]
 pub struct Soup {
-    #[allow(dead_code)]
     inner: scrape_core::Soup,
 }
 
@@ -85,57 +84,22 @@ impl Soup {
         Self { inner: scrape_core::Soup::parse_with_config(html, config.into()) }
     }
 
-    /// Finds the first element matching the selector.
-    pub fn find(&self, _selector: &str) -> Option<Tag> {
-        // TODO: implement find
-        None
-    }
-
-    /// Finds all elements matching the selector.
-    #[wasm_bindgen(js_name = "findAll")]
-    pub fn find_all(&self, _selector: &str) -> Vec<Tag> {
-        // TODO: implement find_all
-        Vec::new()
-    }
-
-    /// Selects elements using a CSS selector.
-    pub fn select(&self, selector: &str) -> Vec<Tag> {
-        self.find_all(selector)
-    }
-}
-
-/// An HTML element in the DOM tree.
-#[wasm_bindgen]
-pub struct Tag {
-    inner: scrape_core::Tag,
-}
-
-#[wasm_bindgen]
-impl Tag {
-    /// Returns the tag name.
+    /// Returns the document title if present.
     #[wasm_bindgen(getter)]
-    pub fn name(&self) -> String {
-        self.inner.name().to_string()
+    pub fn title(&self) -> Option<String> {
+        self.inner.title()
     }
 
-    /// Returns the text content.
+    /// Returns the text content of the document.
     #[wasm_bindgen(getter)]
     pub fn text(&self) -> String {
-        // TODO: implement when Tag::text is implemented
-        String::new()
+        self.inner.text()
     }
 
-    /// Returns the inner HTML.
-    #[wasm_bindgen(getter, js_name = "innerHTML")]
-    pub fn inner_html(&self) -> String {
-        // TODO: implement when Tag::inner_html is implemented
-        String::new()
-    }
-
-    /// Returns the value of an attribute.
-    pub fn get(&self, _attr: &str) -> Option<String> {
-        // TODO: implement when Tag::get is implemented
-        None
+    /// Returns the HTML representation of the document.
+    #[wasm_bindgen(js_name = "toHtml")]
+    pub fn to_html(&self) -> String {
+        self.inner.to_html()
     }
 }
 

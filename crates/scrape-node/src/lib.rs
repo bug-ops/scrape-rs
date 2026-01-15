@@ -28,7 +28,6 @@ impl From<SoupConfig> for scrape_core::SoupConfig {
 /// A parsed HTML document.
 #[napi]
 pub struct Soup {
-    #[allow(dead_code)]
     inner: scrape_core::Soup,
 }
 
@@ -41,72 +40,28 @@ impl Soup {
         Self { inner: scrape_core::Soup::parse_with_config(&html, config) }
     }
 
-    /// Finds the first element matching the selector.
-    #[napi]
-    pub fn find(&self, _selector: String) -> Option<Tag> {
-        // TODO: implement find
-        None
-    }
-
-    /// Finds all elements matching the selector.
-    #[napi]
-    pub fn find_all(&self, _selector: String) -> Vec<Tag> {
-        // TODO: implement find_all
-        Vec::new()
-    }
-
-    /// Selects elements using a CSS selector.
-    #[napi]
-    pub fn select(&self, selector: String) -> Vec<Tag> {
-        self.find_all(selector)
-    }
-}
-
-/// An HTML element in the DOM tree.
-#[napi]
-pub struct Tag {
-    inner: scrape_core::Tag,
-}
-
-#[napi]
-impl Tag {
-    /// Returns the tag name.
+    /// Returns the document title if present.
     #[napi(getter)]
-    pub fn name(&self) -> &str {
-        self.inner.name()
+    pub fn title(&self) -> Option<String> {
+        self.inner.title()
     }
 
-    /// Returns the text content.
+    /// Returns the text content of the document.
     #[napi(getter)]
     pub fn text(&self) -> String {
-        // TODO: implement when Tag::text is implemented
-        String::new()
+        self.inner.text()
     }
 
-    /// Returns the inner HTML.
-    #[napi(getter, js_name = "innerHTML")]
-    pub fn inner_html(&self) -> String {
-        // TODO: implement when Tag::inner_html is implemented
-        String::new()
-    }
-
-    /// Returns the value of an attribute.
-    #[napi]
-    pub fn get(&self, _attr: String) -> Option<String> {
-        // TODO: implement when Tag::get is implemented
-        None
-    }
-
-    /// Alias for get(), for users familiar with DOM API.
-    #[napi]
-    pub fn attr(&self, attr: String) -> Option<String> {
-        self.get(attr)
+    /// Returns the HTML representation of the document.
+    #[napi(js_name = "toHtml")]
+    pub fn to_html(&self) -> String {
+        self.inner.to_html()
     }
 }
 
 /// Parse multiple HTML documents in parallel.
 #[napi]
 pub fn parse_batch(documents: Vec<String>, _config: Option<SoupConfig>) -> Vec<Soup> {
-    // TODO: implement parallel batch parsing
+    // TODO: implement parallel batch parsing with rayon
     documents.into_iter().map(|html| Soup::new(html, None)).collect()
 }
