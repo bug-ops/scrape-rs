@@ -198,7 +198,7 @@ jobs:
       - name: Build and test
         working-directory: crates/scrape-node
         run: |
-          pnpm install
+          pnpm install --no-frozen-lockfile
           pnpm exec biome check .
           pnpm run build
           pnpm test
@@ -231,7 +231,7 @@ jobs:
       - name: Build and lint
         working-directory: crates/scrape-wasm
         run: |
-          pnpm install
+          pnpm install --no-frozen-lockfile
           pnpm exec biome check .
       - name: Build WASM
         run: wasm-pack build crates/scrape-wasm --target web --release
