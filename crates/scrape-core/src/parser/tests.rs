@@ -213,7 +213,7 @@ fn test_parse_sibling_relationships() {
         let li_children: Vec<_> = doc
             .children(ul_id)
             .filter(|id| {
-                doc.get(**id).is_some_and(|n| n.kind.as_element_name() == Some("li"))
+                doc.get(*id).is_some_and(|n| n.kind.as_element_name() == Some("li"))
             })
             .collect();
 

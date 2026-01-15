@@ -418,8 +418,7 @@ mod tests {
         let doc = create_test_doc();
         let root = doc.root().unwrap();
 
-        let children: Vec<_> = doc.children(root).collect();
-        assert_eq!(children.len(), 2);
+        assert_eq!(doc.children(root).count(), 2);
     }
 
     #[test]
@@ -439,8 +438,7 @@ mod tests {
         let doc = create_test_doc();
         let root = doc.root().unwrap();
 
-        let descendants: Vec<_> = doc.descendants(root).collect();
-        assert_eq!(descendants.len(), 4);
+        assert_eq!(doc.descendants(root).count(), 4);
     }
 
     #[test]
@@ -452,8 +450,7 @@ mod tests {
         let div = doc.first_child(body).unwrap();
         let text = doc.first_child(div).unwrap();
 
-        let ancestors: Vec<_> = doc.ancestors(text).collect();
-        assert_eq!(ancestors.len(), 3);
+        assert_eq!(doc.ancestors(text).count(), 3);
     }
 
     #[test]
@@ -477,8 +474,7 @@ mod tests {
         let div = doc.first_child(body).unwrap();
         let text = doc.first_child(div).unwrap();
 
-        let children: Vec<_> = doc.children(text).collect();
-        assert!(children.is_empty());
+        assert!(doc.children(text).next().is_none());
     }
 
     #[test]
@@ -490,8 +486,7 @@ mod tests {
         let div = doc.first_child(body).unwrap();
         let text = doc.first_child(div).unwrap();
 
-        let descendants: Vec<_> = doc.descendants(text).collect();
-        assert!(descendants.is_empty());
+        assert!(doc.descendants(text).next().is_none());
     }
 
     #[test]
@@ -499,8 +494,7 @@ mod tests {
         let doc = create_test_doc();
         let root = doc.root().unwrap();
 
-        let ancestors: Vec<_> = doc.ancestors(root).collect();
-        assert!(ancestors.is_empty());
+        assert!(doc.ancestors(root).next().is_none());
     }
 
     #[test]
