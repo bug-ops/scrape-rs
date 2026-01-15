@@ -88,25 +88,18 @@ fn test_parse_malformed_html_no_panic() {
     for input in malformed_inputs {
         let result = parser.parse(input);
         // Should not panic, may succeed or return error
-        assert!(result.is_ok() || result.is_err(), "Input '{}' caused unexpected behavior", input);
+        assert!(result.is_ok() || result.is_err(), "Input '{input}' caused unexpected behavior");
     }
 }
 
 #[test]
 fn test_parse_preserves_attributes() {
-    let parser = Html5everParser;
-    let doc = parser
-        .parse(r#"<a href="https://example.com" class="link" data-id="123">Link</a>"#)
-        .unwrap();
-
-    let root_id = doc.root().unwrap();
-
-    fn find_anchor<'a>(doc: &'a Document, node_id: NodeId) -> Option<&'a crate::dom::Node> {
+    fn find_anchor(doc: &Document, node_id: NodeId) -> Option<&crate::dom::Node> {
         let node = doc.get(node_id)?;
-        if let NodeKind::Element { name, .. } = &node.kind {
-            if name == "a" {
-                return Some(node);
-            }
+        if let NodeKind::Element { name, .. } = &node.kind
+            && name == "a"
+        {
+            return Some(node);
         }
         for child_id in &node.children {
             if let Some(found) = find_anchor(doc, *child_id) {
@@ -116,6 +109,12 @@ fn test_parse_preserves_attributes() {
         None
     }
 
+    let parser = Html5everParser;
+    let doc = parser
+        .parse(r#"<a href="https://example.com" class="link" data-id="123">Link</a>"#)
+        .unwrap();
+
+    let root_id = doc.root().unwrap();
     let anchor = find_anchor(&doc, root_id).expect("Should find anchor element");
     if let NodeKind::Element { attributes, .. } = &anchor.kind {
         assert_eq!(attributes.get("href"), Some(&"https://example.com".to_string()));
@@ -216,7 +215,7 @@ fn test_parse_sibling_relationships() {
             .children
             .iter()
             .filter(|id| {
-                doc.get(**id).map(|n| n.kind.as_element_name() == Some("li")).unwrap_or(false)
+                doc.get(**id).is_some_and(|n| n.kind.as_element_name() == Some("li"))
             })
             .collect();
 
@@ -246,7 +245,7 @@ fn test_parse_unicode_content() {
 
 #[test]
 fn test_default_parser() {
-    let parser = Html5everParser::default();
+    let parser = Html5everParser;
     let doc = parser.parse("<p>Test</p>").unwrap();
     assert!(doc.root().is_some());
 }

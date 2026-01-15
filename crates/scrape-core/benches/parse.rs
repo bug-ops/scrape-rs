@@ -1,10 +1,13 @@
 //! Benchmarks for HTML parsing performance.
 
-use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use std::hint::black_box;
 use scrape_core::Soup;
 
 /// Sample HTML documents of varying sizes for benchmarking.
 mod samples {
+    use std::fmt::Write;
+
     pub const SMALL: &str = r#"
         <html>
             <head><title>Small Page</title></head>
@@ -23,9 +26,10 @@ mod samples {
     pub fn generate_large(element_count: usize) -> String {
         let mut html = String::from("<html><head><title>Large</title></head><body>");
         for i in 0..element_count {
-            html.push_str(&format!(
+            let _ = write!(
+                html,
                 r#"<div class="item-{i}" id="item-{i}"><span>Item {i}</span></div>"#
-            ));
+            );
         }
         html.push_str("</body></html>");
         html
