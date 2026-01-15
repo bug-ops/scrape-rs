@@ -41,7 +41,7 @@ mod tag;
 
 // Error types
 // DOM types
-pub use dom::{Document, Node, NodeId, NodeKind};
+pub use dom::{AncestorsIter, ChildrenIter, DescendantsIter, Document, Node, NodeId, NodeKind};
 pub use error::{Error, Result};
 // Parser types
 pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};

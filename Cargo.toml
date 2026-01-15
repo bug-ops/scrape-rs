@@ -57,6 +57,8 @@ return_self_not_must_use = "allow"
 use_self = "allow"
 used_underscore_binding = "allow"
 unused_self = "allow"
+# Allow multiple crate versions due to html5ever/markup5ever dependency chain
+multiple_crate_versions = "allow"
 
 [profile.release]
 lto = true
