@@ -85,13 +85,13 @@ fn bench_find_all(c: &mut Criterion) {
 
     group.bench_function("all_divs", |b| {
         b.iter(|| {
-            let _: Vec<_> = soup.find_all(black_box("div")).collect();
+            let _ = soup.find_all(black_box("div")).unwrap();
         });
     });
 
     group.bench_function("all_spans", |b| {
         b.iter(|| {
-            let _: Vec<_> = soup.find_all(black_box("span")).collect();
+            let _ = soup.find_all(black_box("span")).unwrap();
         });
     });
 

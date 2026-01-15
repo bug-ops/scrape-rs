@@ -205,14 +205,13 @@ fn test_parse_sibling_relationships() {
     let doc = parser.parse("<ul><li>A</li><li>B</li><li>C</li></ul>").unwrap();
 
     // Find ul element
-    let ul_id =
-        doc.nodes().find(|(_, node)| node.kind.as_element_name() == Some("ul")).map(|(id, _)| id);
+    let ul_id = doc.nodes().find(|(_, node)| node.kind.tag_name() == Some("ul")).map(|(id, _)| id);
 
     if let Some(ul_id) = ul_id {
         // Should have li children with proper sibling links
         let li_children: Vec<_> = doc
             .children(ul_id)
-            .filter(|id| doc.get(*id).is_some_and(|n| n.kind.as_element_name() == Some("li")))
+            .filter(|id| doc.get(*id).is_some_and(|n| n.kind.tag_name() == Some("li")))
             .collect();
 
         assert!(li_children.len() >= 3, "Should have at least 3 li children");

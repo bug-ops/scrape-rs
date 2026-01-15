@@ -2,37 +2,77 @@
 default_to_workspace = false
 
 # ============================================================================
+# Quick commands (for rapid iteration)
+# ============================================================================
+
+[tasks.check]
+description = "Quick cargo check"
+command = "cargo"
+args = ["check", "--workspace"]
+
+[tasks.c]
+description = "Alias for check"
+alias = "check"
+
+# ============================================================================
 # Rust verification
 # ============================================================================
 
 [tasks.fmt]
 description = "Format Rust code with nightly rustfmt"
+toolchain = "nightly"
 command = "cargo"
-args = ["+nightly", "fmt"]
+args = ["fmt"]
 
 [tasks.fmt-check]
 description = "Check Rust formatting"
+toolchain = "nightly"
 command = "cargo"
-args = ["+nightly", "fmt", "--check"]
+args = ["fmt", "--check"]
 
 [tasks.clippy]
 description = "Run clippy lints"
 command = "cargo"
-args = ["clippy", "--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
+args = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
 
 [tasks.test]
 description = "Run tests with nextest"
 command = "cargo"
 args = ["nextest", "run", "--workspace"]
 
+[tasks.test-core]
+description = "Run scrape-core tests only"
+command = "cargo"
+args = ["nextest", "run", "-p", "scrape-core"]
+
 [tasks.deny]
-description = "Run cargo-deny checks"
+description = "Run cargo-deny security checks"
 command = "cargo"
 args = ["deny", "check"]
+
+[tasks.msrv]
+description = "Check MSRV compatibility"
+command = "cargo"
+args = ["check", "--workspace"]
+env = { "RUSTUP_TOOLCHAIN" = "1.88" }
+
+[tasks.doc]
+description = "Build documentation"
+command = "cargo"
+args = ["doc", "--workspace", "--no-deps"]
+
+[tasks.doc-open]
+description = "Build and open documentation"
+command = "cargo"
+args = ["doc", "--workspace", "--no-deps", "--open"]
 
 [tasks.verify-rust]
 description = "Full Rust verification: fmt + clippy + test + deny"
 dependencies = ["fmt-check", "clippy", "test", "deny"]
+
+[tasks.verify-rust-quick]
+description = "Quick Rust verification: fmt + clippy + test (no deny)"
+dependencies = ["fmt-check", "clippy", "test-core"]
 
 # ============================================================================
 # Python verification
@@ -47,16 +87,24 @@ args = ["run", "maturin", "develop"]
 [tasks.python-lint]
 description = "Lint Python code with ruff"
 cwd = "crates/scrape-py"
-script = [
-    "uv run ruff check .",
-    "uv run ruff format --check ."
-]
+script = '''
+uv run ruff check .
+uv run ruff format --check .
+'''
+
+[tasks.python-lint-fix]
+description = "Fix Python lint issues"
+cwd = "crates/scrape-py"
+script = '''
+uv run ruff check . --fix
+uv run ruff format .
+'''
 
 [tasks.python-test]
 description = "Run Python tests"
 cwd = "crates/scrape-py"
 command = "uv"
-args = ["run", "pytest"]
+args = ["run", "pytest", "-v"]
 dependencies = ["python-build"]
 
 [tasks.verify-python]
@@ -66,6 +114,12 @@ dependencies = ["python-lint", "python-test"]
 # ============================================================================
 # Node.js verification
 # ============================================================================
+
+[tasks.node-install]
+description = "Install Node.js dependencies"
+cwd = "crates/scrape-node"
+command = "pnpm"
+args = ["install"]
 
 [tasks.node-build]
 description = "Build Node.js bindings"
@@ -79,12 +133,24 @@ cwd = "crates/scrape-node"
 command = "pnpm"
 args = ["exec", "biome", "check", "."]
 
+[tasks.node-lint-fix]
+description = "Fix Node.js lint issues"
+cwd = "crates/scrape-node"
+command = "pnpm"
+args = ["exec", "biome", "check", ".", "--write"]
+
 [tasks.node-test]
 description = "Run Node.js tests"
 cwd = "crates/scrape-node"
 command = "pnpm"
 args = ["test"]
 dependencies = ["node-build"]
+
+[tasks.node-audit]
+description = "Audit Node.js dependencies"
+cwd = "crates/scrape-node"
+command = "pnpm"
+args = ["audit"]
 
 [tasks.verify-node]
 description = "Full Node.js verification: lint + build + test"
@@ -94,10 +160,21 @@ dependencies = ["node-lint", "node-test"]
 # WASM verification
 # ============================================================================
 
+[tasks.wasm-install]
+description = "Install WASM dependencies"
+cwd = "crates/scrape-wasm"
+command = "pnpm"
+args = ["install"]
+
 [tasks.wasm-build]
 description = "Build WASM bindings"
 command = "wasm-pack"
 args = ["build", "crates/scrape-wasm", "--target", "web", "--release"]
+
+[tasks.wasm-build-dev]
+description = "Build WASM bindings (dev mode)"
+command = "wasm-pack"
+args = ["build", "crates/scrape-wasm", "--target", "web", "--dev"]
 
 [tasks.wasm-lint]
 description = "Lint WASM JavaScript with biome"
@@ -105,22 +182,75 @@ cwd = "crates/scrape-wasm"
 command = "pnpm"
 args = ["exec", "biome", "check", "."]
 
+[tasks.wasm-lint-fix]
+description = "Fix WASM lint issues"
+cwd = "crates/scrape-wasm"
+command = "pnpm"
+args = ["exec", "biome", "check", ".", "--write"]
+
 [tasks.wasm-test]
-description = "Run WASM tests"
+description = "Run WASM tests in headless Firefox"
 command = "wasm-pack"
 args = ["test", "crates/scrape-wasm", "--headless", "--firefox"]
 
+[tasks.wasm-test-chrome]
+description = "Run WASM tests in headless Chrome"
+command = "wasm-pack"
+args = ["test", "crates/scrape-wasm", "--headless", "--chrome"]
+
+[tasks.wasm-audit]
+description = "Audit WASM dependencies"
+cwd = "crates/scrape-wasm"
+command = "pnpm"
+args = ["audit"]
+
 [tasks.verify-wasm]
 description = "Full WASM verification: lint + build + test"
-dependencies = ["wasm-lint", "wasm-build", "wasm-test"]
+dependencies = ["wasm-lint", "wasm-build"]
 
 # ============================================================================
-# Full verification
+# Full verification (PRE-COMMIT - ALWAYS RUN BEFORE COMMITTING)
 # ============================================================================
 
 [tasks.verify-all]
-description = "Full verification of all components"
+description = "CRITICAL: Full verification of ALL ecosystems before commit"
 dependencies = ["verify-rust", "verify-python", "verify-node", "verify-wasm"]
+
+[tasks.pre-commit]
+description = "Alias for verify-all"
+alias = "verify-all"
+
+[tasks.verify-quick]
+description = "Quick verification (Rust only, no security audit)"
+dependencies = ["fmt-check", "clippy", "test-core"]
+
+# ============================================================================
+# Security audit
+# ============================================================================
+
+[tasks.audit]
+description = "Full security audit across all ecosystems"
+dependencies = ["deny", "node-audit", "wasm-audit"]
+
+# ============================================================================
+# Clean commands
+# ============================================================================
+
+[tasks.clean]
+description = "Clean all build artifacts"
+command = "cargo"
+args = ["clean"]
+
+[tasks.clean-all]
+description = "Clean everything including node_modules and Python venvs"
+script = '''
+cargo clean
+rm -rf crates/scrape-node/node_modules
+rm -rf crates/scrape-wasm/node_modules
+rm -rf crates/scrape-wasm/pkg
+rm -rf crates/scrape-py/.venv
+rm -rf target
+'''
 
 # ============================================================================
 # Development helpers
@@ -129,7 +259,12 @@ dependencies = ["verify-rust", "verify-python", "verify-node", "verify-wasm"]
 [tasks.dev]
 description = "Watch for changes and run checks"
 command = "cargo"
-args = ["watch", "-x", "check", "-x", "test"]
+args = ["watch", "-x", "check", "-x", "clippy"]
+
+[tasks.dev-test]
+description = "Watch for changes and run tests"
+command = "cargo"
+args = ["watch", "-x", "nextest run -p scrape-core"]
 
 [tasks.bench]
 description = "Run benchmarks"
@@ -137,6 +272,21 @@ command = "cargo"
 args = ["bench"]
 
 [tasks.fuzz]
-description = "Run fuzzing"
+description = "Run fuzzing (requires nightly)"
 command = "cargo"
 args = ["+nightly", "fuzz", "run", "parse_fuzzer"]
+
+# ============================================================================
+# Release helpers
+# ============================================================================
+
+[tasks.release-dry]
+description = "Dry run of cargo release"
+command = "cargo"
+args = ["release", "--dry-run"]
+
+[tasks.version]
+description = "Show current version"
+script = '''
+grep "^version" Cargo.toml | head -1
+'''

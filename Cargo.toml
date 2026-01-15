@@ -14,7 +14,9 @@ categories = ["parsing", "web-programming"]
 
 [workspace.dependencies]
 criterion = { version = "0.8", default-features = false }
+cssparser = "0.36"
 html5ever = "0.36"
+precomputed-hash = "0.1"
 js-sys = "0.3"
 markup5ever = "0.36"
 markup5ever_rcdom = "0.36"
@@ -23,7 +25,7 @@ napi = "3"
 napi-build = "2"
 napi-derive = "3"
 pyo3 = "0.27"
-scrape-core = { path = "crates/scrape-core", default-features = false }
+scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.1.0" }
 selectors = "0.34"
 thiserror = "2.0"
 wasm-bindgen = "0.2"

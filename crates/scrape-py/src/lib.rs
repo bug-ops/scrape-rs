@@ -41,7 +41,6 @@ impl PySoupConfig {
 /// Python wrapper for [`scrape_core::Soup`].
 #[pyclass(name = "Soup")]
 pub struct PySoup {
-    #[allow(dead_code)]
     inner: scrape_core::Soup,
 }
 
@@ -55,63 +54,21 @@ impl PySoup {
         Self { inner: scrape_core::Soup::parse_with_config(html, config) }
     }
 
-    /// Finds the first element matching the selector.
-    fn find(&self, _selector: &str) -> Option<PyTag> {
-        // TODO: implement find
-        None
-    }
-
-    /// Finds all elements matching the selector.
-    fn find_all(&self, _selector: &str) -> Vec<PyTag> {
-        // TODO: implement find_all
-        Vec::new()
-    }
-
-    /// Selects elements using a CSS selector.
-    fn select(&self, selector: &str) -> Vec<PyTag> {
-        self.find_all(selector)
-    }
-}
-
-/// Python wrapper for [`scrape_core::Tag`].
-#[pyclass(name = "Tag")]
-#[derive(Clone)]
-pub struct PyTag {
-    #[allow(dead_code)]
-    inner: scrape_core::Tag,
-}
-
-#[pymethods]
-impl PyTag {
-    /// Returns the tag name.
+    /// Returns the document title if present.
     #[getter]
-    fn name(&self) -> &str {
-        self.inner.name()
+    fn title(&self) -> Option<String> {
+        self.inner.title()
     }
 
-    /// Returns the text content.
+    /// Returns the text content of the document.
     #[getter]
     fn text(&self) -> String {
-        // TODO: implement when Tag::text is implemented
-        String::new()
+        self.inner.text()
     }
 
-    /// Returns the inner HTML.
-    #[getter]
-    fn inner_html(&self) -> String {
-        // TODO: implement when Tag::inner_html is implemented
-        String::new()
-    }
-
-    /// Returns the value of an attribute.
-    fn get(&self, _attr: &str) -> Option<String> {
-        // TODO: implement when Tag::get is implemented
-        None
-    }
-
-    /// Gets attribute value, supporting Python subscript syntax.
-    fn __getitem__(&self, attr: &str) -> PyResult<String> {
-        self.get(attr).ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(attr.to_string()))
+    /// Returns the HTML representation of the document.
+    fn to_html(&self) -> String {
+        self.inner.to_html()
     }
 }
 
@@ -122,8 +79,8 @@ impl PyTag {
 #[pyo3(signature = (documents, n_threads=None))]
 #[allow(unused_variables)]
 fn parse_batch(documents: Vec<String>, n_threads: Option<usize>) -> Vec<PySoup> {
-    // TODO: implement parallel batch parsing
-    Vec::new()
+    // TODO: implement parallel batch parsing with rayon
+    documents.into_iter().map(|html| PySoup { inner: scrape_core::Soup::parse(&html) }).collect()
 }
 
 /// Python module definition.
@@ -131,7 +88,6 @@ fn parse_batch(documents: Vec<String>, n_threads: Option<usize>) -> Vec<PySoup> 
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySoupConfig>()?;
     m.add_class::<PySoup>()?;
-    m.add_class::<PyTag>()?;
     m.add_function(wrap_pyfunction!(parse_batch, m)?)?;
     Ok(())
 }
