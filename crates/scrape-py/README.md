@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/scrape-rs)](https://pypi.org/project/scrape-rs)
 [![Python](https://img.shields.io/pypi/pyversions/scrape-rs)](https://pypi.org/project/scrape-rs)
+[![codecov](https://codecov.io/gh/bug-ops/scrape-rs/graph/badge.svg?token=6MQTONGT95&flag=python)](https://codecov.io/gh/bug-ops/scrape-rs)
 [![License](https://img.shields.io/pypi/l/scrape-rs)](../../LICENSE-MIT)
 
 Python bindings for scrape-rs, a high-performance HTML parsing library.

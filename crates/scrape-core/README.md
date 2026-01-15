@@ -2,6 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/scrape-core)](https://crates.io/crates/scrape-core)
 [![docs.rs](https://img.shields.io/docsrs/scrape-core)](https://docs.rs/scrape-core)
+[![codecov](https://codecov.io/gh/bug-ops/scrape-rs/graph/badge.svg?token=6MQTONGT95&flag=rust)](https://codecov.io/gh/bug-ops/scrape-rs)
 [![MSRV](https://img.shields.io/badge/MSRV-1.88-blue)](https://github.com/bug-ops/scrape-rs)
 [![License](https://img.shields.io/crates/l/scrape-core)](../../LICENSE-MIT)
 

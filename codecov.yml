@@ -1,0 +1,60 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+flags:
+  rust:
+    paths:
+      - crates/scrape-core/
+    carryforward: true
+
+  python:
+    paths:
+      - crates/scrape-py/
+    carryforward: true
+
+  node:
+    paths:
+      - crates/scrape-node/
+    carryforward: true
+
+  wasm:
+    paths:
+      - crates/scrape-wasm/
+    carryforward: true
+
+comment:
+  layout: "header, diff, flags, components"
+  behavior: default
+  require_changes: true
+
+component_management:
+  individual_components:
+    - component_id: core
+      name: Rust Core
+      paths:
+        - crates/scrape-core/**
+    - component_id: python
+      name: Python Bindings
+      paths:
+        - crates/scrape-py/**
+    - component_id: node
+      name: Node.js Bindings
+      paths:
+        - crates/scrape-node/**
+    - component_id: wasm
+      name: WASM Bindings
+      paths:
+        - crates/scrape-wasm/**

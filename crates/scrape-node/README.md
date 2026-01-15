@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/v/scrape-rs)](https://www.npmjs.com/package/scrape-rs)
 [![Node.js](https://img.shields.io/node/v/scrape-rs)](https://www.npmjs.com/package/scrape-rs)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
+[![codecov](https://codecov.io/gh/bug-ops/scrape-rs/graph/badge.svg?token=6MQTONGT95&flag=node)](https://codecov.io/gh/bug-ops/scrape-rs)
 [![License](https://img.shields.io/npm/l/scrape-rs)](../../LICENSE-MIT)
 
 Node.js bindings for scrape-rs, a high-performance HTML parsing library.

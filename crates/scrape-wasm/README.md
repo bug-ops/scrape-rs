@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@scrape-rs/wasm)](https://www.npmjs.com/package/@scrape-rs/wasm)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@scrape-rs/wasm)](https://bundlephobia.com/package/@scrape-rs/wasm)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
+[![codecov](https://codecov.io/gh/bug-ops/scrape-rs/graph/badge.svg?token=6MQTONGT95&flag=wasm)](https://codecov.io/gh/bug-ops/scrape-rs)
 [![License](https://img.shields.io/npm/l/@scrape-rs/wasm)](../../LICENSE-MIT)
 
 WebAssembly bindings for scrape-rs, a high-performance HTML parsing library. Run native-speed parsing in the browser.

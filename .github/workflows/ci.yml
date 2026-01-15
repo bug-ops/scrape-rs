@@ -266,4 +266,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: lcov.info
+          flags: rust
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
