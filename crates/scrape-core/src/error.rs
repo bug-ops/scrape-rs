@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-/// Result type alias using [`Error`].
+/// Result type alias using [`enum@Error`].
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors that can occur during HTML parsing and querying.
@@ -45,25 +45,19 @@ impl Error {
     /// Creates a new parse error with the given message.
     #[must_use]
     pub fn parse(message: impl Into<String>) -> Self {
-        Self::ParseError {
-            message: message.into(),
-        }
+        Self::ParseError { message: message.into() }
     }
 
     /// Creates a new invalid selector error.
     #[must_use]
     pub fn invalid_selector(selector: impl Into<String>) -> Self {
-        Self::InvalidSelector {
-            selector: selector.into(),
-        }
+        Self::InvalidSelector { selector: selector.into() }
     }
 
     /// Creates a new not found error.
     #[must_use]
     pub fn not_found(query: impl Into<String>) -> Self {
-        Self::NotFound {
-            query: query.into(),
-        }
+        Self::NotFound { query: query.into() }
     }
 
     /// Creates a new attribute not found error.

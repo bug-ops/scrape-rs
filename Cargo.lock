@@ -359,16 +359,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "html5ever"
-version = "0.37.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5935f02fdc02823ff15fec27c2b3d7ca19d629e996f7a0ae4d7d500e62e54c76"
-dependencies = [
- "log",
- "markup5ever 0.37.1",
-]
-
-[[package]]
 name = "indoc"
 version = "2.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,7 +463,7 @@ version = "0.36.0+unofficial"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e5fc8802e8797c0dfdd2ce5c21aa0aee21abbc7b3b18559100651b3352a7b63"
 dependencies = [
- "html5ever 0.36.1",
+ "html5ever",
  "markup5ever 0.36.1",
  "tendril 0.4.3",
  "xml5ever",
@@ -849,7 +839,7 @@ name = "scrape-core"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "html5ever 0.37.1",
+ "html5ever",
  "markup5ever 0.37.1",
  "markup5ever_rcdom",
  "memchr",

@@ -8,17 +8,17 @@
 //!
 //! ## Quick Start
 //!
-//! ```rust,ignore
-//! use scrape_core::{Soup, SoupConfig};
+//! ```rust
+//! use scrape_core::{Html5everParser, Parser, Soup, SoupConfig};
 //!
+//! // Parse HTML using Soup (high-level API)
 //! let html = "<html><body><div class=\"product\">Hello</div></body></html>";
 //! let soup = Soup::parse(html);
 //!
-//! // Find elements by CSS selector
-//! let products = soup.select("div.product");
-//! for product in products {
-//!     println!("{}", product.text());
-//! }
+//! // Or use the parser directly (low-level API)
+//! let parser = Html5everParser;
+//! let document = parser.parse(html).unwrap();
+//! assert!(document.root().is_some());
 //! ```
 //!
 //! ## Features
@@ -39,6 +39,12 @@ mod query;
 mod soup;
 mod tag;
 
+// Error types
+// DOM types
+pub use dom::{Document, Node, NodeId, NodeKind};
 pub use error::{Error, Result};
+// Parser types
+pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};
+// High-level API
 pub use soup::{Soup, SoupConfig};
 pub use tag::Tag;

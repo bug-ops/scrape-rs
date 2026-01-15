@@ -33,7 +33,7 @@ use crate::Result;
 /// ```
 #[derive(Debug)]
 pub struct Selector {
-    _raw: String,
+    raw: String,
 }
 
 impl Selector {
@@ -42,17 +42,16 @@ impl Selector {
     /// # Errors
     ///
     /// Returns an error if the selector syntax is invalid.
+    #[allow(clippy::unnecessary_wraps)]
     pub fn parse(selector: &str) -> Result<Self> {
-        // TODO: implement actual selector parsing
-        Ok(Self {
-            _raw: selector.to_string(),
-        })
+        // TODO: implement actual selector parsing with proper error handling
+        Ok(Self { raw: selector.to_string() })
     }
 
     /// Returns the original selector string.
     #[must_use]
     pub fn as_str(&self) -> &str {
-        &self._raw
+        &self.raw
     }
 }
 
@@ -84,6 +83,8 @@ mod tests {
     #[test]
     fn test_attr_filter() {
         let filter = AttrFilter::Equals("class".to_string(), "test".to_string());
-        assert!(matches!(filter, AttrFilter::Equals(name, value) if name == "class" && value == "test"));
+        assert!(
+            matches!(filter, AttrFilter::Equals(name, value) if name == "class" && value == "test")
+        );
     }
 }

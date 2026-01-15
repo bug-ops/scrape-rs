@@ -14,7 +14,7 @@ categories = ["parsing", "web-programming"]
 
 [workspace.dependencies]
 criterion = { version = "0.8", default-features = false }
-html5ever = "0.37"
+html5ever = "0.36"
 js-sys = "0.3"
 markup5ever = "0.37"
 markup5ever_rcdom = "0.36"
@@ -33,6 +33,9 @@ web-sys = "0.3"
 [workspace.lints.rust]
 unsafe_code = "warn"
 missing_docs = "warn"
+# TODO: remove these after implementing stub code
+dead_code = "allow"
+unused_variables = "allow"
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
@@ -40,11 +43,19 @@ pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
 
-# Allow certain pedantic lints that are too noisy
-module_name_repetitions = "allow"
-must_use_candidate = "allow"
+# Allow lints for early-stage skeleton project
+cargo_common_metadata = "allow"
+doc_markdown = "allow"
+missing_const_for_fn = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+needless_pass_by_value = "allow"
+return_self_not_must_use = "allow"
+use_self = "allow"
+used_underscore_binding = "allow"
+unused_self = "allow"
 
 [profile.release]
 lto = true

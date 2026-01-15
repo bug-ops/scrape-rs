@@ -37,14 +37,14 @@ use crate::Result;
 /// ```
 #[derive(Debug, Clone)]
 pub struct Tag {
-    _name: String,
+    tag_name: String,
 }
 
 impl Tag {
     /// Creates a new Tag (internal use only).
     #[must_use]
     pub(crate) fn new(name: impl Into<String>) -> Self {
-        Self { _name: name.into() }
+        Self { tag_name: name.into() }
     }
 
     /// Returns the tag name (e.g., "div", "span", "a").
@@ -60,7 +60,7 @@ impl Tag {
     /// ```
     #[must_use]
     pub fn name(&self) -> &str {
-        &self._name
+        &self.tag_name
     }
 
     /// Returns the value of an attribute, if present.
@@ -89,8 +89,7 @@ impl Tag {
     ///
     /// [`Error::AttributeNotFound`]: crate::Error::AttributeNotFound
     pub fn get_or_err(&self, attr: &str) -> Result<String> {
-        self.get(attr)
-            .ok_or_else(|| crate::Error::attribute_not_found(attr))
+        self.get(attr).ok_or_else(|| crate::Error::attribute_not_found(attr))
     }
 
     /// Returns the text content of this element and its descendants.

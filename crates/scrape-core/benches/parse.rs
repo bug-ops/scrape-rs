@@ -1,6 +1,6 @@
 //! Benchmarks for HTML parsing performance.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use scrape_core::Soup;
 
 /// Sample HTML documents of varying sizes for benchmarking.

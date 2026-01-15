@@ -2,19 +2,20 @@
 //!
 //! The [`Soup`] struct is the primary entry point for parsing and querying HTML documents.
 
-use crate::{Result, Tag};
+use crate::{
+    Result, Tag,
+    dom::Document,
+    parser::{Html5everParser, ParseConfig, Parser},
+};
 
 /// Configuration options for HTML parsing.
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust
 /// use scrape_core::SoupConfig;
 ///
-/// let config = SoupConfig::builder()
-///     .max_depth(256)
-///     .strict_mode(false)
-///     .build();
+/// let config = SoupConfig::builder().max_depth(256).strict_mode(false).build();
 /// ```
 #[derive(Debug, Clone)]
 pub struct SoupConfig {
@@ -22,13 +23,19 @@ pub struct SoupConfig {
     pub max_depth: usize,
     /// Enable strict parsing mode (fail on malformed HTML).
     pub strict_mode: bool,
+    /// Whether to preserve whitespace-only text nodes.
+    pub preserve_whitespace: bool,
+    /// Whether to include comment nodes.
+    pub include_comments: bool,
 }
 
 impl Default for SoupConfig {
     fn default() -> Self {
         Self {
-            max_depth: 256,
+            max_depth: 512,
             strict_mode: false,
+            preserve_whitespace: false,
+            include_comments: false,
         }
     }
 }
@@ -46,6 +53,8 @@ impl SoupConfig {
 pub struct SoupConfigBuilder {
     max_depth: Option<usize>,
     strict_mode: Option<bool>,
+    preserve_whitespace: Option<bool>,
+    include_comments: Option<bool>,
 }
 
 impl SoupConfigBuilder {
@@ -63,12 +72,28 @@ impl SoupConfigBuilder {
         self
     }
 
+    /// Enables or disables whitespace preservation.
+    #[must_use]
+    pub fn preserve_whitespace(mut self, preserve: bool) -> Self {
+        self.preserve_whitespace = Some(preserve);
+        self
+    }
+
+    /// Enables or disables comment inclusion.
+    #[must_use]
+    pub fn include_comments(mut self, include: bool) -> Self {
+        self.include_comments = Some(include);
+        self
+    }
+
     /// Builds the configuration.
     #[must_use]
     pub fn build(self) -> SoupConfig {
         SoupConfig {
-            max_depth: self.max_depth.unwrap_or(256),
+            max_depth: self.max_depth.unwrap_or(512),
             strict_mode: self.strict_mode.unwrap_or(false),
+            preserve_whitespace: self.preserve_whitespace.unwrap_or(false),
+            include_comments: self.include_comments.unwrap_or(false),
         }
     }
 }
@@ -112,6 +137,7 @@ impl SoupConfigBuilder {
 /// ```
 #[derive(Debug)]
 pub struct Soup {
+    document: Document,
     _config: SoupConfig,
 }
 
@@ -123,32 +149,45 @@ impl Soup {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
     /// use scrape_core::Soup;
     ///
     /// let soup = Soup::parse("<html><body>Hello</body></html>");
     /// ```
     #[must_use]
-    pub fn parse(_html: &str) -> Self {
-        Self::parse_with_config(_html, SoupConfig::default())
+    pub fn parse(html: &str) -> Self {
+        Self::parse_with_config(html, SoupConfig::default())
     }
 
     /// Parses an HTML string with custom configuration.
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust
     /// use scrape_core::{Soup, SoupConfig};
     ///
-    /// let config = SoupConfig::builder()
-    ///     .max_depth(128)
-    ///     .build();
+    /// let config = SoupConfig::builder().max_depth(128).build();
     /// let soup = Soup::parse_with_config("<html>...</html>", config);
     /// ```
     #[must_use]
-    pub fn parse_with_config(_html: &str, config: SoupConfig) -> Self {
-        // TODO: implement actual parsing using html5ever
-        Self { _config: config }
+    pub fn parse_with_config(html: &str, config: SoupConfig) -> Self {
+        let parser = Html5everParser;
+        let parse_config = ParseConfig {
+            max_depth: config.max_depth,
+            preserve_whitespace: config.preserve_whitespace,
+            include_comments: config.include_comments,
+        };
+
+        let document =
+            parser.parse_with_config(html, &parse_config).unwrap_or_else(|_| Document::new());
+
+        Self { document, _config: config }
+    }
+
+    /// Returns a reference to the underlying document.
+    #[must_use]
+    pub fn document(&self) -> &Document {
+        &self.document
     }
 
     /// Parses HTML from a file.
@@ -239,20 +278,42 @@ mod tests {
     #[test]
     fn test_soup_config_default() {
         let config = SoupConfig::default();
-        assert_eq!(config.max_depth, 256);
+        assert_eq!(config.max_depth, 512);
         assert!(!config.strict_mode);
+        assert!(!config.preserve_whitespace);
+        assert!(!config.include_comments);
     }
 
     #[test]
     fn test_soup_config_builder() {
-        let config = SoupConfig::builder().max_depth(128).strict_mode(true).build();
+        let config = SoupConfig::builder()
+            .max_depth(128)
+            .strict_mode(true)
+            .preserve_whitespace(true)
+            .include_comments(true)
+            .build();
         assert_eq!(config.max_depth, 128);
         assert!(config.strict_mode);
+        assert!(config.preserve_whitespace);
+        assert!(config.include_comments);
     }
 
     #[test]
-    fn test_soup_parse_creates_instance() {
-        let soup = Soup::parse("<html></html>");
-        assert!(!soup._config.strict_mode);
+    fn test_soup_parse_creates_document() {
+        let soup = Soup::parse("<html><body>Hello</body></html>");
+        assert!(soup.document().root().is_some());
+    }
+
+    #[test]
+    fn test_soup_parse_empty_creates_empty_document() {
+        let soup = Soup::parse("");
+        assert!(soup.document().is_empty());
+    }
+
+    #[test]
+    fn test_soup_parse_with_config() {
+        let config = SoupConfig::builder().max_depth(256).build();
+        let soup = Soup::parse_with_config("<div>Test</div>", config);
+        assert!(soup.document().root().is_some());
     }
 }
