@@ -144,7 +144,7 @@ jobs:
       name: pypi
       url: https://pypi.org/project/scrape-rs/
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: wheels-*
           path: dist
@@ -239,7 +239,7 @@ jobs:
           version: 9
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: node-*
           path: crates/scrape-node/artifacts
