@@ -25,7 +25,7 @@ scrape-rs = "0.1"
 ```
 
 > [!IMPORTANT]
-> Requires Rust 1.85 or later.
+> Requires Rust 1.88 or later.
 
 ### Python
 
