@@ -108,8 +108,8 @@ fn test_parse_preserves_attributes() {
                 return Some(node);
             }
         }
-        for child_id in &node.children {
-            if let Some(found) = find_anchor(doc, *child_id) {
+        for child_id in doc.children(node_id) {
+            if let Some(found) = find_anchor(doc, child_id) {
                 return Some(found);
             }
         }
@@ -210,13 +210,11 @@ fn test_parse_sibling_relationships() {
         doc.nodes().find(|(_, node)| node.kind.as_element_name() == Some("ul")).map(|(id, _)| id);
 
     if let Some(ul_id) = ul_id {
-        let ul = doc.get(ul_id).unwrap();
         // Should have li children with proper sibling links
-        let li_children: Vec<_> = ul
-            .children
-            .iter()
+        let li_children: Vec<_> = doc
+            .children(ul_id)
             .filter(|id| {
-                doc.get(**id).map(|n| n.kind.as_element_name() == Some("li")).unwrap_or(false)
+                doc.get(*id).map(|n| n.kind.as_element_name() == Some("li")).unwrap_or(false)
             })
             .collect();
 
@@ -224,11 +222,11 @@ fn test_parse_sibling_relationships() {
 
         // Check sibling links
         if li_children.len() >= 2 {
-            let first = doc.get(*li_children[0]).unwrap();
-            let second = doc.get(*li_children[1]).unwrap();
+            let first = doc.get(li_children[0]).unwrap();
+            let second = doc.get(li_children[1]).unwrap();
 
-            assert_eq!(first.next_sibling, Some(*li_children[1]));
-            assert_eq!(second.prev_sibling, Some(*li_children[0]));
+            assert_eq!(first.next_sibling, Some(li_children[1]));
+            assert_eq!(second.prev_sibling, Some(li_children[0]));
         }
     }
 }

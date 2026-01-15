@@ -16,7 +16,7 @@ categories = ["parsing", "web-programming"]
 criterion = { version = "0.8", default-features = false }
 html5ever = "0.36"
 js-sys = "0.3"
-markup5ever = "0.37"
+markup5ever = "0.36"
 markup5ever_rcdom = "0.36"
 memchr = "2.7"
 napi = "3"
@@ -56,6 +56,8 @@ return_self_not_must_use = "allow"
 use_self = "allow"
 used_underscore_binding = "allow"
 unused_self = "allow"
+# Allow multiple crate versions due to html5ever/markup5ever dependency chain
+multiple_crate_versions = "allow"
 
 [profile.release]
 lto = true
