@@ -1,0 +1,38 @@
+# Label configuration for actions/labeler
+# See: https://github.com/actions/labeler
+
+rust:
+  - changed-files:
+      - any-glob-to-any-file: 'crates/scrape-core/**'
+
+python:
+  - changed-files:
+      - any-glob-to-any-file: 'crates/scrape-py/**'
+
+node:
+  - changed-files:
+      - any-glob-to-any-file: 'crates/scrape-node/**'
+
+wasm:
+  - changed-files:
+      - any-glob-to-any-file: 'crates/scrape-wasm/**'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'Cargo.toml'
+          - 'Cargo.lock'
+          - '**/package.json'
+          - '**/pnpm-lock.yaml'
+          - '**/pyproject.toml'
+          - '**/uv.lock'

@@ -1,0 +1,302 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================================================
+  # Auto-label PRs based on changed files
+  # ==========================================================================
+  labeler:
+    name: Label PR
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================================================
+  # Detect changed paths to enable conditional job execution
+  # ==========================================================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      python: ${{ steps.filter.outputs.python }}
+      node: ${{ steps.filter.outputs.node }}
+      wasm: ${{ steps.filter.outputs.wasm }}
+      ci: ${{ steps.filter.outputs.ci }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'crates/scrape-core/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+            python:
+              - 'crates/scrape-py/**'
+            node:
+              - 'crates/scrape-node/**'
+            wasm:
+              - 'crates/scrape-wasm/**'
+            ci:
+              - '.github/workflows/**'
+
+  # ==========================================================================
+  # Format check (fast, runs first)
+  # ==========================================================================
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo +nightly fmt --check
+
+  # ==========================================================================
+  # Clippy lint check (depends on fmt)
+  # ==========================================================================
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes, fmt]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  # ==========================================================================
+  # Test matrix (depends on clippy)
+  # ==========================================================================
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    needs: [changes, clippy]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: test-${{ matrix.os }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - run: cargo nextest run --workspace
+
+  # ==========================================================================
+  # Security audit
+  # ==========================================================================
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - run: cargo deny check
+
+  # ==========================================================================
+  # Python bindings (depends on test, runs if scrape-py or scrape-core changed)
+  # ==========================================================================
+  build-python:
+    name: Python Bindings
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, test]
+    if: |
+      (needs.changes.outputs.python == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+      && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: python
+          workspaces: crates/scrape-py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install dependencies and build
+        working-directory: crates/scrape-py
+        run: |
+          uv sync
+          uv run maturin develop
+      - name: Lint with ruff
+        working-directory: crates/scrape-py
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Run tests
+        working-directory: crates/scrape-py
+        run: uv run pytest
+
+  # ==========================================================================
+  # Node.js bindings (depends on test, runs if scrape-node or scrape-core changed)
+  # ==========================================================================
+  build-node:
+    name: Node.js Bindings
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, test]
+    if: |
+      (needs.changes.outputs.node == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+      && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: node
+          workspaces: crates/scrape-node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install dependencies
+        working-directory: crates/scrape-node
+        run: pnpm install
+      - name: Lint with biome
+        working-directory: crates/scrape-node
+        run: pnpm exec biome check .
+      - name: Build
+        working-directory: crates/scrape-node
+        run: pnpm run build
+      - name: Run tests
+        working-directory: crates/scrape-node
+        run: pnpm test
+
+  # ==========================================================================
+  # WASM bindings (depends on test, runs if scrape-wasm or scrape-core changed)
+  # ==========================================================================
+  build-wasm:
+    name: WASM Bindings
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, test]
+    if: |
+      (needs.changes.outputs.wasm == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+      && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: wasm
+          workspaces: crates/scrape-wasm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install dependencies
+        working-directory: crates/scrape-wasm
+        run: pnpm install
+      - name: Lint with biome
+        working-directory: crates/scrape-wasm
+        run: pnpm exec biome check .
+      - name: Build WASM
+        run: wasm-pack build crates/scrape-wasm --target web --release
+
+  # ==========================================================================
+  # Code coverage
+  # ==========================================================================
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, test]
+    if: |
+      (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+      && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: coverage
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Generate coverage
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+
+  # ==========================================================================
+  # MSRV check
+  # ==========================================================================
+  msrv:
+    name: MSRV Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Extract MSRV
+        id: msrv
+        run: |
+          MSRV=$(grep '^rust-version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$MSRV" >> $GITHUB_OUTPUT
+          echo "Detected MSRV: $MSRV"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: msrv
+      - run: cargo check --workspace
