@@ -81,6 +81,8 @@ mod dom;
 mod error;
 mod parser;
 pub mod query;
+#[cfg(feature = "simd")]
+pub mod simd;
 mod soup;
 mod tag;
 

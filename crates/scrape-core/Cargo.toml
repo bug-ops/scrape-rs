@@ -34,3 +34,7 @@ parallel = []
 [[bench]]
 name = "parse"
 harness = false
+
+[[bench]]
+name = "simd"
+harness = false

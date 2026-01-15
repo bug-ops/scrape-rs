@@ -190,6 +190,11 @@ impl Filter {
             let class_attr = attributes.and_then(|attrs| attrs.get("class"));
 
             for required_class in &self.classes {
+                #[cfg(feature = "simd")]
+                let has_class = class_attr
+                    .is_some_and(|classes| crate::simd::contains_class(classes, required_class));
+
+                #[cfg(not(feature = "simd"))]
                 let has_class = class_attr
                     .is_some_and(|classes| classes.split_whitespace().any(|c| c == required_class));
 
