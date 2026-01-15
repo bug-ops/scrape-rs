@@ -106,7 +106,7 @@ jobs:
           sccache: false
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.target }}
           path: dist/*.whl
@@ -128,7 +128,7 @@ jobs:
           args: --out dist -m crates/scrape-py/Cargo.toml
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheels-sdist
           path: dist/*.tar.gz
@@ -214,7 +214,7 @@ jobs:
         run: pnpm run build --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: node-${{ matrix.target }}
           path: crates/scrape-node/*.node
