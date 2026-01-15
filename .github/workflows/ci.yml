@@ -8,6 +8,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
+  CARGO_HOME: ${{ github.workspace }}/.cargo
+  CARGO_INCREMENTAL: 0
+  CACHE_ON_FAILURE: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,6 +41,7 @@ jobs:
               - 'Cargo.toml'
               - 'Cargo.lock'
               - 'rust-toolchain.toml'
+              - 'Makefile.toml'
             python:
               - 'crates/scrape-py/**'
             node:
@@ -62,7 +66,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
-      - run: cargo +nightly fmt --check
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
+      - run: cargo make fmt-check
 
   clippy:
     name: Clippy
@@ -76,7 +83,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
+      - run: cargo make clippy
 
   security:
     name: Security
@@ -88,8 +98,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: taiki-e/install-action@v2
         with:
-          tool: cargo-deny
-      - run: cargo deny check
+          tool: cargo-deny,cargo-make
+      - run: cargo make deny
 
   msrv:
     name: MSRV
@@ -138,8 +148,8 @@ jobs:
           shared-key: test-${{ matrix.os }}
       - uses: taiki-e/install-action@v2
         with:
-          tool: nextest
-      - run: cargo nextest run --workspace
+          tool: nextest,cargo-make
+      - run: cargo make test
 
   # ==========================================================================
   # STAGE 2 (parallel): Bindings (run in parallel with Rust tests)
@@ -164,6 +174,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Build and test
@@ -197,6 +210,9 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
       - name: Build and test
         working-directory: crates/scrape-node
         run: |
@@ -229,6 +245,9 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build and lint
@@ -237,7 +256,7 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm exec biome check .
       - name: Build WASM
-        run: wasm-pack build crates/scrape-wasm --target web --release
+        run: cargo make wasm-build
 
   # ==========================================================================
   # STAGE 2 (parallel): Coverage (runs in parallel with tests)
