@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.4,<2.0"]
+requires = ["maturin>=1.11,<2.0"]
 build-backend = "maturin"
 
 [project]
@@ -59,6 +59,13 @@ ignore = ["E501"]  # Line too long (handled by formatter)
 
 [tool.ruff.lint.isort]
 known-first-party = ["scrape_rs"]
+
+[dependency-groups]
+dev = [
+    "maturin>=1.11,<2.0",
+    "pytest>=9.0",
+    "ruff>=0.8",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

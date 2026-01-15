@@ -1,47 +1,47 @@
 {
-  "name": "@scrape-rs/wasm",
-  "version": "0.1.0",
-  "description": "High-performance HTML parsing library for browsers (WASM)",
-  "type": "module",
-  "main": "pkg/scrape_wasm.js",
-  "types": "pkg/scrape_wasm.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./pkg/scrape_wasm.d.ts",
-        "default": "./pkg/scrape_wasm.js"
-      }
-    },
-    "./pkg/*": "./pkg/*"
-  },
-  "files": [
-    "pkg/"
-  ],
-  "sideEffects": [
-    "./pkg/scrape_wasm.js"
-  ],
-  "scripts": {
-    "build": "wasm-pack build --target web --release",
-    "build:dev": "wasm-pack build --target web --dev",
-    "test": "wasm-pack test --headless --firefox",
-    "lint": "biome check js/"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/example/scrape-rs.git",
-    "directory": "crates/scrape-wasm"
-  },
-  "keywords": [
-    "html",
-    "parser",
-    "scraping",
-    "css-selectors",
-    "dom",
-    "wasm",
-    "webassembly"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0"
-  }
+	"name": "@scrape-rs/wasm",
+	"version": "0.1.0",
+	"description": "High-performance HTML parsing library for browsers (WASM)",
+	"type": "module",
+	"main": "pkg/scrape_wasm.js",
+	"types": "pkg/scrape_wasm.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./pkg/scrape_wasm.d.ts",
+				"default": "./pkg/scrape_wasm.js"
+			}
+		},
+		"./pkg/*": "./pkg/*"
+	},
+	"files": [
+		"pkg/"
+	],
+	"sideEffects": [
+		"./pkg/scrape_wasm.js"
+	],
+	"scripts": {
+		"build": "wasm-pack build --target web --release",
+		"build:dev": "wasm-pack build --target web --dev",
+		"test": "wasm-pack test --headless --firefox",
+		"lint": "biome check js/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/example/scrape-rs.git",
+		"directory": "crates/scrape-wasm"
+	},
+	"keywords": [
+		"html",
+		"parser",
+		"scraping",
+		"css-selectors",
+		"dom",
+		"wasm",
+		"webassembly"
+	],
+	"license": "MIT OR Apache-2.0",
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.11"
+	}
 }

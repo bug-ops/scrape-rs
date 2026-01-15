@@ -1,75 +1,80 @@
 {
-  "name": "scrape-rs",
-  "version": "0.1.0",
-  "description": "High-performance HTML parsing library for Node.js",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./index.d.ts",
-        "default": "./index.mjs"
-      },
-      "require": {
-        "types": "./index.d.ts",
-        "default": "./index.js"
-      }
-    }
-  },
-  "napi": {
-    "name": "scrape-rs",
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
-        "x86_64-unknown-linux-musl"
-      ]
-    }
-  },
-  "files": [
-    "index.js",
-    "index.mjs",
-    "index.d.ts"
-  ],
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
-    "prepublishOnly": "napi prepublish -t npm",
-    "test": "node --test tests/",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write ."
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/example/scrape-rs.git"
-  },
-  "keywords": [
-    "html",
-    "parser",
-    "scraping",
-    "css-selectors",
-    "dom",
-    "rust",
-    "napi"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@napi-rs/cli": "^3.0.0-alpha.0"
-  },
-  "optionalDependencies": {
-    "@scrape-rs/darwin-arm64": "0.1.0",
-    "@scrape-rs/darwin-x64": "0.1.0",
-    "@scrape-rs/linux-arm64-gnu": "0.1.0",
-    "@scrape-rs/linux-arm64-musl": "0.1.0",
-    "@scrape-rs/linux-x64-gnu": "0.1.0",
-    "@scrape-rs/linux-x64-musl": "0.1.0",
-    "@scrape-rs/win32-x64-msvc": "0.1.0"
-  }
+	"name": "scrape-rs",
+	"version": "0.1.0",
+	"description": "High-performance HTML parsing library for Node.js",
+	"main": "index.js",
+	"types": "index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./index.d.ts",
+				"default": "./index.mjs"
+			},
+			"require": {
+				"types": "./index.d.ts",
+				"default": "./index.js"
+			}
+		}
+	},
+	"napi": {
+		"binaryName": "scrape-rs",
+		"targets": [
+			"x86_64-apple-darwin",
+			"aarch64-apple-darwin",
+			"x86_64-unknown-linux-gnu",
+			"x86_64-unknown-linux-musl",
+			"aarch64-unknown-linux-gnu",
+			"aarch64-unknown-linux-musl",
+			"x86_64-pc-windows-msvc"
+		]
+	},
+	"files": [
+		"index.js",
+		"index.mjs",
+		"index.d.ts"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"artifacts": "napi artifacts",
+		"build": "napi build --platform --release",
+		"build:debug": "napi build --platform",
+		"prepublishOnly": "napi prepublish -t npm",
+		"test": "node --test 'tests/**/*.test.js'",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/example/scrape-rs.git"
+	},
+	"keywords": [
+		"html",
+		"parser",
+		"scraping",
+		"css-selectors",
+		"dom",
+		"rust",
+		"napi"
+	],
+	"license": "MIT OR Apache-2.0",
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.11",
+		"@napi-rs/cli": "^3.5.1"
+	},
+	"optionalDependencies": {
+		"@scrape-rs/darwin-arm64": "0.1.0",
+		"@scrape-rs/darwin-x64": "0.1.0",
+		"@scrape-rs/linux-arm64-gnu": "0.1.0",
+		"@scrape-rs/linux-arm64-musl": "0.1.0",
+		"@scrape-rs/linux-x64-gnu": "0.1.0",
+		"@scrape-rs/linux-x64-musl": "0.1.0",
+		"@scrape-rs/win32-x64-msvc": "0.1.0"
+	},
+	"dependencies": {
+		"@emnapi/runtime": "^1.8.1",
+		"@octokit/core": "^7.0.6",
+		"typanion": "^3.14.0"
+	}
 }

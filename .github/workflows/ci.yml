@@ -1,0 +1,275 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================================================
+  # Detect changed paths to enable conditional job execution
+  # ==========================================================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      python: ${{ steps.filter.outputs.python }}
+      node: ${{ steps.filter.outputs.node }}
+      wasm: ${{ steps.filter.outputs.wasm }}
+      ci: ${{ steps.filter.outputs.ci }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'crates/scrape-core/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+            python:
+              - 'crates/scrape-py/**'
+            node:
+              - 'crates/scrape-node/**'
+            wasm:
+              - 'crates/scrape-wasm/**'
+            ci:
+              - '.github/workflows/**'
+
+  # ==========================================================================
+  # PARALLEL STAGE 1: Quick checks (run concurrently)
+  # ==========================================================================
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo +nightly fmt --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - run: cargo deny check
+
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Extract MSRV
+        id: msrv
+        run: |
+          MSRV=$(grep '^rust-version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$MSRV" >> $GITHUB_OUTPUT
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: msrv
+      - run: cargo check --workspace
+
+  # ==========================================================================
+  # STAGE 2: Tests (depends on fmt + clippy passing)
+  # ==========================================================================
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    needs: [changes, fmt, clippy]
+    if: |
+      always() &&
+      (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true') &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: test-${{ matrix.os }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - run: cargo nextest run --workspace
+
+  # ==========================================================================
+  # STAGE 2 (parallel): Bindings (run in parallel with Rust tests)
+  # ==========================================================================
+
+  build-python:
+    name: Python
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, fmt, clippy]
+    if: |
+      always() &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
+      (needs.changes.outputs.python == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Build and test
+        working-directory: crates/scrape-py
+        run: |
+          uv sync
+          uv run maturin develop
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest
+
+  build-node:
+    name: Node.js
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, fmt, clippy]
+    if: |
+      always() &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
+      (needs.changes.outputs.node == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Build and test
+        working-directory: crates/scrape-node
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm exec biome check .
+          pnpm run build
+          pnpm test
+
+  build-wasm:
+    name: WASM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes, fmt, clippy]
+    if: |
+      always() &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
+      (needs.changes.outputs.wasm == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: wasm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Build and lint
+        working-directory: crates/scrape-wasm
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm exec biome check .
+      - name: Build WASM
+        run: wasm-pack build crates/scrape-wasm --target web --release
+
+  # ==========================================================================
+  # STAGE 2 (parallel): Coverage (runs in parallel with tests)
+  # ==========================================================================
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, fmt, clippy]
+    if: |
+      always() &&
+      needs.fmt.result == 'success' &&
+      needs.clippy.result == 'success' &&
+      (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: coverage
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Generate coverage
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          flags: rust
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

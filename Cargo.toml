@@ -45,6 +45,7 @@ cargo = { level = "warn", priority = -1 }
 
 # Allow lints for early-stage skeleton project
 cargo_common_metadata = "allow"
+multiple_crate_versions = "allow"
 doc_markdown = "allow"
 missing_const_for_fn = "allow"
 missing_errors_doc = "allow"
@@ -56,8 +57,6 @@ return_self_not_must_use = "allow"
 use_self = "allow"
 used_underscore_binding = "allow"
 unused_self = "allow"
-# Allow multiple crate versions due to html5ever/markup5ever dependency chain
-multiple_crate_versions = "allow"
 
 [profile.release]
 lto = true
