@@ -52,9 +52,7 @@ impl PySoup {
     #[pyo3(signature = (html, config=None))]
     fn new(html: &str, config: Option<PySoupConfig>) -> Self {
         let config = config.map_or_else(scrape_core::SoupConfig::default, |c| c.inner);
-        Self {
-            inner: scrape_core::Soup::parse_with_config(html, config),
-        }
+        Self { inner: scrape_core::Soup::parse_with_config(html, config) }
     }
 
     /// Finds the first element matching the selector.
@@ -113,8 +111,7 @@ impl PyTag {
 
     /// Gets attribute value, supporting Python subscript syntax.
     fn __getitem__(&self, attr: &str) -> PyResult<String> {
-        self.get(attr)
-            .ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(attr.to_string()))
+        self.get(attr).ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(attr.to_string()))
     }
 }
 

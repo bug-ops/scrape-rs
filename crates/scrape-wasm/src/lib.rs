@@ -9,9 +9,7 @@ use wasm_bindgen::prelude::*;
 /// This should be called once before using any other functions.
 #[wasm_bindgen(start)]
 pub fn init() {
-    // Set panic hook for better error messages in browser console
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
+    // TODO: add console_error_panic_hook feature for better error messages in browser console
 }
 
 /// Configuration options for HTML parsing.
@@ -27,10 +25,7 @@ impl SoupConfig {
     /// Creates a new configuration with default values.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            max_depth: 256,
-            strict_mode: false,
-        }
+        Self { max_depth: 256, strict_mode: false }
     }
 
     /// Sets the maximum nesting depth.
@@ -81,17 +76,13 @@ impl Soup {
     /// Parses an HTML string into a Soup document.
     #[wasm_bindgen(constructor)]
     pub fn new(html: &str) -> Self {
-        Self {
-            inner: scrape_core::Soup::parse(html),
-        }
+        Self { inner: scrape_core::Soup::parse(html) }
     }
 
     /// Parses an HTML string with custom configuration.
     #[wasm_bindgen(js_name = "parseWithConfig")]
     pub fn parse_with_config(html: &str, config: SoupConfig) -> Self {
-        Self {
-            inner: scrape_core::Soup::parse_with_config(html, config.into()),
-        }
+        Self { inner: scrape_core::Soup::parse_with_config(html, config.into()) }
     }
 
     /// Finds the first element matching the selector.

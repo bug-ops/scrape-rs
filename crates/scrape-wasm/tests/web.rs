@@ -26,10 +26,7 @@ fn test_soup_config() {
 
 #[wasm_bindgen_test]
 fn test_parse_batch() {
-    let docs = vec![
-        "<html></html>".to_string(),
-        "<div>Hello</div>".to_string(),
-    ];
+    let docs = vec!["<html></html>".to_string(), "<div>Hello</div>".to_string()];
     let results = scrape_wasm::parse_batch(docs);
     assert_eq!(results.len(), 2);
 }

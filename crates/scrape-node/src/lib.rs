@@ -4,7 +4,6 @@
 
 #![deny(clippy::all)]
 
-use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 /// Configuration options for HTML parsing.
@@ -39,9 +38,7 @@ impl Soup {
     #[napi(constructor)]
     pub fn new(html: String, config: Option<SoupConfig>) -> Self {
         let config = config.map_or_else(scrape_core::SoupConfig::default, Into::into);
-        Self {
-            inner: scrape_core::Soup::parse_with_config(&html, config),
-        }
+        Self { inner: scrape_core::Soup::parse_with_config(&html, config) }
     }
 
     /// Finds the first element matching the selector.
@@ -111,8 +108,5 @@ impl Tag {
 #[napi]
 pub fn parse_batch(documents: Vec<String>, _config: Option<SoupConfig>) -> Vec<Soup> {
     // TODO: implement parallel batch parsing
-    documents
-        .into_iter()
-        .map(|html| Soup::new(html, None))
-        .collect()
+    documents.into_iter().map(|html| Soup::new(html, None)).collect()
 }
