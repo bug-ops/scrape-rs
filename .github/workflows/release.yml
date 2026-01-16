@@ -394,7 +394,7 @@ jobs:
       name: npm
       url: https://www.npmjs.com/package/@fast-scrape/node
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v6
@@ -449,10 +449,9 @@ jobs:
 
       - name: Publish main package
         working-directory: crates/scrape-node
-        run: pnpm publish --access public --no-git-checks --provenance
+        run: pnpm publish --access public --no-git-checks --provenance --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ==========================================================================
   # Build and publish WASM

@@ -1,6 +1,6 @@
 {
   "name": "@fast-scrape/node-darwin-x64",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "fast-scrape native binding for macOS x64 (Intel)",
   "os": [
     "darwin"
