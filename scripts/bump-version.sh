@@ -174,6 +174,51 @@ update_workspace_deps() {
     echo "Updated scrape-core and scrape-cli dependencies in: $file"
 }
 
+# Update all lock files across ecosystems
+update_lockfiles() {
+    if $DRY_RUN; then
+        echo "[dry-run] Would update lock files:"
+        echo "  - Cargo.lock (cargo update)"
+        echo "  - crates/scrape-py/uv.lock (uv lock)"
+        echo "  - crates/scrape-node/pnpm-lock.yaml (pnpm install --lockfile-only)"
+        echo "  - crates/scrape-wasm/pnpm-lock.yaml (pnpm install --lockfile-only)"
+        return
+    fi
+
+    echo ""
+    echo "Updating lock files..."
+
+    # Rust
+    if command -v cargo &> /dev/null; then
+        (cd "$PROJECT_ROOT" && cargo update --quiet)
+        echo "Updated: Cargo.lock"
+    else
+        echo "Warning: cargo not found, skipping Cargo.lock"
+    fi
+
+    # Python
+    if command -v uv &> /dev/null && [[ -f "$PROJECT_ROOT/crates/scrape-py/pyproject.toml" ]]; then
+        (cd "$PROJECT_ROOT/crates/scrape-py" && uv lock --quiet 2>/dev/null || true)
+        echo "Updated: crates/scrape-py/uv.lock"
+    fi
+
+    # Node.js
+    if command -v pnpm &> /dev/null; then
+        if [[ -f "$PROJECT_ROOT/crates/scrape-node/package.json" ]]; then
+            (cd "$PROJECT_ROOT/crates/scrape-node" && pnpm install --lockfile-only --silent 2>/dev/null || true)
+            echo "Updated: crates/scrape-node/pnpm-lock.yaml"
+        fi
+
+        # WASM
+        if [[ -f "$PROJECT_ROOT/crates/scrape-wasm/package.json" ]]; then
+            (cd "$PROJECT_ROOT/crates/scrape-wasm" && pnpm install --lockfile-only --silent 2>/dev/null || true)
+            echo "Updated: crates/scrape-wasm/pnpm-lock.yaml"
+        fi
+    else
+        echo "Warning: pnpm not found, skipping Node.js/WASM lock files"
+    fi
+}
+
 main() {
     local current_version
     current_version=$(get_current_version)
@@ -210,6 +255,9 @@ main() {
             fi
         done
     fi
+
+    # Update lock files
+    update_lockfiles
 
     echo ""
     echo "=== Version bump complete ==="

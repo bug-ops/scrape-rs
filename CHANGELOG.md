@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-01-16
+
+### Added
+
+- **CLI tool** (`scrape-cli`): Command-line HTML extraction tool
+  - CSS selector-based extraction with `-s`/`--selector`
+  - Multiple output formats: text, JSON, CSV, HTML (`-f`/`--format`)
+  - Batch processing with parallel execution via Rayon
+  - Named extractions support (`-n`/`--named`)
+  - Attribute extraction (`-a`/`--attrs`)
+  - HTML fragment output (`--html`)
+  - File and stdin input support
+- CLI binary builds for 5 platforms in GitHub releases (linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64)
+
+### Changed
+
+- Renamed Python package from `scrape-rs` to `fast-scrape` on PyPI
+- Renamed Node.js package from `scrape-rs` to `@fast-scrape/node` on npm
+- Renamed WASM package from `@scrape-rs/wasm` to `@fast-scrape/wasm` on npm
+
+### Fixed
+
+- HTML comment escaping in CLI output to prevent injection via filenames
+
 ## [0.1.0] - 2026-01-16
 
 ### Added
@@ -33,5 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/bug-ops/scrape-rs/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/bug-ops/scrape-rs/releases/tag/v0.1.0
