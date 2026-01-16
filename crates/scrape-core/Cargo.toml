@@ -1,6 +1,7 @@
 [package]
 name = "scrape-core"
 description = "High-performance HTML parsing library core"
+publish = true
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

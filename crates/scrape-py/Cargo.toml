@@ -1,6 +1,7 @@
 [package]
 name = "scrape-py"
 description = "Python bindings for scrape-rs HTML parsing library"
+publish.workspace = true
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
