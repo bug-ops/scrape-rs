@@ -25,6 +25,7 @@ napi = "3"
 napi-build = "2"
 napi-derive = "3"
 pyo3 = "0.27"
+rayon = "1.11"
 scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.1.0" }
 selectors = "0.34"
 thiserror = "2.0"
