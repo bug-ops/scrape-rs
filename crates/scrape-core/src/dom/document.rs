@@ -195,7 +195,7 @@ impl Document {
     /// ```
     /// use std::collections::HashMap;
     ///
-    /// use scrape_core::dom::Document;
+    /// use scrape_core::Document;
     ///
     /// let mut doc = Document::new();
     /// let parent = doc.create_element("div", HashMap::new());
@@ -222,7 +222,7 @@ impl Document {
     /// ```
     /// use std::collections::HashMap;
     ///
-    /// use scrape_core::dom::Document;
+    /// use scrape_core::Document;
     ///
     /// let mut doc = Document::new();
     /// let grandparent = doc.create_element("html", HashMap::new());
@@ -249,7 +249,7 @@ impl Document {
     /// ```
     /// use std::collections::HashMap;
     ///
-    /// use scrape_core::dom::Document;
+    /// use scrape_core::Document;
     ///
     /// let mut doc = Document::new();
     /// let root = doc.create_element("html", HashMap::new());

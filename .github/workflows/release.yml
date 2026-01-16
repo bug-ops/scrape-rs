@@ -228,7 +228,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
-          args: --release --out dist -m crates/scrape-py/Cargo.toml
+          args: --release --out dist -m crates/scrape-py/Cargo.toml --find-interpreter
           sccache: false
 
       - name: Upload wheels
@@ -350,7 +350,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Setup cross-compilation (Linux ARM64)
         if: contains(matrix.platform.name, 'linux-arm64')
@@ -405,7 +405,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Download all bindings
         uses: actions/download-artifact@v7
