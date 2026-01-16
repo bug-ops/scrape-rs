@@ -317,9 +317,10 @@ jobs:
             os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
 
-          - name: linux-arm64-musl
-            os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
+          # TODO: linux-arm64-musl requires proper cross-compiler setup
+          # - name: linux-arm64-musl
+          #   os: ubuntu-latest
+          #   target: aarch64-unknown-linux-musl
 
           - name: darwin-x64
             os: macos-14
@@ -364,23 +365,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-
-      - name: Setup musl (Linux ARM64 musl)
-        if: matrix.platform.name == 'linux-arm64-musl'
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.11.0
-
-      - name: Configure ARM64 musl linker
-        if: matrix.platform.name == 'linux-arm64-musl'
-        run: |
-          sudo ln -sf $(which zig) /usr/local/bin/aarch64-linux-musl-gcc
-          cat > /tmp/zigcc << 'ZIGEOF'
-          #!/bin/sh
-          exec zig cc -target aarch64-linux-musl "$@"
-          ZIGEOF
-          sudo mv /tmp/zigcc /usr/local/bin/aarch64-linux-musl-gcc
-          sudo chmod +x /usr/local/bin/aarch64-linux-musl-gcc
 
       - name: Install dependencies
         working-directory: crates/scrape-node
@@ -433,7 +417,7 @@ jobs:
       - name: Prepare platform packages
         run: |
           cd crates/scrape-node
-          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-arm64-musl linux-x64-gnu linux-x64-musl win32-x64-msvc; do
+          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-x64-gnu linux-x64-musl win32-x64-msvc; do
             if [[ -d "../../artifacts/node-$platform" ]]; then
               cp ../../artifacts/node-$platform/*.node npm/$platform/ 2>/dev/null || true
               echo "Copied binaries to npm/$platform/"
@@ -451,7 +435,7 @@ jobs:
       - name: Publish platform packages
         working-directory: crates/scrape-node
         run: |
-          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-arm64-musl linux-x64-gnu linux-x64-musl win32-x64-msvc; do
+          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-x64-gnu linux-x64-musl win32-x64-msvc; do
             if [[ -f "npm/$platform/package.json" ]] && ls npm/$platform/*.node 1>/dev/null 2>&1; then
               echo "Publishing @scrape-rs/$platform"
               cd npm/$platform
