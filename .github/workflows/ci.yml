@@ -257,6 +257,8 @@ jobs:
           pnpm exec biome check .
       - name: Build WASM
         run: cargo make wasm-build
+      - name: Test WASM (Chrome)
+        run: cargo make wasm-test-chrome
 
   # ==========================================================================
   # STAGE 2 (parallel): Coverage (runs in parallel with tests)
