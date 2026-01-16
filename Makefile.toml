@@ -191,12 +191,12 @@ args = ["exec", "biome", "check", ".", "--write"]
 [tasks.wasm-test]
 description = "Run WASM tests in headless Firefox"
 command = "wasm-pack"
-args = ["test", "crates/scrape-wasm", "--headless", "--firefox"]
+args = ["test", "--headless", "--firefox", "crates/scrape-wasm"]
 
 [tasks.wasm-test-chrome]
 description = "Run WASM tests in headless Chrome"
 command = "wasm-pack"
-args = ["test", "crates/scrape-wasm", "--headless", "--chrome"]
+args = ["test", "--headless", "--chrome", "crates/scrape-wasm"]
 
 [tasks.wasm-audit]
 description = "Audit WASM dependencies"
