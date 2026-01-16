@@ -76,10 +76,14 @@ jobs:
           shared-key: release
 
       - name: Run tests
-        run: cargo test -p scrape-core --all-features
+        run: |
+          cargo test -p scrape-core --all-features
+          cargo test -p scrape-cli
 
       - name: Run clippy
-        run: cargo clippy -p scrape-core --all-features -- -D warnings
+        run: |
+          cargo clippy -p scrape-core --all-features -- -D warnings
+          cargo clippy -p scrape-cli -- -D warnings
 
       - name: Authenticate with crates.io (Trusted Publishing)
         id: crates-io-auth
@@ -91,6 +95,89 @@ jobs:
           registry-token: ${{ steps.crates-io-auth.outputs.token }}
           ignore-unpublished-changes: true
           publish-delay: 10000
+
+  # ==========================================================================
+  # Build CLI binaries for multiple platforms
+  # ==========================================================================
+  build-cli:
+    name: Build CLI (${{ matrix.platform.name }})
+    needs: validate
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+
+          - name: linux-aarch64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            archive: tar.gz
+
+          - name: darwin-x86_64
+            os: macos-13
+            target: x86_64-apple-darwin
+            archive: tar.gz
+
+          - name: darwin-aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            archive: tar.gz
+
+          - name: windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: cli-${{ matrix.platform.name }}
+
+      - name: Setup cross-compilation (Linux ARM64)
+        if: matrix.platform.name == 'linux-aarch64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Build CLI
+        run: cargo build -p scrape-cli --release --target ${{ matrix.platform.target }}
+
+      - name: Create archive (Unix)
+        if: matrix.platform.archive == 'tar.gz'
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.platform.target }}/release/scrape dist/
+          cd dist
+          tar -czvf scrape-${{ matrix.platform.name }}.tar.gz scrape
+          rm scrape
+
+      - name: Create archive (Windows)
+        if: matrix.platform.archive == 'zip'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item target/${{ matrix.platform.target }}/release/scrape.exe dist/
+          Compress-Archive -Path dist/scrape.exe -DestinationPath dist/scrape-${{ matrix.platform.name }}.zip
+          Remove-Item dist/scrape.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-${{ matrix.platform.name }}
+          path: dist/scrape-*
+          retention-days: 7
 
   # ==========================================================================
   # Build Python wheels for multiple platforms
@@ -427,7 +514,7 @@ jobs:
   # ==========================================================================
   github-release:
     name: Create GitHub Release
-    needs: [validate, publish-crates, publish-pypi, publish-npm, publish-wasm]
+    needs: [validate, publish-crates, publish-pypi, publish-npm, publish-wasm, build-cli]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -440,6 +527,13 @@ jobs:
         with:
           path: release-artifacts/python
           pattern: wheels-*
+          merge-multiple: true
+
+      - name: Download CLI binaries
+        uses: actions/download-artifact@v7
+        with:
+          path: release-artifacts/cli
+          pattern: cli-*
           merge-multiple: true
 
       - name: Install git-cliff
@@ -460,6 +554,12 @@ jobs:
           cat >> RELEASE_NOTES.md << EOF
 
           ## Installation
+
+          ### CLI
+          \`\`\`bash
+          cargo install scrape-cli
+          \`\`\`
+          Or download pre-built binaries from the assets below.
 
           ### Rust
           \`\`\`toml
@@ -484,7 +584,8 @@ jobs:
 
           ## Published to
 
-          - [crates.io](https://crates.io/crates/scrape-core)
+          - [crates.io (scrape-core)](https://crates.io/crates/scrape-core)
+          - [crates.io (scrape-cli)](https://crates.io/crates/scrape-cli)
           - [PyPI](https://pypi.org/project/fast-scrape)
           - [npm](https://www.npmjs.com/package/@fast-scrape/node)
           - [npm (WASM)](https://www.npmjs.com/package/@fast-scrape/wasm)
@@ -499,6 +600,8 @@ jobs:
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
           files: |
             release-artifacts/python/*.whl
+            release-artifacts/cli/*.tar.gz
+            release-artifacts/cli/*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # ==========================================================================
@@ -506,7 +609,7 @@ jobs:
   # ==========================================================================
   release-success:
     name: Release Success
-    needs: [publish-crates, publish-pypi, publish-npm, publish-wasm, github-release]
+    needs: [publish-crates, publish-pypi, publish-npm, publish-wasm, build-cli, github-release]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -517,6 +620,7 @@ jobs:
             "${{ needs.publish-pypi.result }}"
             "${{ needs.publish-npm.result }}"
             "${{ needs.publish-wasm.result }}"
+            "${{ needs.build-cli.result }}"
             "${{ needs.github-release.result }}"
           )
 
