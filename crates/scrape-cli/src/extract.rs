@@ -42,10 +42,8 @@ pub fn extract(
     let mut results = Vec::with_capacity(tags.len());
 
     for tag in tags {
-        let text = attribute.map_or_else(
-            || tag.text(),
-            |attr| tag.get(attr).unwrap_or_default().to_string(),
-        );
+        let text = attribute
+            .map_or_else(|| tag.text(), |attr| tag.get(attr).unwrap_or_default().to_string());
 
         let attrs = if include_html { tag.attrs().cloned() } else { None };
 

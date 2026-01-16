@@ -56,10 +56,7 @@ impl Output for CsvOutput {
             let row: Vec<_> = headers
                 .iter()
                 .map(|h| {
-                    results
-                        .get(h)
-                        .and_then(|v| v.get(row_idx))
-                        .map_or("", |e| e.text.as_str())
+                    results.get(h).and_then(|v| v.get(row_idx)).map_or("", |e| e.text.as_str())
                 })
                 .collect();
             wtr.write_record(&row)?;
