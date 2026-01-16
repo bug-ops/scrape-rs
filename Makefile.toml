@@ -295,3 +295,31 @@ description = "Show current version"
 script = '''
 grep "^version" Cargo.toml | head -1
 '''
+
+# ============================================================================
+# CLI tool
+# ============================================================================
+
+[tasks.cli-build]
+description = "Build CLI tool"
+command = "cargo"
+args = ["build", "-p", "scrape-cli", "--release"]
+
+[tasks.cli-build-dev]
+description = "Build CLI tool (dev mode)"
+command = "cargo"
+args = ["build", "-p", "scrape-cli"]
+
+[tasks.cli-test]
+description = "Run CLI tests"
+command = "cargo"
+args = ["nextest", "run", "-p", "scrape-cli"]
+
+[tasks.cli-install]
+description = "Install CLI locally"
+command = "cargo"
+args = ["install", "--path", "crates/scrape-cli"]
+
+[tasks.verify-cli]
+description = "Full CLI verification: build + test"
+dependencies = ["cli-build", "cli-test"]
