@@ -972,6 +972,8 @@ dependencies = [
  "memchr",
  "precomputed-hash",
  "selectors",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 
@@ -1002,6 +1004,8 @@ dependencies = [
  "console_error_panic_hook",
  "js-sys",
  "scrape-core",
+ "serde",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",

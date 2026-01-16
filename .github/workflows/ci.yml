@@ -150,13 +150,16 @@ jobs:
         with:
           tool: nextest,cargo-make
       - run: cargo make test
+      - name: Check benchmarks compile
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo build --release --benches
 
   # ==========================================================================
   # STAGE 2 (parallel): Bindings (run in parallel with Rust tests)
   # ==========================================================================
 
   build-python:
-    name: Python
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [changes, fmt, clippy]
@@ -165,15 +168,19 @@ jobs:
       needs.fmt.result == 'success' &&
       needs.clippy.result == 'success' &&
       (needs.changes.outputs.python == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: python
+          shared-key: python-${{ matrix.python-version }}
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-make
@@ -189,7 +196,7 @@ jobs:
           uv run pytest
 
   build-node:
-    name: Node.js
+    name: Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [changes, fmt, clippy]
@@ -198,15 +205,19 @@ jobs:
       needs.fmt.result == 'success' &&
       needs.clippy.result == 'success' &&
       (needs.changes.outputs.node == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22", "24", "25"]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: node
+          shared-key: node-${{ matrix.node-version }}
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ matrix.node-version }}
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -222,8 +233,8 @@ jobs:
           pnpm test
 
   build-wasm:
-    name: WASM
-    runs-on: ubuntu-latest
+    name: WASM (${{ matrix.browser }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     needs: [changes, fmt, clippy]
     if: |
@@ -231,6 +242,16 @@ jobs:
       needs.fmt.result == 'success' &&
       needs.clippy.result == 'success' &&
       (needs.changes.outputs.wasm == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chrome
+            os: ubuntu-latest
+          - browser: firefox
+            os: ubuntu-latest
+          - browser: safari
+            os: macos-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -238,10 +259,10 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: wasm
+          shared-key: wasm-${{ matrix.browser }}
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -251,14 +272,19 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build and lint
+        if: matrix.browser == 'chrome'
         working-directory: crates/scrape-wasm
         run: |
           pnpm install --no-frozen-lockfile
-          pnpm exec biome check .
+          pnpm exec biome check js/
+      - name: Install dependencies
+        if: matrix.browser != 'chrome'
+        working-directory: crates/scrape-wasm
+        run: pnpm install --no-frozen-lockfile
       - name: Build WASM
         run: cargo make wasm-build
-      - name: Test WASM (Chrome)
-        run: cargo make wasm-test-chrome
+      - name: Test WASM
+        run: wasm-pack test --headless --${{ matrix.browser }} crates/scrape-wasm
 
   # ==========================================================================
   # STAGE 2 (parallel): Coverage (runs in parallel with tests)

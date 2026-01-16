@@ -87,6 +87,7 @@ perf.data.old
 flamegraph.svg
 cachegrind.out.*
 callgrind.out.*
+benches/fixtures/*.html
 
 # =============================================================================
 # Fuzzing

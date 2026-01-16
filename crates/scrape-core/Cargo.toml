@@ -22,6 +22,8 @@ thiserror.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 
 [lints]
 workspace = true
@@ -38,3 +40,12 @@ harness = false
 [[bench]]
 name = "simd"
 harness = false
+
+[[test]]
+name = "integration"
+path = "../../tests/integration/mod.rs"
+
+[[bench]]
+name = "comparison"
+harness = false
+path = "../../benches/comparison.rs"

@@ -125,14 +125,27 @@ scrape-core = { version = "0.1", features = ["simd", "parallel"] }
 
 ## Performance
 
-Designed for high performance with:
+Benchmarked against BeautifulSoup (Python's most popular HTML parser):
 
-- Arena-based DOM allocation (cache-friendly, zero per-node heap allocations)
-- SIMD-accelerated byte scanning (SSE4.2, AVX2, NEON, WASM SIMD128)
-- Parallel batch processing via Rayon
+### Parse speed
 
-> [!NOTE]
-> Benchmarks coming soon. Run `cargo bench` to test on your hardware.
+| File size | scrape-rs | BeautifulSoup | Speedup |
+|-----------|-----------|---------------|---------|
+| 1 KB | 0.024 ms | 0.230 ms | **9.7x** |
+| 219 KB | 3.1 ms | 28.2 ms | **9.2x** |
+| 5.9 MB | 97.2 ms | 1031.6 ms | **10.6x** |
+
+### Query speed
+
+| Operation | scrape-rs | BeautifulSoup | Speedup |
+|-----------|-----------|---------------|---------|
+| `find("div")` | 0.001 ms | 0.016 ms | **20x** |
+| `find(".class")` | 0.006 ms | 0.797 ms | **132x** |
+| `find("#id")` | 0.027 ms | 0.799 ms | **30x** |
+| `select(".class")` | 0.110 ms | 4.361 ms | **40x** |
+
+> [!TIP]
+> Run `python benches/compare_python.py` to benchmark on your hardware.
 
 ## Contributing
 

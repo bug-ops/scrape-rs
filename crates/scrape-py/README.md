@@ -104,6 +104,21 @@ def extract_links(soup: Soup) -> list[str]:
     return [a.get("href") for a in soup.select("a[href]")]
 ```
 
+## Performance
+
+Compared to BeautifulSoup on the same HTML documents:
+
+| Operation | Speedup |
+|-----------|---------|
+| Parse (1 KB) | **9.7x** faster |
+| Parse (219 KB) | **9.2x** faster |
+| Parse (5.9 MB) | **10.6x** faster |
+| `find(".class")` | **132x** faster |
+| `select(".class")` | **40x** faster |
+
+> [!TIP]
+> Run `python benches/compare_python.py` from the project root to benchmark on your hardware.
+
 ## Related packages
 
 Part of the [scrape-rs](https://github.com/bug-ops/scrape-rs) project:

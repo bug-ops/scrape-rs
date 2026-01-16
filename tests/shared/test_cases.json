@@ -1,0 +1,314 @@
+{
+  "version": "1.0",
+  "test_suites": [
+    {
+      "name": "parsing",
+      "description": "Basic HTML parsing tests",
+      "cases": [
+        {
+          "id": "parse_simple",
+          "description": "Parse simple well-formed HTML",
+          "input": "<html><body><div>Hello</div></body></html>",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"exists": true, "text": "Hello"}}
+          ]
+        },
+        {
+          "id": "parse_empty",
+          "description": "Parse empty string returns empty document",
+          "input": "",
+          "assertions": [
+            {"method": "find", "selector": "html", "expected": {"exists": false}}
+          ]
+        },
+        {
+          "id": "parse_malformed",
+          "description": "Parse unclosed tags (auto-correction)",
+          "input": "<div><span>unclosed",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"exists": true}},
+            {"method": "find", "selector": "span", "expected": {"exists": true, "text": "unclosed"}}
+          ]
+        },
+        {
+          "id": "parse_nested",
+          "description": "Parse deeply nested structure",
+          "input": "<div><ul><li><a><span>deep</span></a></li></ul></div>",
+          "assertions": [
+            {"method": "find", "selector": "span", "expected": {"exists": true, "text": "deep"}}
+          ]
+        },
+        {
+          "id": "parse_multiple_roots",
+          "description": "Parse with multiple top-level elements",
+          "input": "<div>A</div><div>B</div>",
+          "assertions": [
+            {"method": "find_all", "selector": "div", "expected": {"count": 2}}
+          ]
+        },
+        {
+          "id": "parse_text_only",
+          "description": "Parse text without tags",
+          "input": "Just plain text",
+          "assertions": [
+            {"method": "text", "expected": {"contains": "Just plain text"}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "selectors",
+      "description": "CSS selector tests",
+      "cases": [
+        {
+          "id": "select_by_tag",
+          "description": "Select by tag name",
+          "input": "<div><span>A</span><p>B</p></div>",
+          "assertions": [
+            {"method": "find", "selector": "span", "expected": {"exists": true, "name": "span"}},
+            {"method": "find", "selector": "p", "expected": {"exists": true, "text": "B"}}
+          ]
+        },
+        {
+          "id": "select_by_class",
+          "description": "Select by class",
+          "input": "<div class=\"foo\">A</div><div class=\"bar\">B</div>",
+          "assertions": [
+            {"method": "find", "selector": ".foo", "expected": {"exists": true, "text": "A"}},
+            {"method": "find", "selector": ".bar", "expected": {"exists": true, "text": "B"}}
+          ]
+        },
+        {
+          "id": "select_by_id",
+          "description": "Select by ID",
+          "input": "<div id=\"main\">Content</div><div id=\"footer\">Footer</div>",
+          "assertions": [
+            {"method": "find", "selector": "#main", "expected": {"exists": true, "text": "Content"}},
+            {"method": "find", "selector": "#footer", "expected": {"exists": true, "text": "Footer"}}
+          ]
+        },
+        {
+          "id": "select_compound",
+          "description": "Select with compound selector (tag.class#id)",
+          "input": "<div class=\"foo\" id=\"bar\">Match</div><div class=\"foo\">No match</div>",
+          "assertions": [
+            {"method": "find", "selector": "div.foo#bar", "expected": {"exists": true, "text": "Match"}}
+          ]
+        },
+        {
+          "id": "select_multiple_classes",
+          "description": "Select with multiple classes",
+          "input": "<li class=\"item active\">First</li><li class=\"item\">Second</li>",
+          "assertions": [
+            {"method": "find", "selector": ".item.active", "expected": {"exists": true, "text": "First"}}
+          ]
+        },
+        {
+          "id": "select_descendant",
+          "description": "Select with descendant combinator",
+          "input": "<div><ul><li>Item</li></ul></div>",
+          "assertions": [
+            {"method": "find", "selector": "div li", "expected": {"exists": true, "text": "Item"}}
+          ]
+        },
+        {
+          "id": "select_child",
+          "description": "Select with child combinator",
+          "input": "<ul><li>A</li><li>B</li><li>C</li></ul>",
+          "assertions": [
+            {"method": "find_all", "selector": "ul > li", "expected": {"count": 3}}
+          ]
+        },
+        {
+          "id": "select_attribute",
+          "description": "Select by attribute",
+          "input": "<a href=\"/page\">Link</a><a>No href</a>",
+          "assertions": [
+            {"method": "find", "selector": "a[href]", "expected": {"exists": true, "text": "Link"}},
+            {"method": "find", "selector": "a[href=\"/page\"]", "expected": {"exists": true, "text": "Link"}}
+          ]
+        },
+        {
+          "id": "select_attribute_contains",
+          "description": "Select by attribute containing value",
+          "input": "<div data-role=\"nav-item\">A</div><div data-role=\"content\">B</div>",
+          "assertions": [
+            {"method": "find", "selector": "[data-role*=\"nav\"]", "expected": {"exists": true, "text": "A"}}
+          ]
+        },
+        {
+          "id": "select_not_found",
+          "description": "Select returns null for non-existent element",
+          "input": "<div>Content</div>",
+          "assertions": [
+            {"method": "find", "selector": ".nonexistent", "expected": {"exists": false}},
+            {"method": "find_all", "selector": ".nonexistent", "expected": {"count": 0}}
+          ]
+        },
+        {
+          "id": "select_complex",
+          "description": "Complex CSS selector",
+          "input": "<div class=\"container\"><ul class=\"list\"><li class=\"item\">First</li><li class=\"item\">Second</li></ul></div>",
+          "assertions": [
+            {"method": "find_all", "selector": "div.container ul.list > li.item", "expected": {"count": 2}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "navigation",
+      "description": "DOM tree navigation tests",
+      "cases": [
+        {
+          "id": "nav_parent",
+          "description": "Navigate to parent element",
+          "input": "<div id=\"parent\"><span id=\"child\">Text</span></div>",
+          "assertions": [
+            {"method": "find_then", "selector": "#child", "chain": "parent", "expected": {"attr": {"id": "parent"}}}
+          ]
+        },
+        {
+          "id": "nav_children",
+          "description": "Get child elements",
+          "input": "<ul><li>A</li><li>B</li><li>C</li></ul>",
+          "assertions": [
+            {"method": "find_then", "selector": "ul", "chain": "children", "expected": {"count": 3}}
+          ]
+        },
+        {
+          "id": "nav_children_empty",
+          "description": "Empty children for leaf element",
+          "input": "<span>text</span>",
+          "assertions": [
+            {"method": "find_then", "selector": "span", "chain": "children", "expected": {"count": 0}}
+          ]
+        },
+        {
+          "id": "nav_next_sibling",
+          "description": "Get next sibling element",
+          "input": "<div><span id=\"first\">A</span><span id=\"second\">B</span></div>",
+          "assertions": [
+            {"method": "find_then", "selector": "#first", "chain": "next_sibling", "expected": {"attr": {"id": "second"}}}
+          ]
+        },
+        {
+          "id": "nav_prev_sibling",
+          "description": "Get previous sibling element",
+          "input": "<div><span id=\"first\">A</span><span id=\"second\">B</span></div>",
+          "assertions": [
+            {"method": "find_then", "selector": "#second", "chain": "prev_sibling", "expected": {"attr": {"id": "first"}}}
+          ]
+        },
+        {
+          "id": "nav_sibling_null",
+          "description": "Null sibling at boundary",
+          "input": "<ul><li id=\"only\">Only</li></ul>",
+          "assertions": [
+            {"method": "find_then", "selector": "#only", "chain": "next_sibling", "expected": {"exists": false}},
+            {"method": "find_then", "selector": "#only", "chain": "prev_sibling", "expected": {"exists": false}}
+          ]
+        },
+        {
+          "id": "nav_descendants",
+          "description": "Get all descendants",
+          "input": "<div><ul><li><a>Link</a></li></ul></div>",
+          "assertions": [
+            {"method": "find_then", "selector": "div", "chain": "descendants", "expected": {"min_count": 3}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "content_extraction",
+      "description": "Content and attribute extraction tests",
+      "cases": [
+        {
+          "id": "extract_text",
+          "description": "Extract text content",
+          "input": "<div>Hello <b>World</b>!</div>",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"text": "Hello World!"}}
+          ]
+        },
+        {
+          "id": "extract_attribute",
+          "description": "Extract attribute value",
+          "input": "<a href=\"/page\" title=\"Page Title\">Link</a>",
+          "assertions": [
+            {"method": "find", "selector": "a", "expected": {"attr": {"href": "/page", "title": "Page Title"}}}
+          ]
+        },
+        {
+          "id": "extract_missing_attr",
+          "description": "Missing attribute returns null",
+          "input": "<div>Content</div>",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"attr_missing": "class"}}
+          ]
+        },
+        {
+          "id": "extract_inner_html",
+          "description": "Extract inner HTML",
+          "input": "<div><span>Hello</span></div>",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"inner_html": "<span>Hello</span>"}}
+          ]
+        },
+        {
+          "id": "extract_classes",
+          "description": "Check has_class",
+          "input": "<div class=\"foo bar baz\">Content</div>",
+          "assertions": [
+            {"method": "find", "selector": "div", "expected": {"has_class": ["foo", "bar", "baz"], "not_has_class": ["qux"]}}
+          ]
+        },
+        {
+          "id": "extract_title",
+          "description": "Extract document title",
+          "input": "<html><head><title>Page Title</title></head><body></body></html>",
+          "assertions": [
+            {"method": "title", "expected": {"equals": "Page Title"}}
+          ]
+        },
+        {
+          "id": "extract_title_missing",
+          "description": "Missing title returns null",
+          "input": "<html><body>No title</body></html>",
+          "assertions": [
+            {"method": "title", "expected": {"is_null": true}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "scoped_queries",
+      "description": "Tests for querying within a specific element scope",
+      "cases": [
+        {
+          "id": "scoped_find",
+          "description": "Find within element scope",
+          "input": "<div id=\"scope\"><span class=\"inner\">A</span></div><span class=\"inner\">B</span>",
+          "assertions": [
+            {"method": "scoped_find", "scope": "#scope", "selector": ".inner", "expected": {"text": "A"}}
+          ]
+        },
+        {
+          "id": "scoped_find_all",
+          "description": "Find all within element scope",
+          "input": "<div id=\"scope\"><span>A</span><span>B</span></div><span>C</span>",
+          "assertions": [
+            {"method": "scoped_find_all", "scope": "#scope", "selector": "span", "expected": {"count": 2}}
+          ]
+        },
+        {
+          "id": "scoped_not_found_outside",
+          "description": "Scoped query does not find outside scope",
+          "input": "<div id=\"scope\"><span>Inside</span></div><p id=\"outside\">Outside</p>",
+          "assertions": [
+            {"method": "scoped_find", "scope": "#scope", "selector": "#outside", "expected": {"exists": false}}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 name = "scrape-fuzz"
 version = "0.0.0"
 publish = false
-edition = "2024"
+edition = "2021"
 
 [package.metadata]
 cargo-fuzz = true
@@ -14,6 +14,13 @@ scrape-core = { path = "../crates/scrape-core" }
 [[bin]]
 name = "parse_fuzzer"
 path = "fuzz_targets/parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "selector_fuzzer"
+path = "fuzz_targets/selector.rs"
 test = false
 doc = false
 bench = false

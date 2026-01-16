@@ -68,6 +68,16 @@ scrape-core = { version = "0.1", features = ["simd", "parallel"] }
 > [!TIP]
 > Start with default features for fastest compile times. Add `simd` for production workloads.
 
+## Performance
+
+Optimized for high throughput:
+
+- Arena-based DOM allocation (cache-friendly, zero per-node heap allocations)
+- SIMD-accelerated byte scanning when `simd` feature is enabled
+- Parallel batch processing via Rayon when `parallel` feature is enabled
+
+Benchmarks show **10x faster parsing** and **up to 132x faster queries** compared to BeautifulSoup. See full benchmark results in the [main project README](https://github.com/bug-ops/scrape-rs#performance).
+
 ## Architecture
 
 ```
