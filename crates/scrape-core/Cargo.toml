@@ -9,6 +9,14 @@ authors.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
+readme = "README.md"
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
 
 [dependencies]
 cssparser.workspace = true

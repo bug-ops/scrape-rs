@@ -1,0 +1,29 @@
+{
+	"name": "@scrape-rs/linux-arm64-gnu",
+	"version": "0.1.0",
+	"description": "scrape-rs native binding for Linux ARM64 (glibc)",
+	"os": ["linux"],
+	"cpu": ["arm64"],
+	"libc": ["glibc"],
+	"main": "scrape-rs.linux-arm64-gnu.node",
+	"files": ["scrape-rs.linux-arm64-gnu.node"],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bug-ops/scrape-rs.git",
+		"directory": "crates/scrape-node"
+	},
+	"keywords": [
+		"html",
+		"parser",
+		"scraping",
+		"napi",
+		"rust",
+		"linux",
+		"arm64",
+		"glibc"
+	],
+	"license": "MIT OR Apache-2.0",
+	"engines": {
+		"node": ">=18"
+	}
+}

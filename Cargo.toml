@@ -8,7 +8,7 @@ edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 authors = ["scrape-rs contributors"]
-repository = "https://github.com/example/scrape-rs"
+repository = "https://github.com/bug-ops/scrape-rs"
 keywords = ["html", "parser", "scraping", "css-selectors", "dom"]
 categories = ["parsing", "web-programming"]
 
