@@ -490,7 +490,8 @@ jobs:
         run: wasm-pack build crates/scrape-wasm --target web --release --scope fast-scrape
 
       - name: Fix package name
-        run: sed -i 's/"name": "@fast-scrape\/scrape-wasm"/"name": "@fast-scrape\/wasm"/' crates/scrape-wasm/pkg/package.json
+        run: |
+          sed -i 's/"name": "@fast-scrape\/scrape-wasm"/"name": "@fast-scrape\/wasm"/' crates/scrape-wasm/pkg/package.json
 
       - name: Verify bundle size
         run: |
