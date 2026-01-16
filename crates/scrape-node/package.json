@@ -3,6 +3,7 @@
 	"version": "0.1.0",
 	"description": "High-performance HTML parsing library for Node.js",
 	"main": "index.js",
+	"module": "index.mjs",
 	"types": "index.d.ts",
 	"exports": {
 		".": {
@@ -71,10 +72,5 @@
 		"@scrape-rs/linux-x64-gnu": "0.1.0",
 		"@scrape-rs/linux-x64-musl": "0.1.0",
 		"@scrape-rs/win32-x64-msvc": "0.1.0"
-	},
-	"dependencies": {
-		"@emnapi/runtime": "^1.8.1",
-		"@octokit/core": "^7.0.6",
-		"typanion": "^3.14.0"
 	}
 }

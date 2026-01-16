@@ -972,6 +972,7 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
+ "rayon",
  "scrape-core",
 ]
 
