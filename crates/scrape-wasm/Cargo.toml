@@ -11,7 +11,12 @@ repository.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = ["console_error_panic_hook"]
+console_error_panic_hook = ["dep:console_error_panic_hook"]
+
 [dependencies]
+console_error_panic_hook = { version = "0.1", optional = true }
 js-sys.workspace = true
 scrape-core.workspace = true
 wasm-bindgen.workspace = true
@@ -23,11 +28,6 @@ wasm-bindgen-test.workspace = true
 [lints]
 workspace = true
 
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-simd", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
