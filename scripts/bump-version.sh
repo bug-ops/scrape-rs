@@ -154,22 +154,24 @@ update_package_json_optional_deps() {
     fi
 }
 
-# Update scrape-core version in workspace dependencies
+# Update scrape-core and scrape-cli versions in workspace dependencies
 update_workspace_deps() {
     local file="$1"
     local version="$2"
 
     if $DRY_RUN; then
-        echo "[dry-run] Would update scrape-core dep in $file"
+        echo "[dry-run] Would update scrape-core and scrape-cli deps in $file"
         return
     fi
 
     if [[ "$(uname)" == "Darwin" ]]; then
         sed -i '' "s/\(scrape-core.*version = \"\)[^\"]*/\1$version/" "$file"
+        sed -i '' "s/\(scrape-cli.*version = \"\)[^\"]*/\1$version/" "$file"
     else
         sed -i "s/\(scrape-core.*version = \"\)[^\"]*/\1$version/" "$file"
+        sed -i "s/\(scrape-cli.*version = \"\)[^\"]*/\1$version/" "$file"
     fi
-    echo "Updated scrape-core dependency in: $file"
+    echo "Updated scrape-core and scrape-cli dependencies in: $file"
 }
 
 main() {
