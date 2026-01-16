@@ -159,9 +159,9 @@ jobs:
   # ==========================================================================
 
   build-python:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    name: Python ${{ matrix.python-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     needs: [changes, fmt, clippy]
     if: |
       always() &&
@@ -171,21 +171,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        # Full version matrix on Linux, single version on macOS/Windows
+        include:
+          - { os: ubuntu-latest, python-version: "3.10" }
+          - { os: ubuntu-latest, python-version: "3.11" }
+          - { os: ubuntu-latest, python-version: "3.12" }
+          - { os: ubuntu-latest, python-version: "3.13" }
+          - { os: ubuntu-latest, python-version: "3.14" }
+          - { os: macos-latest, python-version: "3.12" }
+          - { os: windows-latest, python-version: "3.12" }
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: python-${{ matrix.python-version }}
+          shared-key: python-${{ matrix.os }}-${{ matrix.python-version }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v6
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-make
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Build and test
         working-directory: crates/scrape-py
         run: |
@@ -196,9 +203,9 @@ jobs:
           uv run pytest
 
   build-node:
-    name: Node.js ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    name: Node.js ${{ matrix.node-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     needs: [changes, fmt, clippy]
     if: |
       always() &&
@@ -208,13 +215,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["22", "24", "25"]
+        # Full version matrix on Linux, single version on macOS/Windows
+        include:
+          - { os: ubuntu-latest, node-version: "22" }
+          - { os: ubuntu-latest, node-version: "24" }
+          - { os: ubuntu-latest, node-version: "25" }
+          - { os: macos-latest, node-version: "24" }
+          - { os: windows-latest, node-version: "24" }
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: node-${{ matrix.node-version }}
+          shared-key: node-${{ matrix.os }}-${{ matrix.node-version }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -245,13 +258,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Safari excluded: WebDriver unreliable in CI (tested locally)
         include:
           - browser: chrome
             os: ubuntu-latest
           - browser: firefox
             os: ubuntu-latest
-          - browser: safari
-            os: macos-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -281,14 +293,9 @@ jobs:
         if: matrix.browser != 'chrome'
         working-directory: crates/scrape-wasm
         run: pnpm install --no-frozen-lockfile
-      - name: Enable Safari WebDriver
-        if: matrix.browser == 'safari'
-        run: sudo safaridriver --enable
       - name: Build WASM
         run: cargo make wasm-build
       - name: Test WASM
-        # Safari WebDriver is flaky in CI environments
-        continue-on-error: ${{ matrix.browser == 'safari' }}
         run: wasm-pack test --headless --${{ matrix.browser }} crates/scrape-wasm
 
   # ==========================================================================

@@ -198,6 +198,11 @@ description = "Run WASM tests in headless Chrome"
 command = "wasm-pack"
 args = ["test", "--headless", "--chrome", "crates/scrape-wasm"]
 
+[tasks.wasm-test-safari]
+description = "Run WASM tests in Safari (macOS only, requires 'safaridriver --enable')"
+command = "wasm-pack"
+args = ["test", "--headless", "--safari", "crates/scrape-wasm"]
+
 [tasks.wasm-audit]
 description = "Audit WASM dependencies"
 cwd = "crates/scrape-wasm"
