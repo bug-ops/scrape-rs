@@ -16,6 +16,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Minimal permissions (principle of least privilege)
+permissions:
+  contents: read
+
 jobs:
   # ==========================================================================
   # Detect changed paths to enable conditional job execution
