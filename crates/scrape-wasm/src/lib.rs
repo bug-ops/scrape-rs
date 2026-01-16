@@ -1,119 +1,84 @@
 //! WebAssembly bindings for scrape-rs.
 //!
 //! This module provides WASM bindings for the scrape-core library using wasm-bindgen.
+//! It exposes a high-level API for parsing and querying HTML documents in browsers,
+//! Deno, and edge environments (Cloudflare Workers, Vercel Edge).
+//!
+//! # Example
+//!
+//! ```javascript
+//! import init, { Soup, parseBatch, hasSimdSupport, version } from '@scrape-rs/wasm';
+//!
+//! await init();
+//!
+//! // Parse single document
+//! const soup = new Soup("<div class='item'>Hello</div>");
+//! const div = soup.find("div.item");
+//! console.log(div.text); // "Hello"
+//!
+//! // Batch processing (sequential in WASM)
+//! const soups = parseBatch(["<div>A</div>", "<div>B</div>"]);
+//!
+//! // Check SIMD support
+//! console.log("SIMD:", hasSimdSupport());
+//! console.log("Version:", version());
+//! ```
 
 use wasm_bindgen::prelude::*;
 
+mod config;
+mod soup;
+mod tag;
+
+pub use config::SoupConfig;
+pub use soup::Soup;
+pub use tag::Tag;
+
 /// Initialize the WASM module.
 ///
-/// This should be called once before using any other functions.
+/// Sets up panic hook for better error messages in browser console.
+/// This is called automatically when the module is loaded.
 #[wasm_bindgen(start)]
 pub fn init() {
-    // TODO: add console_error_panic_hook feature for better error messages in browser console
-}
-
-/// Configuration options for HTML parsing.
-#[wasm_bindgen]
-#[derive(Debug, Clone, Default)]
-pub struct SoupConfig {
-    max_depth: usize,
-    strict_mode: bool,
-}
-
-#[wasm_bindgen]
-impl SoupConfig {
-    /// Creates a new configuration with default values.
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self { max_depth: 256, strict_mode: false }
-    }
-
-    /// Sets the maximum nesting depth.
-    #[wasm_bindgen(js_name = "setMaxDepth")]
-    pub fn set_max_depth(mut self, depth: usize) -> Self {
-        self.max_depth = depth;
-        self
-    }
-
-    /// Sets strict parsing mode.
-    #[wasm_bindgen(js_name = "setStrictMode")]
-    pub fn set_strict_mode(mut self, strict: bool) -> Self {
-        self.strict_mode = strict;
-        self
-    }
-
-    /// Returns the maximum depth setting.
-    #[wasm_bindgen(getter, js_name = "maxDepth")]
-    pub fn max_depth(&self) -> usize {
-        self.max_depth
-    }
-
-    /// Returns the strict mode setting.
-    #[wasm_bindgen(getter, js_name = "strictMode")]
-    pub fn strict_mode(&self) -> bool {
-        self.strict_mode
-    }
-}
-
-impl From<SoupConfig> for scrape_core::SoupConfig {
-    fn from(config: SoupConfig) -> Self {
-        scrape_core::SoupConfig::builder()
-            .max_depth(config.max_depth)
-            .strict_mode(config.strict_mode)
-            .build()
-    }
-}
-
-/// A parsed HTML document.
-#[wasm_bindgen]
-pub struct Soup {
-    inner: scrape_core::Soup,
-}
-
-#[wasm_bindgen]
-impl Soup {
-    /// Parses an HTML string into a Soup document.
-    #[wasm_bindgen(constructor)]
-    pub fn new(html: &str) -> Self {
-        Self { inner: scrape_core::Soup::parse(html) }
-    }
-
-    /// Parses an HTML string with custom configuration.
-    #[wasm_bindgen(js_name = "parseWithConfig")]
-    pub fn parse_with_config(html: &str, config: SoupConfig) -> Self {
-        Self { inner: scrape_core::Soup::parse_with_config(html, config.into()) }
-    }
-
-    /// Returns the document title if present.
-    #[wasm_bindgen(getter)]
-    pub fn title(&self) -> Option<String> {
-        self.inner.title()
-    }
-
-    /// Returns the text content of the document.
-    #[wasm_bindgen(getter)]
-    pub fn text(&self) -> String {
-        self.inner.text()
-    }
-
-    /// Returns the HTML representation of the document.
-    #[wasm_bindgen(js_name = "toHtml")]
-    pub fn to_html(&self) -> String {
-        self.inner.to_html()
-    }
+    #[cfg(feature = "console_error_panic_hook")]
+    console_error_panic_hook::set_once();
 }
 
 /// Parse multiple HTML documents.
 ///
 /// Note: WASM does not support threads, so this processes documents sequentially.
+/// For parallel processing in browsers, use Web Workers with separate WASM instances.
+///
+/// @param documents - Array of HTML strings to parse
+/// @returns Array of Soup documents
+///
+/// @example
+/// ```javascript
+/// const soups = parseBatch(['<div>A</div>', '<div>B</div>']);
+/// console.log(soups.length); // 2
+/// ```
 #[wasm_bindgen(js_name = "parseBatch")]
 pub fn parse_batch(documents: Vec<String>) -> Vec<Soup> {
-    documents.into_iter().map(|html| Soup::new(&html)).collect()
+    documents.into_iter().map(|html| Soup::new(&html, None)).collect()
 }
 
-/// Check if WASM SIMD is supported.
+/// Check if WASM SIMD is supported in the current environment.
+///
+/// Returns true if the module was compiled with SIMD support and
+/// is running on a platform that supports SIMD128 instructions.
+///
+/// SIMD support requires:
+/// - Chrome 91+ / Firefox 89+ / Safari 16.4+
+/// - Module built with RUSTFLAGS='-C target-feature=+simd128'
 #[wasm_bindgen(js_name = "hasSimdSupport")]
 pub fn has_simd_support() -> bool {
-    // In modern browsers, SIMD128 is widely supported
     cfg!(target_feature = "simd128")
+}
+
+/// Get the library version.
+///
+/// @returns Version string (e.g., "0.1.0")
+#[wasm_bindgen]
+pub fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
 }

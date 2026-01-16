@@ -23,8 +23,14 @@
 	"scripts": {
 		"build": "wasm-pack build --target web --release",
 		"build:dev": "wasm-pack build --target web --dev",
+		"build:bundler": "wasm-pack build --target bundler --release",
+		"build:nodejs": "wasm-pack build --target nodejs --release",
+		"build:simd": "RUSTFLAGS='-C target-feature=+simd128' wasm-pack build --target web --release",
 		"test": "wasm-pack test --headless --firefox",
-		"lint": "biome check js/"
+		"test:chrome": "wasm-pack test --headless --chrome",
+		"test:safari": "wasm-pack test --headless --safari",
+		"lint": "biome check js/",
+		"size": "bash scripts/analyze-size.sh"
 	},
 	"repository": {
 		"type": "git",
@@ -38,10 +44,17 @@
 		"css-selectors",
 		"dom",
 		"wasm",
-		"webassembly"
+		"webassembly",
+		"browser",
+		"edge",
+		"cloudflare-workers",
+		"deno"
 	],
 	"license": "MIT OR Apache-2.0",
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.11"
+	},
+	"engines": {
+		"node": ">=18"
 	}
 }
