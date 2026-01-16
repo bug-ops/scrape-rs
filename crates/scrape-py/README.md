@@ -1,30 +1,33 @@
-# scrape-rs (Python)
+# fast-scrape
 
-[![PyPI](https://img.shields.io/pypi/v/scrape-rs)](https://pypi.org/project/scrape-rs)
-[![Python](https://img.shields.io/pypi/pyversions/scrape-rs)](https://pypi.org/project/scrape-rs)
+[![PyPI](https://img.shields.io/pypi/v/fast-scrape)](https://pypi.org/project/fast-scrape)
+[![Python](https://img.shields.io/pypi/pyversions/fast-scrape)](https://pypi.org/project/fast-scrape)
 [![codecov](https://codecov.io/gh/bug-ops/scrape-rs/graph/badge.svg?token=6MQTONGT95&flag=python)](https://codecov.io/gh/bug-ops/scrape-rs)
-[![License](https://img.shields.io/pypi/l/scrape-rs)](../../LICENSE-MIT)
+[![License](https://img.shields.io/pypi/l/fast-scrape)](../../LICENSE-MIT)
 
-Python bindings for scrape-rs, a high-performance HTML parsing library.
+**10-50x faster** HTML parsing for Python. Rust-powered, BeautifulSoup-compatible API.
 
 ## Installation
 
 ```bash
-pip install scrape-rs
+pip install fast-scrape
 ```
 
-Alternative package managers:
+<details>
+<summary>Alternative package managers</summary>
 
 ```bash
 # uv (recommended - 10-100x faster)
-uv pip install scrape-rs
+uv pip install fast-scrape
 
 # Poetry
-poetry add scrape-rs
+poetry add fast-scrape
 
 # Pipenv
-pipenv install scrape-rs
+pipenv install fast-scrape
 ```
+
+</details>
 
 > [!IMPORTANT]
 > Requires Python 3.10 or later.
@@ -34,17 +37,16 @@ pipenv install scrape-rs
 ```python
 from scrape_rs import Soup
 
-html = "<html><body><div class='content'>Hello, World!</div></body></html>"
-soup = Soup(html)
+soup = Soup("<html><body><div class='content'>Hello, World!</div></body></html>")
 
 div = soup.find("div")
-print(div.text)
-# Hello, World!
+print(div.text)  # Hello, World!
 ```
 
 ## Usage
 
-### Find elements
+<details open>
+<summary><strong>Find elements</strong></summary>
 
 ```python
 from scrape_rs import Soup
@@ -62,22 +64,23 @@ for el in soup.select("div.content > p"):
     print(el.text)
 ```
 
-### Element properties
+</details>
+
+<details>
+<summary><strong>Element properties</strong></summary>
 
 ```python
 element = soup.find("a")
 
-# Get text content
-text = element.text
-
-# Get inner HTML
-html = element.inner_html
-
-# Get attribute
-href = element.get("href")
+text = element.text          # Get text content
+html = element.inner_html    # Get inner HTML
+href = element.get("href")   # Get attribute
 ```
 
-### Batch processing
+</details>
+
+<details>
+<summary><strong>Batch processing</strong></summary>
 
 ```python
 from scrape_rs import Soup
@@ -91,11 +94,14 @@ for soup in soups:
 ```
 
 > [!TIP]
-> Use `parse_batch()` for processing multiple documents. It uses all CPU cores automatically.
+> Use `parse_batch()` for processing multiple documents. Uses all CPU cores automatically.
 
-## Type hints
+</details>
 
-This package includes type stubs for full IDE support:
+<details>
+<summary><strong>Type hints</strong></summary>
+
+Full IDE support with type stubs:
 
 ```python
 from scrape_rs import Soup, Tag
@@ -104,29 +110,27 @@ def extract_links(soup: Soup) -> list[str]:
     return [a.get("href") for a in soup.select("a[href]")]
 ```
 
+</details>
+
 ## Performance
 
-Compared to BeautifulSoup on the same HTML documents:
+Compared to BeautifulSoup:
 
 | Operation | Speedup |
 |-----------|---------|
 | Parse (1 KB) | **9.7x** faster |
-| Parse (219 KB) | **9.2x** faster |
 | Parse (5.9 MB) | **10.6x** faster |
 | `find(".class")` | **132x** faster |
 | `select(".class")` | **40x** faster |
 
-> [!TIP]
-> Run `python benches/compare_python.py` from the project root to benchmark on your hardware.
-
 ## Related packages
 
-Part of the [scrape-rs](https://github.com/bug-ops/scrape-rs) project:
-
-- `scrape-core` — Rust core library
-- `scrape-rs` (npm) — Node.js bindings
-- `@scrape-rs/wasm` — Browser/WASM bindings
+| Platform | Package |
+|----------|---------|
+| Rust | [`scrape-core`](https://crates.io/crates/scrape-core) |
+| Node.js | [`@fast-scrape/node`](https://www.npmjs.com/package/@fast-scrape/node) |
+| WASM | [`@fast-scrape/wasm`](https://www.npmjs.com/package/@fast-scrape/wasm) |
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](../../LICENSE-APACHE) or [MIT License](../../LICENSE-MIT) at your option.
+MIT OR Apache-2.0

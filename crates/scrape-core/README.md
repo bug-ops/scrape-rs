@@ -93,13 +93,15 @@ scrape-core/
 
 Minimum Supported Rust Version: **1.88**. MSRV increases are minor version bumps.
 
-## Related crates
+## Related packages
 
-This crate is part of the [scrape-rs](https://github.com/bug-ops/scrape-rs) workspace:
+This crate is part of [fast-scrape](https://github.com/bug-ops/scrape-rs):
 
-- `scrape-py` — Python bindings
-- `scrape-node` — Node.js bindings
-- `scrape-wasm` — WebAssembly bindings
+| Platform | Package |
+|----------|---------|
+| Python | [`fast-scrape`](https://pypi.org/project/fast-scrape) |
+| Node.js | [`@fast-scrape/node`](https://www.npmjs.com/package/@fast-scrape/node) |
+| WASM | [`@fast-scrape/wasm`](https://www.npmjs.com/package/@fast-scrape/wasm) |
 
 ## License
 
