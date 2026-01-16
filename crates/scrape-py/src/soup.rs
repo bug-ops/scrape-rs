@@ -1,0 +1,152 @@
+//! Python wrapper for Soup document.
+
+use std::sync::Arc;
+
+use pyo3::prelude::*;
+use scrape_core::Soup;
+
+use crate::{config::PySoupConfig, error::IntoPyErr, tag::PyTag};
+
+/// A parsed HTML document.
+///
+/// Example:
+///     >>> from scrape_rs import Soup
+///     >>> soup = Soup("<div>Hello</div>")
+///     >>> print(soup.find("div").text)
+///     Hello
+#[pyclass(name = "Soup")]
+pub struct PySoup {
+    pub(crate) inner: Arc<Soup>,
+}
+
+#[pymethods]
+impl PySoup {
+    /// Parse an HTML string into a Soup document.
+    ///
+    /// Args:
+    ///     html: HTML string to parse.
+    ///     config: Optional parsing configuration.
+    ///
+    /// Returns:
+    ///     A new Soup instance.
+    #[new]
+    #[pyo3(signature = (html, config=None))]
+    fn new(html: &str, config: Option<&PySoupConfig>) -> Self {
+        let core_config = config.map(PySoupConfig::to_core).unwrap_or_default();
+
+        let soup = Soup::parse_with_config(html, core_config);
+        Self { inner: Arc::new(soup) }
+    }
+
+    /// Parse HTML from a file.
+    ///
+    /// Args:
+    ///     path: Path to the HTML file.
+    ///     config: Optional parsing configuration.
+    ///
+    /// Returns:
+    ///     A new Soup instance.
+    ///
+    /// Raises:
+    ///     ValueError: If the file cannot be read.
+    #[staticmethod]
+    #[pyo3(signature = (path, config=None))]
+    fn from_file(path: &str, config: Option<&PySoupConfig>) -> PyResult<Self> {
+        let html = std::fs::read_to_string(path).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Failed to read file: {e}"))
+        })?;
+        Ok(Self::new(&html, config))
+    }
+
+    /// Find the first element matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     The first matching Tag, or None if not found.
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn find(&self, selector: &str) -> PyResult<Option<PyTag>> {
+        self.inner
+            .find(selector)
+            .map_err(IntoPyErr::into_py_err)
+            .map(|opt| opt.map(|tag| PyTag::new(Arc::clone(&self.inner), tag.node_id())))
+    }
+
+    /// Find all elements matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     List of matching Tag instances.
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn find_all(&self, selector: &str) -> PyResult<Vec<PyTag>> {
+        self.inner.find_all(selector).map_err(IntoPyErr::into_py_err).map(|tags| {
+            tags.into_iter().map(|tag| PyTag::new(Arc::clone(&self.inner), tag.node_id())).collect()
+        })
+    }
+
+    /// Find all elements matching a CSS selector (alias for find_all).
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     List of matching Tag instances.
+    fn select(&self, selector: &str) -> PyResult<Vec<PyTag>> {
+        self.find_all(selector)
+    }
+
+    /// Get the root element of the document.
+    ///
+    /// Returns:
+    ///     The root Tag (usually <html>), or None for empty documents.
+    #[getter]
+    fn root(&self) -> Option<PyTag> {
+        self.inner.root().map(|tag| PyTag::new(Arc::clone(&self.inner), tag.node_id()))
+    }
+
+    /// Get the document title.
+    ///
+    /// Returns:
+    ///     The title text, or None if no <title> element exists.
+    #[getter]
+    fn title(&self) -> Option<String> {
+        self.inner.title()
+    }
+
+    /// Get the text content of the entire document.
+    ///
+    /// Returns:
+    ///     All text content with HTML tags stripped.
+    #[getter]
+    fn text(&self) -> String {
+        self.inner.text()
+    }
+
+    /// Get the HTML representation of the document.
+    ///
+    /// Returns:
+    ///     The document as an HTML string.
+    fn to_html(&self) -> String {
+        self.inner.to_html()
+    }
+
+    fn __repr__(&self) -> String {
+        let node_count = self.inner.document().len();
+        format!("Soup(nodes={node_count})")
+    }
+
+    fn __str__(&self) -> String {
+        self.to_html()
+    }
+
+    fn __len__(&self) -> usize {
+        self.inner.document().len()
+    }
+}
