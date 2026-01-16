@@ -1,6 +1,6 @@
 {
   "name": "@fast-scrape/node-win32-x64-msvc",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "fast-scrape native binding for Windows x64 (MSVC)",
   "os": [
     "win32"
