@@ -1,28 +1,34 @@
 {
-	"name": "@scrape-rs/darwin-x64",
-	"version": "0.1.0",
-	"description": "scrape-rs native binding for macOS x64 (Intel)",
-	"os": ["darwin"],
-	"cpu": ["x64"],
-	"main": "scrape-rs.darwin-x64.node",
-	"files": ["scrape-rs.darwin-x64.node"],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/bug-ops/scrape-rs.git",
-		"directory": "crates/scrape-node"
-	},
-	"keywords": [
-		"html",
-		"parser",
-		"scraping",
-		"napi",
-		"rust",
-		"darwin",
-		"x64",
-		"intel"
-	],
-	"license": "MIT OR Apache-2.0",
-	"engines": {
-		"node": ">=18"
-	}
+  "name": "fast-scrape-darwin-x64",
+  "version": "0.1.0",
+  "description": "scrape-rs native binding for macOS x64 (Intel)",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "scrape-rs.darwin-x64.node",
+  "files": [
+    "scrape-rs.darwin-x64.node"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bug-ops/scrape-rs.git",
+    "directory": "crates/scrape-node"
+  },
+  "keywords": [
+    "html",
+    "parser",
+    "scraping",
+    "napi",
+    "rust",
+    "darwin",
+    "x64",
+    "intel"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  }
 }

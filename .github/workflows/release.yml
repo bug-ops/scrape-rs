@@ -304,7 +304,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: npm
-      url: https://www.npmjs.com/package/scrape-rs
+      url: https://www.npmjs.com/package/fast-scrape
     permissions:
       contents: read
       id-token: write
@@ -471,7 +471,7 @@ jobs:
 
           ### Node.js
           \`\`\`bash
-          npm install scrape-rs@$VERSION
+          npm install fast-scrape@$VERSION
           \`\`\`
 
           ### WASM
@@ -483,7 +483,7 @@ jobs:
 
           - [crates.io](https://crates.io/crates/scrape-core)
           - [PyPI](https://pypi.org/project/fast-scrape)
-          - [npm](https://www.npmjs.com/package/scrape-rs)
+          - [npm](https://www.npmjs.com/package/fast-scrape)
           - [npm (WASM)](https://www.npmjs.com/package/@scrape-rs/wasm)
           EOF
 
