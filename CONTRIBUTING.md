@@ -177,6 +177,73 @@ Use the feature request template and describe:
 
 By contributing, you agree that your contributions will be licensed under the same dual MIT/Apache-2.0 license as the project.
 
+## Releasing
+
+This section is for maintainers who need to publish a new release.
+
+### Prerequisites
+
+- `CARGO_REGISTRY_TOKEN` secret set in GitHub (for crates.io)
+- `NPM_TOKEN` secret set in GitHub (for npm)
+- PyPI uses trusted publishing (no token needed)
+
+### Release Process
+
+1. **Bump version** across all manifests:
+   ```bash
+   ./scripts/bump-version.sh 0.2.0
+   # or for minor/patch:
+   ./scripts/bump-version.sh minor
+   ./scripts/bump-version.sh patch
+   ```
+
+2. **Update CHANGELOG.md** with release notes:
+   ```bash
+   # Preview changelog
+   git cliff --unreleased
+
+   # Or generate directly
+   git cliff --unreleased >> CHANGELOG.md
+   ```
+
+3. **Commit and tag**:
+   ```bash
+   git add -A
+   git commit -m "chore(release): 0.2.0"
+   git tag v0.2.0
+   ```
+
+4. **Push to trigger release**:
+   ```bash
+   git push && git push --tags
+   ```
+
+### Dry Run
+
+Test the release workflow without publishing:
+
+```bash
+gh workflow run release.yml -f dry_run=true
+```
+
+### Post-Release Verification
+
+After the release workflow completes, verify:
+
+- [ ] [crates.io/crates/scrape-core](https://crates.io/crates/scrape-core)
+- [ ] [pypi.org/project/scrape-rs](https://pypi.org/project/scrape-rs)
+- [ ] [npmjs.com/package/scrape-rs](https://www.npmjs.com/package/scrape-rs)
+- [ ] [npmjs.com/package/@scrape-rs/wasm](https://www.npmjs.com/package/@scrape-rs/wasm)
+- [ ] GitHub Release created with changelog
+
+### Troubleshooting
+
+**Version mismatch error**: The tag version must match `Cargo.toml`. Use the bump script to keep them in sync.
+
+**PyPI publish fails**: Ensure the `pypi` environment is configured in GitHub with trusted publishing.
+
+**npm publish fails**: Check that `NPM_TOKEN` has publish access to the `@scrape-rs` scope.
+
 ## Questions?
 
 - Open a [Discussion](https://github.com/bug-ops/scrape-rs/discussions)

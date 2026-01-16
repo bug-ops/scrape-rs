@@ -1,0 +1,28 @@
+{
+	"name": "@scrape-rs/win32-x64-msvc",
+	"version": "0.1.0",
+	"description": "scrape-rs native binding for Windows x64 (MSVC)",
+	"os": ["win32"],
+	"cpu": ["x64"],
+	"main": "scrape-rs.win32-x64-msvc.node",
+	"files": ["scrape-rs.win32-x64-msvc.node"],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bug-ops/scrape-rs.git",
+		"directory": "crates/scrape-node"
+	},
+	"keywords": [
+		"html",
+		"parser",
+		"scraping",
+		"napi",
+		"rust",
+		"windows",
+		"x64",
+		"msvc"
+	],
+	"license": "MIT OR Apache-2.0",
+	"engines": {
+		"node": ">=18"
+	}
+}

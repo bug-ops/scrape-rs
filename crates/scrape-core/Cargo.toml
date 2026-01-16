@@ -1,6 +1,7 @@
 [package]
 name = "scrape-core"
 description = "High-performance HTML parsing library core"
+publish = true
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,6 +10,14 @@ authors.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
+readme = "README.md"
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
 
 [dependencies]
 cssparser.workspace = true

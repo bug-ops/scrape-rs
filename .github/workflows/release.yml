@@ -3,90 +3,129 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
 
 permissions:
   contents: write
   id-token: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # ==========================================================================
-  # Create GitHub Release
+  # Validate tag and extract version
   # ==========================================================================
-  create-release:
-    name: Create Release
+  validate:
+    name: Validate Release Tag
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      version: ${{ steps.get_version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Get version from tag
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing version: $VERSION"
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+      - name: Verify version matches Cargo.toml
+        run: |
+          CARGO_VERSION=$(grep -m 1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: Cargo.toml version ($CARGO_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version validation successful: $TAG_VERSION"
 
   # ==========================================================================
-  # Publish to crates.io
+  # Publish to crates.io using Trusted Publishing (OIDC)
+  # Setup: https://doc.rust-lang.org/cargo/reference/registry-authentication.html#trusted-publishing
   # ==========================================================================
   publish-crates:
     name: Publish to crates.io
+    needs: validate
     runs-on: ubuntu-latest
-    needs: [create-release]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release
 
-      - name: Publish scrape-core
-        run: cargo publish -p scrape-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Run tests
+        run: cargo test -p scrape-core --all-features
+
+      - name: Run clippy
+        run: cargo clippy -p scrape-core --all-features -- -D warnings
+
+      - name: Authenticate with crates.io (Trusted Publishing)
+        id: crates-io-auth
+        uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Publish to crates.io
+        uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ steps.crates-io-auth.outputs.token }}
+          ignore-unpublished-changes: true
+          publish-delay: 10000
 
   # ==========================================================================
-  # Build Python wheels (multi-platform)
+  # Build Python wheels for multiple platforms
   # ==========================================================================
   build-python:
-    name: Build Python (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    needs: [create-release]
+    name: Build Python (${{ matrix.platform.name }})
+    needs: validate
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Linux x86_64
-          - os: ubuntu-latest
+        platform:
+          - name: linux-x86_64
+            os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             manylinux: auto
 
-          # Linux aarch64
-          - os: ubuntu-latest
+          - name: linux-aarch64
+            os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             manylinux: auto
 
-          # macOS x86_64
-          - os: macos-13
+          - name: macos-x86_64
+            os: macos-13
             target: x86_64-apple-darwin
             manylinux: auto
 
-          # macOS aarch64
-          - os: macos-latest
+          - name: macos-aarch64
+            os: macos-latest
             target: aarch64-apple-darwin
             manylinux: auto
 
-          # Windows x86_64
-          - os: windows-latest
+          - name: windows-x86_64
+            os: windows-latest
             target: x86_64-pc-windows-msvc
             manylinux: auto
 
@@ -95,29 +134,30 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          target: ${{ matrix.target }}
-          manylinux: ${{ matrix.manylinux }}
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
           args: --release --out dist -m crates/scrape-py/Cargo.toml
           sccache: false
 
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
-          name: wheels-${{ matrix.target }}
+          name: wheels-${{ matrix.platform.name }}
           path: dist/*.whl
+          retention-days: 7
 
   # ==========================================================================
   # Build Python sdist
   # ==========================================================================
   build-python-sdist:
     name: Build Python sdist
+    needs: validate
     runs-on: ubuntu-latest
-    needs: [create-release]
     steps:
       - uses: actions/checkout@v6
 
@@ -132,58 +172,78 @@ jobs:
         with:
           name: wheels-sdist
           path: dist/*.tar.gz
+          retention-days: 7
 
   # ==========================================================================
-  # Publish to PyPI
+  # Publish to PyPI using Trusted Publishing (OIDC)
+  # Setup: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
   # ==========================================================================
   publish-pypi:
     name: Publish to PyPI
+    needs: [validate, build-python, build-python-sdist]
     runs-on: ubuntu-latest
-    needs: [build-python, build-python-sdist]
+    timeout-minutes: 10
     environment:
       name: pypi
       url: https://pypi.org/project/scrape-rs/
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/download-artifact@v7
+      - name: Download all wheels
+        uses: actions/download-artifact@v7
         with:
-          pattern: wheels-*
           path: dist
+          pattern: wheels-*
           merge-multiple: true
 
-      - name: Publish to PyPI
+      - name: List wheels
+        run: ls -lh dist/
+
+      - name: Publish to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          packages-dir: dist/
           skip-existing: true
+          verbose: true
 
   # ==========================================================================
-  # Build Node.js binaries (multi-platform)
+  # Build Node.js bindings for multiple platforms
   # ==========================================================================
   build-node:
-    name: Build Node.js (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    needs: [create-release]
+    name: Build Node.js (${{ matrix.platform.name }})
+    needs: validate
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Linux x86_64
-          - os: ubuntu-latest
+        platform:
+          - name: linux-x64-gnu
+            os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
 
-          # Linux aarch64
-          - os: ubuntu-latest
+          - name: linux-x64-musl
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+
+          - name: linux-arm64-gnu
+            os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
 
-          # macOS x86_64
-          - os: macos-13
+          - name: linux-arm64-musl
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+
+          - name: darwin-x64
+            os: macos-13
             target: x86_64-apple-darwin
 
-          # macOS aarch64
-          - os: macos-latest
+          - name: darwin-arm64
+            os: macos-latest
             target: aarch64-apple-darwin
 
-          # Windows x86_64
-          - os: windows-latest
+          - name: win32-x64-msvc
+            os: windows-latest
             target: x86_64-pc-windows-msvc
 
     steps:
@@ -191,19 +251,32 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.platform.target }}
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: node-${{ matrix.target }}
+          shared-key: node-${{ matrix.platform.name }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '22'
 
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Setup cross-compilation (Linux ARM64)
+        if: contains(matrix.platform.name, 'linux-arm64')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Setup musl (Linux musl)
+        if: contains(matrix.platform.name, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
 
       - name: Install dependencies
         working-directory: crates/scrape-node
@@ -211,53 +284,83 @@ jobs:
 
       - name: Build
         working-directory: crates/scrape-node
-        run: pnpm run build --target ${{ matrix.target }}
+        run: pnpm run build --target ${{ matrix.platform.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: node-${{ matrix.target }}
+          name: node-${{ matrix.platform.name }}
           path: crates/scrape-node/*.node
+          retention-days: 7
 
   # ==========================================================================
-  # Publish to npm (Node.js)
+  # Publish to npm using Trusted Publishing (OIDC)
+  # Setup: https://docs.npmjs.com/generating-provenance-statements
   # ==========================================================================
   publish-npm:
     name: Publish to npm
+    needs: [validate, build-node]
     runs-on: ubuntu-latest
-    needs: [build-node]
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/scrape-rs
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
 
       - uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Download all artifacts
+      - name: Download all bindings
         uses: actions/download-artifact@v7
         with:
+          path: artifacts
           pattern: node-*
-          path: crates/scrape-node/artifacts
-          merge-multiple: true
 
-      - name: Move binaries
-        working-directory: crates/scrape-node
+      - name: Prepare platform packages
         run: |
-          mkdir -p npm
-          mv artifacts/*.node npm/ || true
+          cd crates/scrape-node
+          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-arm64-musl linux-x64-gnu linux-x64-musl win32-x64-msvc; do
+            if [[ -d "../../artifacts/node-$platform" ]]; then
+              cp ../../artifacts/node-$platform/*.node npm/$platform/ 2>/dev/null || true
+              echo "Copied binaries to npm/$platform/"
+              ls -la npm/$platform/
+            fi
+          done
 
       - name: Install dependencies
         working-directory: crates/scrape-node
         run: pnpm install
 
-      - name: Publish
+      - name: Update npm for provenance
+        run: npm install -g npm@latest
+
+      - name: Publish platform packages
         working-directory: crates/scrape-node
-        run: pnpm publish --access public --no-git-checks
+        run: |
+          for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-arm64-musl linux-x64-gnu linux-x64-musl win32-x64-msvc; do
+            if [[ -f "npm/$platform/package.json" ]] && ls npm/$platform/*.node 1>/dev/null 2>&1; then
+              echo "Publishing @scrape-rs/$platform"
+              cd npm/$platform
+              npm publish --access public --provenance || true
+              cd ../..
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish main package
+        working-directory: crates/scrape-node
+        run: pnpm publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -266,8 +369,15 @@ jobs:
   # ==========================================================================
   publish-wasm:
     name: Publish WASM to npm
+    needs: validate
     runs-on: ubuntu-latest
-    needs: [create-release]
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@scrape-rs/wasm
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
@@ -279,23 +389,139 @@ jobs:
         with:
           shared-key: wasm
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
 
       - name: Build WASM
         run: wasm-pack build crates/scrape-wasm --target web --release --scope scrape-rs
 
+      - name: Verify bundle size
+        run: |
+          WASM_SIZE=$(stat -c%s crates/scrape-wasm/pkg/scrape_wasm_bg.wasm 2>/dev/null || stat -f%z crates/scrape-wasm/pkg/scrape_wasm_bg.wasm)
+          echo "WASM bundle size: $WASM_SIZE bytes"
+          if [ "$WASM_SIZE" -gt 512000 ]; then
+            echo "Warning: WASM bundle exceeds 500KB target"
+          fi
+
+      - name: Update npm for provenance
+        run: npm install -g npm@latest
+
       - name: Publish to npm
         working-directory: crates/scrape-wasm/pkg
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ==========================================================================
+  # Create GitHub Release
+  # ==========================================================================
+  github-release:
+    name: Create GitHub Release
+    needs: [validate, publish-crates, publish-pypi, publish-npm, publish-wasm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download Python wheels
+        uses: actions/download-artifact@v7
+        with:
+          path: release-artifacts/python
+          pattern: wheels-*
+          merge-multiple: true
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Generate release notes
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          if git describe --tags --abbrev=0 HEAD^ 2>/dev/null; then
+            git cliff --latest --strip header > RELEASE_NOTES.md
+          else
+            git cliff --unreleased --strip header > RELEASE_NOTES.md
+          fi
+
+          cat >> RELEASE_NOTES.md << EOF
+
+          ## Installation
+
+          ### Rust
+          \`\`\`toml
+          [dependencies]
+          scrape-core = "$VERSION"
+          \`\`\`
+
+          ### Python
+          \`\`\`bash
+          pip install scrape-rs==$VERSION
+          \`\`\`
+
+          ### Node.js
+          \`\`\`bash
+          npm install scrape-rs@$VERSION
+          \`\`\`
+
+          ### WASM
+          \`\`\`bash
+          npm install @scrape-rs/wasm@$VERSION
+          \`\`\`
+
+          ## Published to
+
+          - [crates.io](https://crates.io/crates/scrape-core)
+          - [PyPI](https://pypi.org/project/scrape-rs)
+          - [npm](https://www.npmjs.com/package/scrape-rs)
+          - [npm (WASM)](https://www.npmjs.com/package/@scrape-rs/wasm)
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ needs.validate.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          files: |
+            release-artifacts/python/*.whl
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================================================
+  # Final success check
+  # ==========================================================================
+  release-success:
+    name: Release Success
+    needs: [publish-crates, publish-pypi, publish-npm, publish-wasm, github-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all release jobs
+        run: |
+          RESULTS=(
+            "${{ needs.publish-crates.result }}"
+            "${{ needs.publish-pypi.result }}"
+            "${{ needs.publish-npm.result }}"
+            "${{ needs.publish-wasm.result }}"
+            "${{ needs.github-release.result }}"
+          )
+
+          for result in "${RESULTS[@]}"; do
+            if [[ "$result" != "success" ]]; then
+              echo "Release job failed: $result"
+              exit 1
+            fi
+          done
+
+          echo "All release jobs completed successfully!"

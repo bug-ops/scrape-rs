@@ -1,0 +1,28 @@
+{
+	"name": "@scrape-rs/darwin-arm64",
+	"version": "0.1.0",
+	"description": "scrape-rs native binding for macOS ARM64 (Apple Silicon)",
+	"os": ["darwin"],
+	"cpu": ["arm64"],
+	"main": "scrape-rs.darwin-arm64.node",
+	"files": ["scrape-rs.darwin-arm64.node"],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bug-ops/scrape-rs.git",
+		"directory": "crates/scrape-node"
+	},
+	"keywords": [
+		"html",
+		"parser",
+		"scraping",
+		"napi",
+		"rust",
+		"darwin",
+		"arm64",
+		"apple-silicon"
+	],
+	"license": "MIT OR Apache-2.0",
+	"engines": {
+		"node": ">=18"
+	}
+}
