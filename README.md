@@ -13,7 +13,8 @@
 pip install fast-scrape          # Python
 npm install @fast-scrape/node    # Node.js
 npm install @fast-scrape/wasm    # Browser/WASM
-cargo add scrape-core            # Rust
+cargo add scrape-core            # Rust library
+cargo install scrape-cli         # CLI tool
 ```
 
 ## Quick start
@@ -88,6 +89,22 @@ console.log(soup.find("div").text);  // Hello
 
 </details>
 
+<details>
+<summary><strong>CLI</strong></summary>
+
+```bash
+# Extract text from HTML file
+scrape 'h1' page.html
+
+# Extract from URL via curl
+curl -s example.com | scrape 'title'
+
+# Output as JSON
+scrape -o json 'a[href]' page.html
+```
+
+</details>
+
 ## Performance
 
 Benchmarked against BeautifulSoup4 (Python) and Cheerio (Node.js):
@@ -146,19 +163,14 @@ scrape-core = { version = "0.1", features = ["simd", "parallel"] }
 
 ## Architecture
 
-```
-               ┌─────────────────────────────────┐
-               │          scrape-core            │
-               │   Pure Rust • SIMD • Parallel   │
-               └────────────────┬────────────────┘
-                                │
-        ┌───────────────────────┼───────────────────────┐
-        │                       │                       │
-┌───────▼───────┐       ┌───────▼───────┐       ┌───────▼───────┐
-│   fast-scrape │       │ @fast-scrape  │       │ @fast-scrape  │
-│    (Python)   │       │    /node      │       │    /wasm      │
-│     PyO3      │       │   napi-rs     │       │ wasm-bindgen  │
-└───────────────┘       └───────────────┘       └───────────────┘
+```mermaid
+graph TD
+    Core[scrape-core<br><i>Pure Rust • SIMD • Parallel</i>]
+
+    Core --> CLI[scrape-cli<br><i>CLI tool</i>]
+    Core --> Python[fast-scrape<br><i>PyO3</i>]
+    Core --> Node["@fast-scrape/node<br><i>napi-rs</i>"]
+    Core --> WASM["@fast-scrape/wasm<br><i>wasm-bindgen</i>"]
 ```
 
 ### Built on Servo
@@ -175,6 +187,7 @@ The core is powered by battle-tested libraries from the [Servo](https://servo.or
 ```
 crates/
 ├── scrape-core/    # Pure Rust library
+├── scrape-cli/     # Command-line tool
 ├── scrape-py/      # Python bindings (PyO3)
 ├── scrape-node/    # Node.js bindings (napi-rs)
 └── scrape-wasm/    # WASM bindings (wasm-bindgen)
