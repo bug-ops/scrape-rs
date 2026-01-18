@@ -88,6 +88,15 @@ scrape-core/
 └── parallel/  # Rayon-based parallelization
 ```
 
+### Built on Servo
+
+The parsing and selector engine is powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine:
+
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
+- [cssparser](https://crates.io/crates/cssparser) — CSS parser
+- [markup5ever](https://crates.io/crates/markup5ever) — Common HTML/XML tree data structures
+
 ## MSRV policy
 
 Minimum Supported Rust Version: **1.88**. MSRV increases are minor version bumps.

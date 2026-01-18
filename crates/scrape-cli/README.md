@@ -173,6 +173,10 @@ scrape --no-filename 'h1' *.html
 | 2 | Runtime error (invalid selector, I/O error) |
 | 4 | Argument validation error |
 
+## Built on Servo
+
+Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+
 ## Related packages
 
 | Platform | Package |

@@ -161,6 +161,14 @@ scrape-core = { version = "0.1", features = ["simd", "parallel"] }
 └───────────────┘       └───────────────┘       └───────────────┘
 ```
 
+### Built on Servo
+
+The core is powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine:
+
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
+- [cssparser](https://crates.io/crates/cssparser) — CSS parser
+
 <details>
 <summary><strong>Project structure</strong></summary>
 
