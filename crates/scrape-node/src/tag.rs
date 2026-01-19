@@ -526,11 +526,12 @@ fn collect_text(doc: &Document, id: NodeId, result: &mut String) {
     }
 }
 
+// FIXME duplicate code
 fn serialize_node(doc: &Document, id: NodeId, result: &mut String) {
     let Some(node) = doc.get(id) else { return };
 
     match &node.kind {
-        NodeKind::Element { name, attributes } => {
+        NodeKind::Element { name, attributes, .. } => {
             result.push('<');
             result.push_str(name);
             for (attr_name, attr_value) in attributes {

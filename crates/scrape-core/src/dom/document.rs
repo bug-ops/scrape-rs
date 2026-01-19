@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use super::{
     arena::Arena,
+    index::DocumentIndex,
     node::{Node, NodeId},
 };
 
@@ -32,6 +33,7 @@ use super::{
 pub struct Document {
     arena: Arena<Node>,
     root: Option<NodeId>,
+    index: Option<DocumentIndex>,
 }
 
 impl Default for Document {
@@ -55,7 +57,7 @@ impl Document {
     /// Use this when you know the approximate number of nodes to avoid reallocations.
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
-        Self { arena: Arena::with_capacity(capacity), root: None }
+        Self { arena: Arena::with_capacity(capacity), root: None, index: None }
     }
 
     /// Returns the root node ID, if any.
@@ -143,6 +145,17 @@ impl Document {
     #[must_use]
     pub fn len(&self) -> usize {
         self.arena.len()
+    }
+
+    /// Returns the document index, if built.
+    #[must_use]
+    pub fn index(&self) -> Option<&DocumentIndex> {
+        self.index.as_ref()
+    }
+
+    /// Sets the document index.
+    pub fn set_index(&mut self, index: DocumentIndex) {
+        self.index = Some(index);
     }
 
     /// Returns `true` if the document has no nodes.

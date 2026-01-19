@@ -6,7 +6,7 @@ use html5ever::{ParseOpts, parse_document, tendril::TendrilSink};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 use super::{ParseConfig, ParseError, ParseResult, Parser, private::Sealed};
-use crate::dom::{Document, NodeId};
+use crate::dom::{Document, DocumentIndex, NodeId};
 
 /// HTML5 spec-compliant parser using html5ever.
 ///
@@ -72,9 +72,11 @@ fn convert_rcdom_to_document_with_capacity(
 ) -> ParseResult<Document> {
     let mut document = Document::with_capacity(capacity);
     let mut depth = 0;
+    let mut index = DocumentIndex::new();
 
-    convert_node(&dom.document, &mut document, None, &mut depth, config)?;
+    convert_node(&dom.document, &mut document, None, &mut depth, config, &mut index)?;
 
+    document.set_index(index);
     Ok(document)
 }
 
@@ -85,6 +87,7 @@ fn convert_node(
     parent: Option<NodeId>,
     depth: &mut usize,
     config: &ParseConfig,
+    index: &mut DocumentIndex,
 ) -> ParseResult<Option<NodeId>> {
     if *depth > config.max_depth {
         return Err(ParseError::MaxDepthExceeded { max_depth: config.max_depth });
@@ -95,7 +98,7 @@ fn convert_node(
         NodeData::Document => {
             // Process children of document node without creating a node
             for child in handle.children.borrow().iter() {
-                if let Some(child_id) = convert_node(child, document, None, depth, config)?
+                if let Some(child_id) = convert_node(child, document, None, depth, config, index)?
                     && document.root().is_none()
                 {
                     document.set_root(child_id);
@@ -120,7 +123,14 @@ fn convert_node(
                 attributes.insert(key, attr.value.to_string());
             }
 
-            let node_id = document.create_element(tag_name, attributes);
+            let node_id = document.create_element(tag_name, attributes.clone());
+
+            if let Some(id_attr) = attributes.get("id") {
+                index.register_id(id_attr.clone(), node_id);
+            }
+            if let Some(class_attr) = attributes.get("class") {
+                index.register_classes(class_attr, node_id);
+            }
 
             if let Some(parent_id) = parent {
                 document.append_child(parent_id, node_id);
@@ -130,7 +140,7 @@ fn convert_node(
 
             // Process children
             for child in handle.children.borrow().iter() {
-                convert_node(child, document, Some(node_id), depth, config)?;
+                convert_node(child, document, Some(node_id), depth, config, index)?;
             }
 
             Some(node_id)

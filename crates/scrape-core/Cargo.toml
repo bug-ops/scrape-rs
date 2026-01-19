@@ -26,6 +26,7 @@ markup5ever.workspace = true
 markup5ever_rcdom.workspace = true
 memchr.workspace = true
 precomputed-hash.workspace = true
+rayon = { workspace = true, optional = true }
 selectors.workspace = true
 thiserror.workspace = true
 
@@ -40,7 +41,7 @@ workspace = true
 [features]
 default = []
 simd = []
-parallel = []
+parallel = ["rayon"]
 
 [[bench]]
 name = "parse"

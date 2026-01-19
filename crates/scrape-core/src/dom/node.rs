@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+use super::tag_id::TagId;
+
 /// A node ID in the DOM tree.
 ///
 /// This is an opaque handle to a node in the document.
@@ -29,6 +31,8 @@ impl NodeId {
 pub enum NodeKind {
     /// Element node (e.g., `<div>`, `<span>`).
     Element {
+        /// Interned tag identifier for fast comparison.
+        tag_id: TagId,
         /// Tag name (lowercase).
         name: String,
         /// Element attributes.
@@ -47,6 +51,16 @@ pub enum NodeKind {
 }
 
 impl NodeKind {
+    /// Returns the tag ID if this is an element node.
+    #[inline]
+    #[must_use]
+    pub fn tag_id(&self) -> Option<TagId> {
+        match self {
+            Self::Element { tag_id, .. } => Some(*tag_id),
+            _ => None,
+        }
+    }
+
     /// Returns the tag name if this is an element node.
     #[must_use]
     pub fn tag_name(&self) -> Option<&str> {
@@ -69,6 +83,16 @@ impl NodeKind {
         match self {
             Self::Element { attributes, .. } => Some(attributes),
             _ => None,
+        }
+    }
+
+    /// Returns true if this element has the given tag ID (fast path).
+    #[inline]
+    #[must_use]
+    pub fn is_tag(&self, tag_id: TagId) -> bool {
+        match self {
+            Self::Element { tag_id: id, .. } => *id == tag_id,
+            _ => false,
         }
     }
 
@@ -134,8 +158,10 @@ impl Node {
     /// Creates a new element node.
     #[must_use]
     pub fn element(name: impl Into<String>, attributes: HashMap<String, String>) -> Self {
+        let name = name.into();
+        let tag_id = TagId::from_name(&name);
         Self {
-            kind: NodeKind::Element { name: name.into(), attributes },
+            kind: NodeKind::Element { tag_id, name, attributes },
             parent: None,
             first_child: None,
             last_child: None,
@@ -186,11 +212,16 @@ mod tests {
 
     #[test]
     fn node_kind_element() {
-        let kind = NodeKind::Element { name: "div".into(), attributes: HashMap::new() };
+        let kind = NodeKind::Element {
+            tag_id: TagId::Div,
+            name: "div".into(),
+            attributes: HashMap::new(),
+        };
         assert!(kind.is_element());
         assert!(!kind.is_text());
         assert!(!kind.is_comment());
         assert_eq!(kind.tag_name(), Some("div"));
+        assert_eq!(kind.tag_id(), Some(TagId::Div));
     }
 
     #[test]

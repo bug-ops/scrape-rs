@@ -79,6 +79,8 @@
 
 mod dom;
 mod error;
+#[cfg(feature = "parallel")]
+pub mod parallel;
 mod parser;
 pub mod query;
 #[cfg(feature = "simd")]
@@ -88,7 +90,10 @@ mod tag;
 
 // Error types
 // DOM types
-pub use dom::{AncestorsIter, ChildrenIter, DescendantsIter, Document, Node, NodeId, NodeKind};
+pub use dom::{
+    AncestorsIter, ChildrenIter, DescendantsIter, Document, DocumentIndex, Node, NodeId, NodeKind,
+    TagId,
+};
 pub use error::{Error, Result};
 // Parser types
 pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};

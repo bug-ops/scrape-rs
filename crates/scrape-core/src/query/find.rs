@@ -34,6 +34,23 @@ use crate::dom::{Document, NodeId};
 /// assert!(result.is_some());
 /// ```
 pub fn find(doc: &Document, selector: &str) -> QueryResult<Option<NodeId>> {
+    // Fast path: simple ID selector
+    if let Some(id) = selector.strip_prefix('#')
+        && is_simple_selector(id)
+        && let Some(index) = doc.index()
+    {
+        return Ok(index.get_by_id(id));
+    }
+
+    // Fast path: simple class selector
+    if let Some(class) = selector.strip_prefix('.')
+        && is_simple_selector(class)
+        && let Some(index) = doc.index()
+    {
+        return Ok(index.get_by_class(class).first().copied());
+    }
+
+    // Fall back to full selector matching
     let selectors = parse_selector(selector)?;
     Ok(find_with_selector(doc, &selectors))
 }
@@ -56,6 +73,23 @@ pub fn find(doc: &Document, selector: &str) -> QueryResult<Option<NodeId>> {
 /// assert_eq!(items.len(), 3);
 /// ```
 pub fn find_all(doc: &Document, selector: &str) -> QueryResult<Vec<NodeId>> {
+    // Fast path: simple ID selector
+    if let Some(id) = selector.strip_prefix('#')
+        && is_simple_selector(id)
+        && let Some(index) = doc.index()
+    {
+        return Ok(index.get_by_id(id).into_iter().collect());
+    }
+
+    // Fast path: simple class selector
+    if let Some(class) = selector.strip_prefix('.')
+        && is_simple_selector(class)
+        && let Some(index) = doc.index()
+    {
+        return Ok(index.get_by_class(class).to_vec());
+    }
+
+    // Fall back to full selector matching
     let selectors = parse_selector(selector)?;
     Ok(find_all_with_selector(doc, &selectors))
 }
@@ -295,6 +329,16 @@ pub fn find_all_within_compiled(
     find_all_within_with_selector(doc, scope, selector.selector_list())
 }
 
+/// Checks if a selector string is simple (no combinators or complex syntax).
+///
+/// A simple selector is one that contains only alphanumeric characters, hyphens,
+/// and underscores. It does not contain combinators (>, +, ~, space), attribute
+/// selectors, pseudo-classes, or multiple selectors.
+#[inline]
+fn is_simple_selector(s: &str) -> bool {
+    !s.is_empty() && !s.contains(['.', '#', '[', ']', ':', ' ', '>', '+', '~', ',', '*', '(', ')'])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -489,5 +533,173 @@ mod tests {
         let results = find_all(&doc, "*").unwrap();
         // Should match html, head, body, div, span (and possibly more from html5ever)
         assert!(results.len() >= 2);
+    }
+
+    #[test]
+    fn test_is_simple_selector() {
+        assert!(is_simple_selector("main"));
+        assert!(is_simple_selector("my-id"));
+        assert!(is_simple_selector("my_class"));
+        assert!(is_simple_selector("id123"));
+
+        assert!(!is_simple_selector(""));
+        assert!(!is_simple_selector("foo bar"));
+        assert!(!is_simple_selector("foo.bar"));
+        assert!(!is_simple_selector("foo#bar"));
+        assert!(!is_simple_selector("foo[attr]"));
+        assert!(!is_simple_selector("foo:hover"));
+        assert!(!is_simple_selector("foo>bar"));
+        assert!(!is_simple_selector("foo+bar"));
+        assert!(!is_simple_selector("foo~bar"));
+        assert!(!is_simple_selector("foo,bar"));
+        assert!(!is_simple_selector("*"));
+        assert!(!is_simple_selector("foo(bar)"));
+    }
+
+    #[test]
+    fn test_fast_path_id_selector() {
+        let doc = parse_doc("<div id='main'><span id='inner'>text</span></div>");
+
+        let main = find(&doc, "#main").unwrap();
+        assert!(main.is_some());
+        let main_id = main.unwrap();
+        assert_eq!(doc.get(main_id).unwrap().kind.tag_name(), Some("div"));
+
+        let inner = find(&doc, "#inner").unwrap();
+        assert!(inner.is_some());
+    }
+
+    #[test]
+    fn test_fast_path_class_selector_find() {
+        let doc = parse_doc("<div class='item'>A</div><div class='item'>B</div>");
+
+        let first = find(&doc, ".item").unwrap();
+        assert!(first.is_some());
+    }
+
+    #[test]
+    fn test_fast_path_class_selector_find_all() {
+        let doc = parse_doc(
+            "<div class='item'>A</div><div class='item'>B</div><div class='item'>C</div>",
+        );
+
+        let items = find_all(&doc, ".item").unwrap();
+        assert_eq!(items.len(), 3);
+    }
+
+    #[test]
+    fn test_fast_path_id_not_found() {
+        let doc = parse_doc("<div id='main'>text</div>");
+
+        let result = find(&doc, "#notfound").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_fast_path_class_not_found() {
+        let doc = parse_doc("<div class='foo'>text</div>");
+
+        let results = find_all(&doc, ".notfound").unwrap();
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_complex_selector_fallback() {
+        let doc = parse_doc("<div id='main' class='container'>text</div>");
+
+        let result = find(&doc, "#main.container").unwrap();
+        assert!(result.is_some());
+
+        let result = find(&doc, "div#main").unwrap();
+        assert!(result.is_some());
+
+        let result = find(&doc, "div > #main").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_fast_path_duplicate_ids() {
+        let doc = parse_doc("<div id='dup'>First</div><div id='dup'>Second</div>");
+
+        let found = find(&doc, "#dup").unwrap();
+        assert!(found.is_some());
+    }
+
+    #[test]
+    fn test_fast_path_multiple_classes() {
+        let doc = parse_doc("<div class='foo bar'>A</div><div class='bar baz'>B</div>");
+
+        let items = find_all(&doc, ".bar").unwrap();
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn test_fast_path_with_no_index() {
+        let mut doc = Document::new();
+        let root_id = doc.create_element("html".to_string(), Default::default());
+        doc.set_root(root_id);
+        let elem = doc.create_element("div".to_string(), Default::default());
+        doc.append_child(root_id, elem);
+
+        let result = find(&doc, "#test").unwrap();
+        assert!(result.is_none());
+
+        let results = find_all(&doc, ".test").unwrap();
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_fast_path_unicode_selectors() {
+        let doc = parse_doc("<div id='日本語'>Japanese</div><div class='中文'>Chinese</div>");
+
+        let result = find(&doc, "#日本語").unwrap();
+        assert!(result.is_some());
+
+        let results = find_all(&doc, ".中文").unwrap();
+        assert_eq!(results.len(), 1);
+    }
+
+    #[test]
+    fn test_fast_path_very_long_selector() {
+        let long_id = "a".repeat(1000);
+        let html = format!("<div id='{long_id}'>text</div>");
+        let doc = parse_doc(&html);
+
+        let result = find(&doc, &format!("#{long_id}")).unwrap();
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_fast_path_empty_class_attribute() {
+        let doc = parse_doc("<div class=''>Empty</div><div>No class</div>");
+
+        let results = find_all(&doc, ".foo").unwrap();
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_fast_path_special_chars_in_selector() {
+        let doc = parse_doc("<div id='test:id'>Colon</div><div class='foo.bar'>Dot</div>");
+
+        let result = find(&doc, "#test\\:id").unwrap();
+        assert!(result.is_some());
+
+        let results = find_all(&doc, ".foo\\.bar").unwrap();
+        assert_eq!(results.len(), 1);
+    }
+
+    #[test]
+    fn test_fast_path_vs_fallback_consistency() {
+        let doc = parse_doc(
+            "<div id='main' class='container'>A</div><div class='container'>B</div>",
+        );
+
+        let fast_result = find(&doc, "#main").unwrap();
+        let fallback_result = find(&doc, "[id='main']").unwrap();
+        assert_eq!(fast_result, fallback_result);
+
+        let fast_results = find_all(&doc, ".container").unwrap();
+        let fallback_results = find_all(&doc, "[class~='container']").unwrap();
+        assert_eq!(fast_results.len(), fallback_results.len());
     }
 }

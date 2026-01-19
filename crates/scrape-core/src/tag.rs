@@ -158,7 +158,16 @@ impl<'a> Tag<'a> {
     #[inline]
     #[must_use]
     pub fn has_class(&self, class: &str) -> bool {
-        self.get("class").is_some_and(|classes| classes.split_whitespace().any(|c| c == class))
+        self.get("class").is_some_and(|classes| {
+            #[cfg(feature = "simd")]
+            {
+                crate::simd::contains_class(classes, class)
+            }
+            #[cfg(not(feature = "simd"))]
+            {
+                classes.split_whitespace().any(|c| c == class)
+            }
+        })
     }
 
     /// Returns all classes on this element.
@@ -276,12 +285,12 @@ impl<'a> Tag<'a> {
         self.serialize_to(&mut result);
         result
     }
-
+    // FIXME primitives
     fn serialize_to(&self, buf: &mut String) {
         let Some(node) = self.doc.get(self.id) else { return };
 
         match &node.kind {
-            NodeKind::Element { name, attributes } => {
+            NodeKind::Element { name, attributes, .. } => {
                 buf.push('<');
                 buf.push_str(name);
 
@@ -814,11 +823,13 @@ impl<'a> Tag<'a> {
             let node = doc.get(child_id)?;
             let attrs = node.kind.attributes()?;
             let classes = attrs.get("class")?;
-            if classes.split_whitespace().any(|c| c == class) {
-                Some(Tag::new(doc, child_id))
-            } else {
-                None
-            }
+
+            #[cfg(feature = "simd")]
+            let matches = crate::simd::contains_class(classes, class);
+            #[cfg(not(feature = "simd"))]
+            let matches = classes.split_whitespace().any(|c| c == class);
+
+            if matches { Some(Tag::new(doc, child_id)) } else { None }
         })
     }
 }

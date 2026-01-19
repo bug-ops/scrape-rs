@@ -20,11 +20,15 @@
 
 mod arena;
 mod document;
+mod index;
 mod node;
+mod tag_id;
 
 #[allow(unused_imports)]
 pub use document::{
     AncestorsIter, ChildrenIter, DescendantsIter, Document, NextSiblingsIter, PrevSiblingsIter,
     SiblingsIter,
 };
+pub use index::DocumentIndex;
 pub use node::{Node, NodeId, NodeKind};
+pub use tag_id::TagId;
