@@ -255,8 +255,7 @@ mod tests {
 
     #[test]
     fn test_parse_batch_concurrent_calls() {
-        use std::sync::Arc;
-        use std::thread;
+        use std::{sync::Arc, thread};
 
         let docs = Arc::new(vec!["<div>1</div>", "<div>2</div>", "<div>3</div>"]);
 

@@ -636,8 +636,10 @@ mod tests {
     #[test]
     fn test_fast_path_with_no_index() {
         let mut doc = Document::new();
+        #[allow(clippy::default_trait_access)]
         let root_id = doc.create_element("html".to_string(), Default::default());
         doc.set_root(root_id);
+        #[allow(clippy::default_trait_access)]
         let elem = doc.create_element("div".to_string(), Default::default());
         doc.append_child(root_id, elem);
 
@@ -690,9 +692,8 @@ mod tests {
 
     #[test]
     fn test_fast_path_vs_fallback_consistency() {
-        let doc = parse_doc(
-            "<div id='main' class='container'>A</div><div class='container'>B</div>",
-        );
+        let doc =
+            parse_doc("<div id='main' class='container'>A</div><div class='container'>B</div>");
 
         let fast_result = find(&doc, "#main").unwrap();
         let fallback_result = find(&doc, "[id='main']").unwrap();
