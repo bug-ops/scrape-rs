@@ -232,7 +232,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: node-${{ matrix.os }}-${{ matrix.node-version }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - uses: pnpm/action-setup@v4
@@ -276,7 +276,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: wasm-${{ matrix.browser }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
       - uses: pnpm/action-setup@v4
