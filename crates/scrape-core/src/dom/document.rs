@@ -70,12 +70,14 @@ impl Document {
     }
 
     /// Returns a reference to the node with the given ID.
+    #[inline]
     #[must_use]
     pub fn get(&self, id: NodeId) -> Option<&Node> {
         self.arena.get(id.index())
     }
 
     /// Returns a mutable reference to the node with the given ID.
+    #[inline]
     #[must_use]
     pub fn get_mut(&mut self, id: NodeId) -> Option<&mut Node> {
         self.arena.get_mut(id.index())
@@ -157,30 +159,35 @@ impl Document {
     // ==================== Navigation APIs ====================
 
     /// Returns the parent of a node.
+    #[inline]
     #[must_use]
     pub fn parent(&self, id: NodeId) -> Option<NodeId> {
         self.arena.get(id.index()).and_then(|n| n.parent)
     }
 
     /// Returns the first child of a node.
+    #[inline]
     #[must_use]
     pub fn first_child(&self, id: NodeId) -> Option<NodeId> {
         self.arena.get(id.index()).and_then(|n| n.first_child)
     }
 
     /// Returns the last child of a node.
+    #[inline]
     #[must_use]
     pub fn last_child(&self, id: NodeId) -> Option<NodeId> {
         self.arena.get(id.index()).and_then(|n| n.last_child)
     }
 
     /// Returns the next sibling of a node.
+    #[inline]
     #[must_use]
     pub fn next_sibling(&self, id: NodeId) -> Option<NodeId> {
         self.arena.get(id.index()).and_then(|n| n.next_sibling)
     }
 
     /// Returns the previous sibling of a node.
+    #[inline]
     #[must_use]
     pub fn prev_sibling(&self, id: NodeId) -> Option<NodeId> {
         self.arena.get(id.index()).and_then(|n| n.prev_sibling)

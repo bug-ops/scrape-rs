@@ -30,6 +30,22 @@ impl Sealed for Html5everParser {}
 
 impl Parser for Html5everParser {
     fn parse_with_config(&self, html: &str, config: &ParseConfig) -> ParseResult<Document> {
+        self.parse_with_config_and_capacity(html, config, 256)
+    }
+}
+
+impl Html5everParser {
+    /// Parses HTML with the given configuration and pre-allocated capacity.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ParseError`] if parsing fails.
+    pub fn parse_with_config_and_capacity(
+        &self,
+        html: &str,
+        config: &ParseConfig,
+        capacity: usize,
+    ) -> ParseResult<Document> {
         if html.trim().is_empty() {
             return Err(ParseError::EmptyInput);
         }
@@ -39,13 +55,22 @@ impl Parser for Html5everParser {
             .read_from(&mut html.as_bytes())
             .map_err(|e| ParseError::InternalError(e.to_string()))?;
 
-        convert_rcdom_to_document(&dom, config)
+        convert_rcdom_to_document_with_capacity(&dom, config, capacity)
     }
 }
 
 /// Converts an html5ever `RcDom` to our Document representation.
 fn convert_rcdom_to_document(dom: &RcDom, config: &ParseConfig) -> ParseResult<Document> {
-    let mut document = Document::new();
+    convert_rcdom_to_document_with_capacity(dom, config, 256)
+}
+
+/// Converts an html5ever `RcDom` to our Document representation with pre-allocated capacity.
+fn convert_rcdom_to_document_with_capacity(
+    dom: &RcDom,
+    config: &ParseConfig,
+    capacity: usize,
+) -> ParseResult<Document> {
+    let mut document = Document::with_capacity(capacity);
     let mut depth = 0;
 
     convert_node(&dom.document, &mut document, None, &mut depth, config)?;

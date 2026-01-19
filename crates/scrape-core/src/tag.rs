@@ -83,6 +83,7 @@ impl<'a> Tag<'a> {
     ///     assert_eq!(div.name(), Some("div"));
     /// }
     /// ```
+    #[inline]
     #[must_use]
     pub fn name(&self) -> Option<&str> {
         self.doc.get(self.id).and_then(|n| n.kind.tag_name())
@@ -101,6 +102,7 @@ impl<'a> Tag<'a> {
     ///     assert_eq!(link.get("class"), None);
     /// }
     /// ```
+    #[inline]
     #[must_use]
     pub fn get(&self, attr: &str) -> Option<&str> {
         self.doc
@@ -153,6 +155,7 @@ impl<'a> Tag<'a> {
     ///     assert!(!div.has_class("baz"));
     /// }
     /// ```
+    #[inline]
     #[must_use]
     pub fn has_class(&self, class: &str) -> bool {
         self.get("class").is_some_and(|classes| classes.split_whitespace().any(|c| c == class))
@@ -193,8 +196,31 @@ impl<'a> Tag<'a> {
     #[must_use]
     pub fn text(&self) -> String {
         let mut result = String::new();
-        self.collect_text(&mut result);
+        self.text_into(&mut result);
         result
+    }
+
+    /// Collects text content into the provided buffer.
+    ///
+    /// This method allows buffer reuse for repeated text extraction,
+    /// avoiding allocations in performance-critical paths.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div>Hello</div><div>World</div>");
+    /// let mut buffer = String::new();
+    ///
+    /// for div in soup.find_all("div").unwrap() {
+    ///     buffer.clear();
+    ///     div.text_into(&mut buffer);
+    ///     println!("{}", buffer);
+    /// }
+    /// ```
+    pub fn text_into(&self, buf: &mut String) {
+        self.collect_text(buf);
     }
 
     fn collect_text(&self, buf: &mut String) {
@@ -1300,5 +1326,96 @@ mod tests {
         let soup = Soup::parse("<div><ul><li class=\"item\">Nested</li></ul></div>");
         let div = soup.find("div").unwrap().unwrap();
         assert!(div.children_by_class("item").next().is_none());
+    }
+
+    #[test]
+    fn test_text_into_empty_buffer() {
+        let soup = Soup::parse("<div>Hello World</div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::new();
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "Hello World");
+    }
+
+    #[test]
+    fn test_text_into_existing_content() {
+        let soup = Soup::parse("<div>Hello</div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::from("Start: ");
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "Start: Hello");
+    }
+
+    #[test]
+    fn test_text_into_buffer_reuse() {
+        let soup = Soup::parse("<div>First</div><div>Second</div><div>Third</div>");
+        let divs = soup.find_all("div").unwrap();
+        let mut buffer = String::new();
+
+        for (i, div) in divs.iter().enumerate() {
+            if i > 0 {
+                buffer.clear();
+            }
+            div.text_into(&mut buffer);
+            match i {
+                0 => assert_eq!(buffer, "First"),
+                1 => assert_eq!(buffer, "Second"),
+                2 => assert_eq!(buffer, "Third"),
+                _ => panic!("unexpected iteration"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_text_into_nested_elements() {
+        let soup = Soup::parse("<div>Hello <b>Bold</b> <i>Italic</i>!</div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::new();
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "Hello BoldItalic!");
+    }
+
+    #[test]
+    fn test_text_into_empty_element() {
+        let soup = Soup::parse("<div></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::from("prefix");
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "prefix");
+    }
+
+    #[test]
+    fn test_text_into_deeply_nested() {
+        let soup = Soup::parse("<div><p><span><b>Deep</b></span></p></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::new();
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "Deep");
+    }
+
+    #[test]
+    fn test_text_into_multiple_text_nodes() {
+        let soup = Soup::parse("<div>First<span>Middle</span>Last</div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let mut buffer = String::new();
+        div.text_into(&mut buffer);
+        assert_eq!(buffer, "FirstMiddleLast");
+    }
+
+    #[test]
+    fn test_text_into_no_allocations_on_reuse() {
+        let soup = Soup::parse("<div>Test</div>");
+        let div = soup.find("div").unwrap().unwrap();
+
+        let mut buffer = String::with_capacity(100);
+        div.text_into(&mut buffer);
+        let capacity_after_first = buffer.capacity();
+
+        buffer.clear();
+        div.text_into(&mut buffer);
+        let capacity_after_second = buffer.capacity();
+
+        assert_eq!(capacity_after_first, capacity_after_second);
+        assert_eq!(buffer, "Test");
     }
 }

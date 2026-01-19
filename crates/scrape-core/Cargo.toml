@@ -58,6 +58,10 @@ harness = false
 name = "fragment_and_extraction"
 harness = false
 
+[[bench]]
+name = "performance"
+harness = false
+
 [[test]]
 name = "integration"
 path = "../../tests/integration/mod.rs"

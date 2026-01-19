@@ -5,7 +5,7 @@
 use crate::{
     Result, Tag,
     dom::{Document, NodeId, NodeKind},
-    parser::{Html5everParser, ParseConfig, Parser},
+    parser::{Html5everParser, ParseConfig},
     query::{
         CompiledSelector, QueryResult, find, find_all, find_all_compiled, find_compiled,
         select_attr, select_text,
@@ -182,8 +182,10 @@ impl Soup {
             include_comments: config.include_comments,
         };
 
-        let document =
-            parser.parse_with_config(html, &parse_config).unwrap_or_else(|_| Document::new());
+        let estimated_nodes = estimate_node_count(html.len());
+        let document = parser
+            .parse_with_config_and_capacity(html, &parse_config, estimated_nodes)
+            .unwrap_or_else(|_| Document::new());
 
         Self { document, config }
     }
@@ -502,6 +504,15 @@ fn collect_text(doc: &Document, id: NodeId, buf: &mut String) {
     }
 }
 
+/// Estimates the number of nodes in the document based on HTML size.
+///
+/// Uses heuristic: ~1 node per 50 bytes of HTML.
+/// Clamps to minimum of 256 nodes to avoid excessive allocations for small documents.
+#[inline]
+fn estimate_node_count(html_len: usize) -> usize {
+    (html_len / 50).max(256)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -706,5 +717,38 @@ mod tests {
 
         assert_eq!(soup1.select_compiled(&selector).len(), 1);
         assert_eq!(soup2.select_compiled(&selector).len(), 2);
+    }
+
+    #[test]
+    fn test_estimate_node_count_minimum() {
+        assert_eq!(estimate_node_count(0), 256);
+        assert_eq!(estimate_node_count(10), 256);
+        assert_eq!(estimate_node_count(100), 256);
+        assert_eq!(estimate_node_count(256 * 50 - 1), 256);
+    }
+
+    #[test]
+    fn test_estimate_node_count_small() {
+        assert_eq!(estimate_node_count(1000), 256);
+        assert_eq!(estimate_node_count(5000), 256);
+    }
+
+    #[test]
+    fn test_estimate_node_count_medium() {
+        assert_eq!(estimate_node_count(15_000), 300);
+        assert_eq!(estimate_node_count(25_000), 500);
+        assert_eq!(estimate_node_count(50_000), 1000);
+    }
+
+    #[test]
+    fn test_estimate_node_count_large() {
+        assert_eq!(estimate_node_count(100_000), 2000);
+        assert_eq!(estimate_node_count(500_000), 10_000);
+        assert_eq!(estimate_node_count(1_000_000), 20_000);
+    }
+
+    #[test]
+    fn test_estimate_node_count_huge() {
+        assert_eq!(estimate_node_count(10_000_000), 200_000);
     }
 }
