@@ -10,12 +10,22 @@ Example:
     World
 """
 
-from scrape_rs._core import Soup, SoupConfig, Tag, __version__, parse_batch
+from scrape_rs._core import (
+    CompiledSelector,
+    Soup,
+    SoupConfig,
+    Tag,
+    __version__,
+    compile_selector,
+    parse_batch,
+)
 
 __all__ = [
+    "CompiledSelector",
     "Soup",
     "SoupConfig",
     "Tag",
+    "compile_selector",
     "parse_batch",
     "__version__",
 ]

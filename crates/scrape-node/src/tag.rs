@@ -6,7 +6,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use scrape_core::{Document, NodeId, NodeKind, Soup as CoreSoup};
 
-use crate::error::IntoNapiError;
+use crate::{error::IntoNapiError, selector::CompiledSelector};
 
 /// An HTML element in the document.
 ///
@@ -352,6 +352,155 @@ impl Tag {
             .children(self.id)
             .filter(|child_id| self.doc().get(*child_id).is_some_and(|n| n.kind.is_element()))
             .count() as u32
+    }
+
+    // ==================== Compiled Selector Methods ====================
+
+    /// Find the first descendant matching a compiled selector.
+    ///
+    /// @param selector - A compiled CSS selector
+    /// @returns The first matching Tag, or null if not found
+    #[napi(js_name = "findCompiled")]
+    pub fn find_compiled(&self, selector: &CompiledSelector) -> Option<Tag> {
+        scrape_core::query::find_within_compiled(self.doc(), self.id, &selector.inner)
+            .map(|id| Tag::new(Arc::clone(&self.soup), id))
+    }
+
+    /// Find all descendants matching a compiled selector.
+    ///
+    /// @param selector - A compiled CSS selector
+    /// @returns Array of matching Tag instances
+    #[napi(js_name = "selectCompiled")]
+    pub fn select_compiled(&self, selector: &CompiledSelector) -> Vec<Tag> {
+        scrape_core::query::find_all_within_compiled(self.doc(), self.id, &selector.inner)
+            .into_iter()
+            .map(|id| Tag::new(Arc::clone(&self.soup), id))
+            .collect()
+    }
+
+    // ==================== Text and Iterator Methods ====================
+
+    /// Get all direct text nodes (excluding descendants).
+    ///
+    /// @returns Array of text content strings
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div>Text1<span>Inner</span>Text2</div>");
+    /// const div = soup.find("div");
+    /// const texts = div.textNodes;
+    /// // texts: ["Text1", "Text2"]
+    /// ```
+    #[napi(getter, js_name = "textNodes")]
+    pub fn text_nodes(&self) -> Vec<String> {
+        self.doc()
+            .children(self.id)
+            .filter_map(|child_id| {
+                let node = self.doc().get(child_id)?;
+                match &node.kind {
+                    NodeKind::Text { content } => Some(content.clone()),
+                    _ => None,
+                }
+            })
+            .collect()
+    }
+
+    /// Get all direct child elements with a specific tag name.
+    ///
+    /// @param name - The tag name to filter by
+    /// @returns Array of matching child Tag instances
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div><p>A</p><span>B</span><p>C</p></div>");
+    /// const div = soup.find("div");
+    /// const paras = div.childrenByName("p");
+    /// // paras.length: 2
+    /// ```
+    #[napi(js_name = "childrenByName")]
+    pub fn children_by_name(&self, name: String) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.children(self.id)
+            .filter_map(|child_id| {
+                let node = doc.get(child_id)?;
+                if node.kind.is_element() && node.kind.tag_name()? == name {
+                    Some(Tag::new(Arc::clone(&self.soup), child_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all direct child elements with a specific class.
+    ///
+    /// @param className - The class name to filter by
+    /// @returns Array of matching child Tag instances
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div><p class='item'>A</p><span>B</span><p class='item'>C</p></div>");
+    /// const div = soup.find("div");
+    /// const items = div.childrenByClass("item");
+    /// // items.length: 2
+    /// ```
+    #[napi(js_name = "childrenByClass")]
+    pub fn children_by_class(&self, class_name: String) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.children(self.id)
+            .filter_map(|child_id| {
+                let node = doc.get(child_id)?;
+                if node.kind.is_element() {
+                    let attrs = node.kind.attributes()?;
+                    let classes = attrs.get("class")?;
+                    if classes.split_whitespace().any(|c| c == class_name) {
+                        return Some(Tag::new(Arc::clone(&self.soup), child_id));
+                    }
+                }
+                None
+            })
+            .collect()
+    }
+
+    // ==================== Extraction Methods ====================
+
+    /// Extract text content from all descendants matching a selector.
+    ///
+    /// @param selector - CSS selector string
+    /// @returns Array of text content strings
+    /// @throws Error if the selector syntax is invalid
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div><p>A</p><p>B</p></div>");
+    /// const div = soup.find("div");
+    /// const texts = div.selectText("p");
+    /// // texts: ["A", "B"]
+    /// ```
+    #[napi(js_name = "selectText")]
+    pub fn select_text(&self, selector: String) -> Result<Vec<String>> {
+        scrape_core::query::select_text_within(self.doc(), self.id, &selector)
+            .map_err(IntoNapiError::into_napi_error)
+    }
+
+    /// Extract attribute values from all descendants matching a selector.
+    ///
+    /// @param selector - CSS selector string
+    /// @param attr - Attribute name to extract
+    /// @returns Array of attribute values (null if attribute is missing)
+    /// @throws Error if the selector syntax is invalid
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div><a href='/a'>A</a><a href='/b'>B</a></div>");
+    /// const div = soup.find("div");
+    /// const hrefs = div.selectAttr("a", "href");
+    /// // hrefs: ["/a", "/b"]
+    /// ```
+    #[napi(js_name = "selectAttr")]
+    pub fn select_attr(&self, selector: String, attr: String) -> Result<Vec<Option<String>>> {
+        scrape_core::query::select_attr_within(self.doc(), self.id, &selector, &attr)
+            .map_err(IntoNapiError::into_napi_error)
     }
 }
 

@@ -65,6 +65,7 @@
 
 mod compiled;
 mod error;
+mod extraction;
 mod filter;
 mod find;
 mod selector;
@@ -72,6 +73,7 @@ mod text;
 
 pub use compiled::{CompiledSelector, compile_selector};
 pub use error::{QueryError, QueryResult};
+pub use extraction::{select_attr, select_attr_within, select_text, select_text_within};
 pub use filter::{Filter, find_by_filter, find_first_by_filter};
 pub use find::{
     find, find_all, find_all_compiled, find_all_with_selector, find_all_within,

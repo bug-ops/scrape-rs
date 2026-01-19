@@ -21,6 +21,7 @@
 
 mod config;
 mod error;
+mod selector;
 mod soup;
 mod tag;
 
@@ -29,6 +30,7 @@ use std::sync::Arc;
 pub use config::SoupConfig;
 use napi_derive::napi;
 use rayon::prelude::*;
+pub use selector::CompiledSelector;
 pub use soup::Soup;
 pub use tag::Tag;
 

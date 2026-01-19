@@ -27,10 +27,12 @@
 use wasm_bindgen::prelude::*;
 
 mod config;
+mod selector;
 mod soup;
 mod tag;
 
 pub use config::SoupConfig;
+pub use selector::CompiledSelector;
 pub use soup::Soup;
 pub use tag::Tag;
 

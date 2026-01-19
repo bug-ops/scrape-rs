@@ -6,7 +6,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use scrape_core::Soup as CoreSoup;
 
-use crate::{config::SoupConfig, error::IntoNapiError, tag::Tag};
+use crate::{config::SoupConfig, error::IntoNapiError, selector::CompiledSelector, tag::Tag};
 
 /// A parsed HTML document.
 ///
@@ -120,5 +120,102 @@ impl Soup {
     #[allow(clippy::cast_possible_truncation)]
     pub fn length(&self) -> u32 {
         self.inner.document().len() as u32
+    }
+
+    // ==================== Compiled Selector Methods ====================
+
+    /// Find the first element matching a compiled selector.
+    ///
+    /// @param selector - A compiled CSS selector
+    /// @returns The first matching Tag, or null if not found
+    #[napi(js_name = "findCompiled")]
+    pub fn find_compiled(&self, selector: &CompiledSelector) -> Option<Tag> {
+        self.inner
+            .find_compiled(&selector.inner)
+            .map(|tag| Tag::new(Arc::clone(&self.inner), tag.node_id()))
+    }
+
+    /// Find all elements matching a compiled selector.
+    ///
+    /// @param selector - A compiled CSS selector
+    /// @returns Array of matching Tag instances
+    #[napi(js_name = "selectCompiled")]
+    pub fn select_compiled(&self, selector: &CompiledSelector) -> Vec<Tag> {
+        self.inner
+            .select_compiled(&selector.inner)
+            .into_iter()
+            .map(|tag| Tag::new(Arc::clone(&self.inner), tag.node_id()))
+            .collect()
+    }
+
+    // ==================== Fragment Parsing ====================
+
+    /// Parse an HTML fragment without html/body wrapper.
+    ///
+    /// @param html - HTML fragment string to parse
+    /// @param context - Optional context element name (default: "body")
+    /// @param config - Optional parsing configuration
+    /// @returns A new Soup instance containing the fragment
+    ///
+    /// @example
+    /// ```javascript
+    /// import { Soup } from 'scrape-rs';
+    ///
+    /// // Parse without wrapper
+    /// const soup = Soup.parseFragment("<div>A</div><div>B</div>");
+    /// const divs = soup.findAll("div");
+    /// console.log(divs.length); // 2
+    ///
+    /// // Parse with td context
+    /// const tdSoup = Soup.parseFragment("<td>Cell</td>", "tr");
+    /// ```
+    #[napi(factory, js_name = "parseFragment")]
+    pub fn parse_fragment(
+        html: String,
+        context: Option<String>,
+        config: Option<SoupConfig>,
+    ) -> Self {
+        let core_config = config.map(|c| c.to_core()).unwrap_or_default();
+        let ctx = context.as_deref().unwrap_or("body");
+
+        let soup = CoreSoup::parse_fragment_with_config(&html, ctx, core_config);
+        Self { inner: Arc::new(soup) }
+    }
+
+    // ==================== Extraction Methods ====================
+
+    /// Extract text content from all elements matching a selector.
+    ///
+    /// @param selector - CSS selector string
+    /// @returns Array of text content strings
+    /// @throws Error if the selector syntax is invalid
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<div>A</div><div>B</div>");
+    /// const texts = soup.selectText("div");
+    /// // texts: ["A", "B"]
+    /// ```
+    #[napi(js_name = "selectText")]
+    pub fn select_text(&self, selector: String) -> Result<Vec<String>> {
+        self.inner.select_text(&selector).map_err(IntoNapiError::into_napi_error)
+    }
+
+    /// Extract attribute values from all elements matching a selector.
+    ///
+    /// @param selector - CSS selector string
+    /// @param attr - Attribute name to extract
+    /// @returns Array of attribute values (null if attribute is missing)
+    /// @throws Error if the selector syntax is invalid
+    ///
+    /// @example
+    /// ```javascript
+    /// const soup = new Soup("<a href='/a'>A</a><a href='/b'>B</a><a>C</a>");
+    /// const hrefs = soup.selectAttr("a", "href");
+    /// // hrefs: ["/a", "/b", null]
+    /// ```
+    #[napi(js_name = "selectAttr")]
+    pub fn select_attr(&self, selector: String, attr: String) -> Result<Vec<Option<String>>> {
+        self.inner.select_attr(&selector, &attr).map_err(IntoNapiError::into_napi_error)
     }
 }

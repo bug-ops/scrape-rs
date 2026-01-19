@@ -6,7 +6,10 @@ use crate::{
     Result, Tag,
     dom::{Document, NodeId, NodeKind},
     parser::{Html5everParser, ParseConfig, Parser},
-    query::{CompiledSelector, QueryResult, find, find_all, find_all_compiled, find_compiled},
+    query::{
+        CompiledSelector, QueryResult, find, find_all, find_all_compiled, find_compiled,
+        select_attr, select_text,
+    },
 };
 
 /// Configuration options for HTML parsing.
@@ -211,6 +214,61 @@ impl Soup {
         Ok(Self::parse(&html))
     }
 
+    /// Parses an HTML fragment without wrapping in html/body tags.
+    ///
+    /// Unlike [`Soup::parse`], this does not wrap content in `<html><body>` structure.
+    /// The fragment is parsed as if it appeared inside a `<body>` element.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse_fragment("<span>A</span><span>B</span>");
+    /// let spans = soup.find_all("span").unwrap();
+    /// assert_eq!(spans.len(), 2);
+    /// ```
+    #[must_use]
+    pub fn parse_fragment(html: &str) -> Self {
+        Self::parse_fragment_with_context(html, "body")
+    }
+
+    /// Parses an HTML fragment with a custom context element.
+    ///
+    /// The context element determines parsing behavior:
+    /// - `"body"`: Standard HTML elements (default)
+    /// - `"table"`: Allows tr/td without explicit tbody
+    /// - `"tbody"`: Allows tr directly
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse_fragment_with_context("<tr><td>A</td></tr>", "tbody");
+    /// let tr = soup.find("tr").unwrap();
+    /// assert!(tr.is_some());
+    /// ```
+    #[must_use]
+    pub fn parse_fragment_with_context(html: &str, context: &str) -> Self {
+        Self::parse_fragment_with_config(html, context, SoupConfig::default())
+    }
+
+    /// Parses an HTML fragment with custom context and configuration.
+    #[must_use]
+    pub fn parse_fragment_with_config(html: &str, context: &str, config: SoupConfig) -> Self {
+        let parse_config = ParseConfig {
+            max_depth: config.max_depth,
+            preserve_whitespace: config.preserve_whitespace,
+            include_comments: config.include_comments,
+        };
+
+        let document = crate::parser::fragment::parse_fragment_impl(html, context, &parse_config)
+            .unwrap_or_else(|_| Document::new());
+
+        Self { document, config }
+    }
+
     // ==================== Query Methods ====================
 
     /// Finds the first element matching the given CSS selector.
@@ -309,6 +367,48 @@ impl Soup {
             .into_iter()
             .map(|id| Tag::new(&self.document, id))
             .collect()
+    }
+
+    /// Extracts text content from all elements matching a CSS selector.
+    ///
+    /// Returns the concatenated text content of each matching element.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<ul><li>First</li><li>Second</li></ul>");
+    /// let texts = soup.select_text("li").unwrap();
+    /// assert_eq!(texts, vec!["First", "Second"]);
+    /// ```
+    pub fn select_text(&self, selector: &str) -> QueryResult<Vec<String>> {
+        select_text(&self.document, selector)
+    }
+
+    /// Extracts attribute values from all elements matching a CSS selector.
+    ///
+    /// Returns `Some(value)` if the attribute exists, `None` if it doesn't.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<a href='/a'>A</a><a>B</a>");
+    /// let hrefs = soup.select_attr("a", "href").unwrap();
+    /// assert_eq!(hrefs, vec![Some("/a".to_string()), None]);
+    /// ```
+    pub fn select_attr(&self, selector: &str, attr: &str) -> QueryResult<Vec<Option<String>>> {
+        select_attr(&self.document, selector, attr)
     }
 
     // ==================== Document Methods ====================

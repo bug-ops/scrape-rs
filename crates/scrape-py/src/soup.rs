@@ -5,7 +5,7 @@ use std::sync::Arc;
 use pyo3::prelude::*;
 use scrape_core::Soup;
 
-use crate::{config::PySoupConfig, error::IntoPyErr, tag::PyTag};
+use crate::{config::PySoupConfig, error::IntoPyErr, selector::PyCompiledSelector, tag::PyTag};
 
 /// A parsed HTML document.
 ///
@@ -100,6 +100,86 @@ impl PySoup {
     ///     List of matching Tag instances.
     fn select(&self, selector: &str) -> PyResult<Vec<PyTag>> {
         self.find_all(selector)
+    }
+
+    /// Find the first element using a pre-compiled selector.
+    ///
+    /// Args:
+    ///     selector: A CompiledSelector instance.
+    ///
+    /// Returns:
+    ///     The first matching Tag, or None if not found.
+    fn find_compiled(&self, selector: &PyCompiledSelector) -> Option<PyTag> {
+        self.inner
+            .find_compiled(&selector.inner)
+            .map(|tag| PyTag::new(Arc::clone(&self.inner), tag.node_id()))
+    }
+
+    /// Find all elements using a pre-compiled selector.
+    ///
+    /// Args:
+    ///     selector: A CompiledSelector instance.
+    ///
+    /// Returns:
+    ///     List of matching Tag instances.
+    fn select_compiled(&self, selector: &PyCompiledSelector) -> Vec<PyTag> {
+        self.inner
+            .select_compiled(&selector.inner)
+            .into_iter()
+            .map(|tag| PyTag::new(Arc::clone(&self.inner), tag.node_id()))
+            .collect()
+    }
+
+    /// Parse an HTML fragment without wrapping in html/body tags.
+    ///
+    /// Args:
+    ///     html: HTML fragment to parse.
+    ///     context: Optional context element name (default: "body").
+    ///     config: Optional parsing configuration.
+    ///
+    /// Returns:
+    ///     A new Soup instance.
+    #[staticmethod]
+    #[pyo3(signature = (html, context=None, config=None))]
+    fn parse_fragment(html: &str, context: Option<&str>, config: Option<&PySoupConfig>) -> Self {
+        let core_config = config.map(PySoupConfig::to_core).unwrap_or_default();
+
+        let soup = if let Some(ctx) = context {
+            Soup::parse_fragment_with_config(html, ctx, core_config)
+        } else {
+            Soup::parse_fragment_with_config(html, "body", core_config)
+        };
+
+        Self { inner: Arc::new(soup) }
+    }
+
+    /// Extract text content from all elements matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     List of text strings, one per matching element.
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn select_text(&self, selector: &str) -> PyResult<Vec<String>> {
+        self.inner.select_text(selector).map_err(IntoPyErr::into_py_err)
+    }
+
+    /// Extract attribute values from all elements matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///     attr: Attribute name to extract.
+    ///
+    /// Returns:
+    ///     List of attribute values (None for missing attributes).
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn select_attr(&self, selector: &str, attr: &str) -> PyResult<Vec<Option<String>>> {
+        self.inner.select_attr(selector, attr).map_err(IntoPyErr::into_py_err)
     }
 
     /// Get the root element of the document.

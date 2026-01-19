@@ -568,3 +568,544 @@ fn test_attribute_selector() {
     let email = soup.find("input[type='text']").unwrap().unwrap();
     assert_eq!(email.get("name"), Some("email".to_string()));
 }
+
+// ==================== Phase 13b: Fragment Parsing Tests ====================
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_empty() {
+    let soup = Soup::parse_fragment("", None, None);
+    assert_eq!(soup.length(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_text_only() {
+    let soup = Soup::parse_fragment("Hello World", None, None);
+    assert!(soup.text().contains("Hello World"));
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_simple() {
+    let soup = Soup::parse_fragment("<div>Test</div>", None, None);
+    let div = soup.find("div").unwrap().unwrap();
+    assert_eq!(div.text(), "Test");
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_nested() {
+    let html = "<div><span>A</span><span>B</span></div>";
+    let soup = Soup::parse_fragment(html, None, None);
+    let spans = soup.find_all("span").unwrap();
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0].text(), "A");
+    assert_eq!(spans[1].text(), "B");
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_no_wrapper() {
+    let soup = Soup::parse_fragment("<div>Content</div>", None, None);
+    let html = soup.to_html();
+    assert!(html.contains("<div>"));
+    assert!(soup.root().is_some());
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_with_context_body() {
+    let soup = Soup::parse_fragment("<div>Test</div>", Some("body".to_string()), None);
+    let div = soup.find("div").unwrap().unwrap();
+    assert_eq!(div.text(), "Test");
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_with_context_table() {
+    let html = "<tr><td>Cell 1</td><td>Cell 2</td></tr>";
+    let soup = Soup::parse_fragment(html, Some("table".to_string()), None);
+    let tds = soup.find_all("td").unwrap();
+    assert_eq!(tds.len(), 2);
+    assert_eq!(tds[0].text(), "Cell 1");
+    assert_eq!(tds[1].text(), "Cell 2");
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_with_context_tbody() {
+    let html = "<tr><td>A</td></tr><tr><td>B</td></tr>";
+    let soup = Soup::parse_fragment(html, Some("tbody".to_string()), None);
+    let trs = soup.find_all("tr").unwrap();
+    assert_eq!(trs.len(), 2);
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_multiple_roots() {
+    let html = "<div>First</div><div>Second</div><div>Third</div>";
+    let soup = Soup::parse_fragment(html, None, None);
+    let divs = soup.find_all("div").unwrap();
+    assert_eq!(divs.len(), 3);
+}
+
+#[wasm_bindgen_test]
+fn test_parse_fragment_preserves_attributes() {
+    let html = "<span class='highlight' id='item'>Text</span>";
+    let soup = Soup::parse_fragment(html, None, None);
+    let span = soup.find("span").unwrap().unwrap();
+    assert_eq!(span.get("class"), Some("highlight".to_string()));
+    assert_eq!(span.get("id"), Some("item".to_string()));
+}
+
+// ==================== Phase 13b: CompiledSelector Tests ====================
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_compile() {
+    let selector = scrape_wasm::CompiledSelector::compile("div.item").unwrap();
+    assert_eq!(selector.source(), "div.item");
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_complex() {
+    let selector = scrape_wasm::CompiledSelector::compile("ul > li.active:first-child").unwrap();
+    assert_eq!(selector.source(), "ul > li.active:first-child");
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_invalid() {
+    let result = scrape_wasm::CompiledSelector::compile("[[[invalid");
+    assert!(result.is_err());
+}
+
+#[wasm_bindgen_test]
+fn test_find_compiled() {
+    let html = "<div class='item'>First</div><div class='item'>Second</div>";
+    let soup = Soup::new(html, None);
+    let selector = scrape_wasm::CompiledSelector::compile(".item").unwrap();
+
+    let result = soup.find_compiled(&selector);
+    assert!(result.is_some());
+    let tag = result.unwrap();
+    assert_eq!(tag.text(), "First");
+}
+
+#[wasm_bindgen_test]
+fn test_select_compiled() {
+    let html = "<ul><li class='active'>A</li><li>B</li><li class='active'>C</li></ul>";
+    let soup = Soup::new(html, None);
+    let selector = scrape_wasm::CompiledSelector::compile("li.active").unwrap();
+
+    let results = soup.select_compiled(&selector);
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].text(), "A");
+    assert_eq!(results[1].text(), "C");
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_reuse() {
+    let selector = scrape_wasm::CompiledSelector::compile("span.highlight").unwrap();
+
+    let soup1 = Soup::new("<div><span class='highlight'>Doc 1</span></div>", None);
+    let soup2 = Soup::new("<div><span class='highlight'>Doc 2</span></div>", None);
+
+    let result1 = soup1.find_compiled(&selector).unwrap();
+    let result2 = soup2.find_compiled(&selector).unwrap();
+
+    assert_eq!(result1.text(), "Doc 1");
+    assert_eq!(result2.text(), "Doc 2");
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_not_found() {
+    let soup = Soup::new("<div>No match</div>", None);
+    let selector = scrape_wasm::CompiledSelector::compile(".nonexistent").unwrap();
+
+    let result = soup.find_compiled(&selector);
+    assert!(result.is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_empty_results() {
+    let soup = Soup::new("<div>No match</div>", None);
+    let selector = scrape_wasm::CompiledSelector::compile("li").unwrap();
+
+    let results = soup.select_compiled(&selector);
+    assert_eq!(results.len(), 0);
+}
+
+// ==================== Phase 13b: Extraction Methods Tests ====================
+
+#[wasm_bindgen_test]
+fn test_select_text_single() {
+    let html = "<div><span class='item'>Hello</span></div>";
+    let soup = Soup::new(html, None);
+
+    let texts = soup.select_text(".item").unwrap();
+    assert_eq!(texts.len(), 1);
+    assert_eq!(texts[0], "Hello");
+}
+
+#[wasm_bindgen_test]
+fn test_select_text_multiple() {
+    let html = "<ul><li class='item'>First</li><li class='item'>Second</li><li \
+                class='item'>Third</li></ul>";
+    let soup = Soup::new(html, None);
+
+    let texts = soup.select_text(".item").unwrap();
+    assert_eq!(texts.len(), 3);
+    assert_eq!(texts[0], "First");
+    assert_eq!(texts[1], "Second");
+    assert_eq!(texts[2], "Third");
+}
+
+#[wasm_bindgen_test]
+fn test_select_text_empty() {
+    let soup = Soup::new("<div>No matches</div>", None);
+    let texts = soup.select_text(".nonexistent").unwrap();
+    assert_eq!(texts.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_select_text_nested_content() {
+    let html = "<div class='item'>Hello <b>World</b>!</div>";
+    let soup = Soup::new(html, None);
+
+    let texts = soup.select_text(".item").unwrap();
+    assert_eq!(texts.len(), 1);
+    assert!(texts[0].contains("Hello"));
+    assert!(texts[0].contains("World"));
+}
+
+#[wasm_bindgen_test]
+fn test_select_text_invalid_selector() {
+    let soup = Soup::new("<div>Test</div>", None);
+    let result = soup.select_text("[[[");
+    assert!(result.is_err());
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_single() {
+    let html = "<a href='/link' class='link'>Click</a>";
+    let soup = Soup::new(html, None);
+
+    let hrefs = soup.select_attr("a", "href").unwrap();
+    assert_eq!(hrefs.len(), 1);
+    assert_eq!(hrefs[0], "/link");
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_multiple() {
+    let html = "<div><a href='/page1'>L1</a><a href='/page2'>L2</a><a href='/page3'>L3</a></div>";
+    let soup = Soup::new(html, None);
+
+    let hrefs = soup.select_attr("a", "href").unwrap();
+    assert_eq!(hrefs.len(), 3);
+    assert_eq!(hrefs[0], "/page1");
+    assert_eq!(hrefs[1], "/page2");
+    assert_eq!(hrefs[2], "/page3");
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_missing() {
+    let html = "<div><a href='/link'>Has</a><a>Missing</a></div>";
+    let soup = Soup::new(html, None);
+
+    let hrefs = soup.select_attr("a", "href").unwrap();
+    assert_eq!(hrefs.len(), 2);
+    assert_eq!(hrefs[0], "/link");
+    assert!(hrefs[1].is_undefined());
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_empty() {
+    let soup = Soup::new("<div>No links</div>", None);
+    let hrefs = soup.select_attr("a", "href").unwrap();
+    assert_eq!(hrefs.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_invalid_selector() {
+    let soup = Soup::new("<div>Test</div>", None);
+    let result = soup.select_attr("[[[", "id");
+    assert!(result.is_err());
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_class() {
+    let html = "<div><span class='tag-a'>A</span><span class='tag-b'>B</span><span \
+                class='tag-c'>C</span></div>";
+    let soup = Soup::new(html, None);
+
+    let classes = soup.select_attr("span", "class").unwrap();
+    assert_eq!(classes.len(), 3);
+}
+
+// ==================== Phase 13b: Text Nodes Iterator Tests ====================
+
+#[wasm_bindgen_test]
+fn test_text_nodes_simple() {
+    let html = "<div>Hello World</div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let text_nodes = div.text_nodes();
+    assert_eq!(text_nodes.len(), 1);
+    assert_eq!(text_nodes[0], "Hello World");
+}
+
+#[wasm_bindgen_test]
+fn test_text_nodes_multiple() {
+    let html = "<div>First<span>Middle</span>Last</div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let text_nodes = div.text_nodes();
+    let has_first = text_nodes.iter().any(|t| t.contains("First"));
+    let has_last = text_nodes.iter().any(|t| t.contains("Last"));
+    let has_middle = text_nodes.iter().any(|t| t.contains("Middle"));
+
+    assert!(has_first);
+    assert!(has_last);
+    assert!(!has_middle); // Middle is inside span
+}
+
+#[wasm_bindgen_test]
+fn test_text_nodes_empty() {
+    let html = "<div><span>No direct text</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let text_nodes = div.text_nodes();
+    let non_empty_count = text_nodes.iter().filter(|t| !t.trim().is_empty()).count();
+    assert_eq!(non_empty_count, 0);
+}
+
+#[wasm_bindgen_test]
+fn test_text_nodes_whitespace() {
+    let html = "<div>  Text with spaces  </div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let text_nodes = div.text_nodes();
+    assert!(text_nodes.len() >= 1);
+    assert!(text_nodes.iter().any(|node| node.contains("Text with spaces")));
+}
+
+#[wasm_bindgen_test]
+fn test_text_nodes_mixed_content() {
+    let html = "<p>Start <b>bold</b> middle <i>italic</i> end</p>";
+    let soup = Soup::new(html, None);
+    let p = soup.find("p").unwrap().unwrap();
+
+    let text_nodes = p.text_nodes();
+    assert!(text_nodes.iter().any(|node| node.contains("Start")));
+    assert!(text_nodes.iter().any(|node| node.contains("middle")));
+    assert!(text_nodes.iter().any(|node| node.contains("end")));
+}
+
+// ==================== Phase 13b: Filtered Iterators Tests ====================
+
+#[wasm_bindgen_test]
+fn test_children_by_name_single() {
+    let html = "<div><span>A</span><p>B</p><span>C</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let spans = div.children_by_name("span");
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0].text(), "A");
+    assert_eq!(spans[1].text(), "C");
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_name_all_match() {
+    let html = "<ul><li>A</li><li>B</li><li>C</li></ul>";
+    let soup = Soup::new(html, None);
+    let ul = soup.find("ul").unwrap().unwrap();
+
+    let items = ul.children_by_name("li");
+    assert_eq!(items.len(), 3);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_name_none_match() {
+    let html = "<div><span>A</span><span>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_name("li");
+    assert_eq!(items.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_name_empty() {
+    let html = "<div></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_name("span");
+    assert_eq!(items.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_name_case_normalized() {
+    let html = "<div><SPAN>A</SPAN><span>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_name("span");
+    assert_eq!(items.len(), 2);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_single() {
+    let html = "<div><span class='item'>A</span><span>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("item");
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].text(), "A");
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_multiple() {
+    let html = "<div><span class='tag'>A</span><p class='tag'>B</p><div class='tag'>C</div></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("tag");
+    assert_eq!(items.len(), 3);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_multiple_classes() {
+    let html = "<div><span class='item active'>A</span><span class='item'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("item");
+    assert_eq!(items.len(), 2);
+
+    let active_items = div.children_by_class("active");
+    assert_eq!(active_items.len(), 1);
+    assert_eq!(active_items[0].text(), "A");
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_none_match() {
+    let html = "<div><span class='a'>A</span><span class='b'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("c");
+    assert_eq!(items.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_empty() {
+    let html = "<div></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("item");
+    assert_eq!(items.len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_children_by_class_no_class_attr() {
+    let html = "<div><span>A</span><span>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let items = div.children_by_class("item");
+    assert_eq!(items.len(), 0);
+}
+
+// ==================== Phase 13b: Scoped Extraction Tests ====================
+
+#[wasm_bindgen_test]
+fn test_tag_select_text() {
+    let html = "<div class='container'><span class='item'>Inside</span></div><span \
+                class='item'>Outside</span>";
+    let soup = Soup::new(html, None);
+    let container = soup.find(".container").unwrap().unwrap();
+
+    let texts = container.select_text(".item").unwrap();
+    assert_eq!(texts.len(), 1);
+    assert_eq!(texts[0], "Inside");
+}
+
+#[wasm_bindgen_test]
+fn test_tag_select_attr() {
+    let html =
+        "<div class='container'><a href='/inside'>Inside</a></div><a href='/outside'>Outside</a>";
+    let soup = Soup::new(html, None);
+    let container = soup.find(".container").unwrap().unwrap();
+
+    let hrefs = container.select_attr("a", "href").unwrap();
+    assert_eq!(hrefs.len(), 1);
+}
+
+#[wasm_bindgen_test]
+fn test_tag_find_compiled() {
+    let html = "<div><span class='target'>Found</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let selector = scrape_wasm::CompiledSelector::compile(".target").unwrap();
+    let result = div.find_compiled(&selector);
+
+    assert!(result.is_some());
+    let tag = result.unwrap();
+    assert_eq!(tag.text(), "Found");
+}
+
+#[wasm_bindgen_test]
+fn test_tag_select_compiled() {
+    let html = "<div><span class='item'>A</span><span class='item'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let div = soup.find("div").unwrap().unwrap();
+
+    let selector = scrape_wasm::CompiledSelector::compile(".item").unwrap();
+    let results = div.select_compiled(&selector);
+
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].text(), "A");
+    assert_eq!(results[1].text(), "B");
+}
+
+// ==================== Phase 13b: Edge Cases ====================
+
+#[wasm_bindgen_test]
+fn test_fragment_with_scripts() {
+    let html = "<div>Before</div><script>alert('test');</script><div>After</div>";
+    let soup = Soup::parse_fragment(html, None, None);
+    let divs = soup.find_all("div").unwrap();
+    assert_eq!(divs.len(), 2);
+}
+
+#[wasm_bindgen_test]
+fn test_compiled_selector_pseudo_classes() {
+    let html = "<ul><li>First</li><li>Second</li><li>Third</li></ul>";
+    let soup = Soup::new(html, None);
+
+    let selector = scrape_wasm::CompiledSelector::compile("li:first-child").unwrap();
+    let result = soup.find_compiled(&selector).unwrap();
+
+    assert_eq!(result.text(), "First");
+}
+
+#[wasm_bindgen_test]
+fn test_select_text_empty_elements() {
+    let html = "<div class='item'></div><div class='item'>Text</div>";
+    let soup = Soup::new(html, None);
+
+    let texts = soup.select_text(".item").unwrap();
+    assert_eq!(texts.len(), 2);
+    assert_eq!(texts[0], "");
+    assert_eq!(texts[1], "Text");
+}
+
+#[wasm_bindgen_test]
+fn test_select_attr_data_attributes() {
+    let html = "<div><button data-id='1'>A</button><button data-id='2'>B</button><button \
+                data-id='3'>C</button></div>";
+    let soup = Soup::new(html, None);
+
+    let ids = soup.select_attr("button", "data-id").unwrap();
+    assert_eq!(ids.len(), 3);
+}

@@ -6,10 +6,12 @@ use pyo3::prelude::*;
 
 mod config;
 mod error;
+mod selector;
 mod soup;
 mod tag;
 
 use config::PySoupConfig;
+use selector::PyCompiledSelector;
 use soup::PySoup;
 use tag::{PyTag, PyTagIterator};
 
@@ -57,6 +59,27 @@ fn parse_batch(py: Python<'_>, documents: Vec<String>, n_threads: Option<usize>)
     })
 }
 
+/// Compile a CSS selector string for efficient repeated use.
+///
+/// Args:
+///     selector: CSS selector string to compile.
+///
+/// Returns:
+///     A CompiledSelector instance.
+///
+/// Raises:
+///     ValueError: If the selector syntax is invalid.
+///
+/// Example:
+///     >>> from scrape_rs import compile_selector
+///     >>> selector = compile_selector("div.item > span")
+///     >>> print(selector.source)
+///     div.item > span
+#[pyfunction]
+fn compile_selector(selector: &str) -> PyResult<PyCompiledSelector> {
+    PyCompiledSelector::compile(selector)
+}
+
 /// Python module definition.
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -64,7 +87,9 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySoup>()?;
     m.add_class::<PyTag>()?;
     m.add_class::<PyTagIterator>()?;
+    m.add_class::<PyCompiledSelector>()?;
     m.add_function(wrap_pyfunction!(parse_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(compile_selector, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

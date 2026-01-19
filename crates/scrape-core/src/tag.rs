@@ -9,7 +9,7 @@ use crate::{
     dom::{Document, NodeId, NodeKind},
     query::{
         CompiledSelector, QueryResult, TextNodesIter, find_all_within, find_all_within_compiled,
-        find_within, find_within_compiled,
+        find_within, find_within_compiled, select_attr_within, select_text_within,
     },
 };
 
@@ -669,6 +669,53 @@ impl<'a> Tag<'a> {
             .into_iter()
             .map(|id| Tag::new(self.doc, id))
             .collect()
+    }
+
+    /// Extracts text content from all descendants matching a CSS selector.
+    ///
+    /// Returns the concatenated text content of each matching element within
+    /// this element's subtree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div><ul><li>First</li><li>Second</li></ul></div>");
+    /// if let Ok(Some(div)) = soup.find("div") {
+    ///     let texts = div.select_text("li").unwrap();
+    ///     assert_eq!(texts, vec!["First", "Second"]);
+    /// }
+    /// ```
+    pub fn select_text(&self, selector: &str) -> QueryResult<Vec<String>> {
+        select_text_within(self.doc, self.id, selector)
+    }
+
+    /// Extracts attribute values from all descendants matching a CSS selector.
+    ///
+    /// Returns `Some(value)` if the attribute exists, `None` if it doesn't.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<nav><a href='/1'>1</a><a href='/2'>2</a></nav>");
+    /// if let Ok(Some(nav)) = soup.find("nav") {
+    ///     let hrefs = nav.select_attr("a", "href").unwrap();
+    ///     assert_eq!(hrefs, vec![Some("/1".to_string()), Some("/2".to_string())]);
+    /// }
+    /// ```
+    pub fn select_attr(&self, selector: &str, attr: &str) -> QueryResult<Vec<Option<String>>> {
+        select_attr_within(self.doc, self.id, selector, attr)
     }
 
     /// Returns an iterator over all text nodes in this subtree.

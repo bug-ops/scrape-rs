@@ -5,7 +5,7 @@ use std::sync::Arc;
 use pyo3::{exceptions::PyKeyError, prelude::*, types::PyDict};
 use scrape_core::{Document, NodeId, NodeKind, Soup};
 
-use crate::error::IntoPyErr;
+use crate::{error::IntoPyErr, selector::PyCompiledSelector};
 
 /// An HTML element in the document.
 ///
@@ -355,6 +355,116 @@ impl PyTag {
     /// Find all descendants matching a CSS selector (alias for find_all).
     fn select(&self, selector: &str) -> PyResult<Vec<PyTag>> {
         self.find_all(selector)
+    }
+
+    /// Find the first descendant using a pre-compiled selector.
+    ///
+    /// Args:
+    ///     selector: A CompiledSelector instance.
+    ///
+    /// Returns:
+    ///     The first matching Tag, or None if not found.
+    fn find_compiled(&self, selector: &PyCompiledSelector) -> Option<PyTag> {
+        scrape_core::query::find_within_compiled(self.doc(), self.id, &selector.inner)
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
+    }
+
+    /// Find all descendants using a pre-compiled selector.
+    ///
+    /// Args:
+    ///     selector: A CompiledSelector instance.
+    ///
+    /// Returns:
+    ///     List of matching Tag instances.
+    fn select_compiled(&self, selector: &PyCompiledSelector) -> Vec<PyTag> {
+        scrape_core::query::find_all_within_compiled(self.doc(), self.id, &selector.inner)
+            .into_iter()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
+            .collect()
+    }
+
+    /// Get all text nodes in this element's subtree.
+    ///
+    /// Returns:
+    ///     List of text content strings.
+    fn text_nodes(&self) -> Vec<String> {
+        scrape_core::query::TextNodesIter::new(self.doc(), self.id).map(String::from).collect()
+    }
+
+    /// Get child elements filtered by tag name.
+    ///
+    /// Args:
+    ///     name: Tag name to filter by.
+    ///
+    /// Returns:
+    ///     List of matching child Tag instances.
+    fn children_by_name(&self, name: &str) -> Vec<PyTag> {
+        self.doc()
+            .children(self.id)
+            .filter_map(|child_id| {
+                let node = self.doc().get(child_id)?;
+                if let NodeKind::Element { name: tag_name, .. } = &node.kind
+                    && tag_name.eq_ignore_ascii_case(name)
+                {
+                    return Some(PyTag::new(Arc::clone(&self.soup), child_id));
+                }
+                None
+            })
+            .collect()
+    }
+
+    /// Get child elements filtered by class name.
+    ///
+    /// Args:
+    ///     class_name: Class name to filter by.
+    ///
+    /// Returns:
+    ///     List of matching child Tag instances.
+    fn children_by_class(&self, class_name: &str) -> Vec<PyTag> {
+        self.doc()
+            .children(self.id)
+            .filter_map(|child_id| {
+                let node = self.doc().get(child_id)?;
+                if let NodeKind::Element { attributes, .. } = &node.kind
+                    && let Some(classes) = attributes.get("class")
+                    && classes.split_whitespace().any(|c| c == class_name)
+                {
+                    return Some(PyTag::new(Arc::clone(&self.soup), child_id));
+                }
+                None
+            })
+            .collect()
+    }
+
+    /// Extract text content from all descendants matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     List of text strings, one per matching element.
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn select_text(&self, selector: &str) -> PyResult<Vec<String>> {
+        scrape_core::query::select_text_within(self.doc(), self.id, selector)
+            .map_err(IntoPyErr::into_py_err)
+    }
+
+    /// Extract attribute values from all descendants matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///     attr: Attribute name to extract.
+    ///
+    /// Returns:
+    ///     List of attribute values (None for missing attributes).
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn select_attr(&self, selector: &str, attr: &str) -> PyResult<Vec<Option<String>>> {
+        scrape_core::query::select_attr_within(self.doc(), self.id, selector, attr)
+            .map_err(IntoPyErr::into_py_err)
     }
 
     // ==================== Python Special Methods ====================

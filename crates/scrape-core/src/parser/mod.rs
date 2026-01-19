@@ -20,6 +20,7 @@
 //! ```
 
 mod error;
+pub mod fragment;
 mod html5;
 #[cfg(test)]
 mod tests;
