@@ -268,6 +268,11 @@ criterion_group!(
 );
 
 #[cfg(not(feature = "simd"))]
-criterion_group!(benches,);
+fn bench_placeholder(_c: &mut criterion::Criterion) {
+    // Empty benchmark - SIMD feature is disabled
+}
+
+#[cfg(not(feature = "simd"))]
+criterion_group!(benches, bench_placeholder);
 
 criterion_main!(benches);

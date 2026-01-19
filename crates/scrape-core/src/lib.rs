@@ -93,7 +93,9 @@ pub use error::{Error, Result};
 // Parser types
 pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};
 // Query types
-pub use query::{Filter, QueryError, QueryResult};
+pub use query::{
+    CompiledSelector, Filter, QueryError, QueryResult, TextNodesIter, compile_selector,
+};
 // High-level API
 pub use soup::{Soup, SoupConfig};
 pub use tag::Tag;

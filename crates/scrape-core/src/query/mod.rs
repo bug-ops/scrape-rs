@@ -63,18 +63,23 @@
 //! | :empty | `div:empty` | Elements with no children |
 //! | :not() | `div:not(.hidden)` | Negation |
 
+mod compiled;
 mod error;
 mod filter;
 mod find;
 mod selector;
+mod text;
 
+pub use compiled::{CompiledSelector, compile_selector};
 pub use error::{QueryError, QueryResult};
 pub use filter::{Filter, find_by_filter, find_first_by_filter};
 pub use find::{
-    find, find_all, find_all_with_selector, find_all_within, find_all_within_with_selector,
-    find_with_selector, find_within, find_within_with_selector,
+    find, find_all, find_all_compiled, find_all_with_selector, find_all_within,
+    find_all_within_compiled, find_all_within_with_selector, find_compiled, find_with_selector,
+    find_within, find_within_compiled, find_within_with_selector,
 };
 pub use selector::{
     ElementWrapper, NonTSPseudoClass, PseudoElement, ScrapeSelector, matches_selector,
     matches_selector_list, matches_selector_with_caches, parse_selector,
 };
+pub use text::TextNodesIter;
