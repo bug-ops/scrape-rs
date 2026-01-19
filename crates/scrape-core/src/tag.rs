@@ -390,6 +390,187 @@ impl<'a> Tag<'a> {
             .map(move |id| Tag::new(doc, id))
     }
 
+    /// Returns an iterator over all ancestor elements.
+    ///
+    /// Iterates from parent toward root (does not include the element itself).
+    /// Only element nodes are included (text and comments are skipped).
+    ///
+    /// # Complexity
+    ///
+    /// - Time: `O(depth)` - iterates from node to root
+    /// - Space: `O(1)` - lazy evaluation
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<html><body><div><span>text</span></div></body></html>");
+    /// if let Ok(Some(span)) = soup.find("span") {
+    ///     let names: Vec<_> = span.parents().filter_map(|t| t.name().map(String::from)).collect();
+    ///     assert_eq!(names, vec!["div", "body", "html"]);
+    /// }
+    /// ```
+    pub fn parents(&self) -> impl Iterator<Item = Tag<'a>> {
+        let doc = self.doc;
+        self.doc
+            .ancestors(self.id)
+            .filter(move |id| doc.get(*id).is_some_and(|n| n.kind.is_element()))
+            .map(move |id| Tag::new(doc, id))
+    }
+
+    /// Returns an iterator over all ancestor elements.
+    ///
+    /// Alias for [`parents`](Self::parents).
+    pub fn ancestors(&self) -> impl Iterator<Item = Tag<'a>> {
+        self.parents()
+    }
+
+    /// Finds the nearest ancestor matching the CSS selector.
+    ///
+    /// Iterates from parent toward root, returning the first match.
+    /// Returns `Ok(None)` if no ancestor matches. Does not match the element itself.
+    ///
+    /// # Complexity
+    ///
+    /// - Time: `O(depth × selector_complexity)` - tests each ancestor against selector
+    /// - Space: `O(1)` - no allocation
+    ///
+    /// # Errors
+    ///
+    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div class='outer'><div class='inner'><span>text</span></div></div>");
+    /// if let Ok(Some(span)) = soup.find("span") {
+    ///     let inner = span.closest("div.inner").unwrap();
+    ///     assert!(inner.is_some());
+    ///     assert!(inner.unwrap().has_class("inner"));
+    ///
+    ///     let outer = span.closest("div.outer").unwrap();
+    ///     assert!(outer.is_some());
+    ///     assert!(outer.unwrap().has_class("outer"));
+    ///
+    ///     let none = span.closest("section").unwrap();
+    ///     assert!(none.is_none());
+    /// }
+    /// ```
+    pub fn closest(&self, selector: &str) -> QueryResult<Option<Tag<'a>>> {
+        use crate::query::{matches_selector_list, parse_selector};
+
+        // Parse selector
+        let selector_list = parse_selector(selector)?;
+
+        // Iterate ancestors and test each
+        for ancestor_id in self.doc.ancestors(self.id) {
+            let Some(node) = self.doc.get(ancestor_id) else {
+                continue;
+            };
+            if !node.kind.is_element() {
+                continue;
+            }
+
+            // Test if ancestor matches selector
+            if matches_selector_list(self.doc, ancestor_id, &selector_list) {
+                return Ok(Some(Tag::new(self.doc, ancestor_id)));
+            }
+        }
+
+        Ok(None)
+    }
+
+    /// Returns an iterator over following sibling elements.
+    ///
+    /// Does not include the element itself. Only element nodes are included.
+    ///
+    /// # Complexity
+    ///
+    /// - Time: `O(width)` - iterates through siblings until end
+    /// - Space: `O(1)` - lazy evaluation
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+    /// if let Ok(Some(first)) = soup.find("li") {
+    ///     let ids: Vec<_> =
+    ///         first.next_siblings().filter_map(|t| t.get("id").map(String::from)).collect();
+    ///     assert_eq!(ids, vec!["b", "c"]);
+    /// }
+    /// ```
+    pub fn next_siblings(&self) -> impl Iterator<Item = Tag<'a>> {
+        let doc = self.doc;
+        self.doc
+            .next_siblings(self.id)
+            .filter(move |id| doc.get(*id).is_some_and(|n| n.kind.is_element()))
+            .map(move |id| Tag::new(doc, id))
+    }
+
+    /// Returns an iterator over preceding sibling elements.
+    ///
+    /// Does not include the element itself. Only element nodes are included.
+    /// Iterates in reverse order (from immediate predecessor toward first sibling).
+    ///
+    /// # Complexity
+    ///
+    /// - Time: `O(width)` - iterates through siblings until start
+    /// - Space: `O(1)` - lazy evaluation
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+    /// if let Ok(Some(last)) = soup.find("li#c") {
+    ///     let ids: Vec<_> =
+    ///         last.prev_siblings().filter_map(|t| t.get("id").map(String::from)).collect();
+    ///     assert_eq!(ids, vec!["b", "a"]); // Reverse order
+    /// }
+    /// ```
+    pub fn prev_siblings(&self) -> impl Iterator<Item = Tag<'a>> {
+        let doc = self.doc;
+        self.doc
+            .prev_siblings(self.id)
+            .filter(move |id| doc.get(*id).is_some_and(|n| n.kind.is_element()))
+            .map(move |id| Tag::new(doc, id))
+    }
+
+    /// Returns an iterator over all sibling elements (excluding self).
+    ///
+    /// Iterates in document order (from first sibling to last).
+    /// Only element nodes are included.
+    ///
+    /// # Complexity
+    ///
+    /// - Time: `O(width)` - iterates through all siblings
+    /// - Space: `O(1)` - lazy evaluation
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+    /// if let Ok(Some(middle)) = soup.find("li#b") {
+    ///     let ids: Vec<_> = middle.siblings().filter_map(|t| t.get("id").map(String::from)).collect();
+    ///     assert_eq!(ids, vec!["a", "c"]); // Document order
+    /// }
+    /// ```
+    pub fn siblings(&self) -> impl Iterator<Item = Tag<'a>> {
+        let doc = self.doc;
+        self.doc
+            .siblings(self.id)
+            .filter(move |id| doc.get(*id).is_some_and(|n| n.kind.is_element()))
+            .map(move |id| Tag::new(doc, id))
+    }
+
     // ==================== Scoped Queries ====================
 
     /// Finds the first descendant matching the selector.
@@ -712,5 +893,151 @@ mod tests {
         assert_eq!(attrs.get("id"), Some(&"main".to_string()));
         assert_eq!(attrs.get("class"), Some(&"container".to_string()));
         assert_eq!(attrs.get("data-value"), Some(&"123".to_string()));
+    }
+
+    #[test]
+    fn test_parents() {
+        let soup = Soup::parse("<html><body><div><span>text</span></div></body></html>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        let parents: Vec<_> = span.parents().collect();
+        assert_eq!(parents.len(), 3);
+        assert_eq!(parents[0].name(), Some("div"));
+        assert_eq!(parents[1].name(), Some("body"));
+        assert_eq!(parents[2].name(), Some("html"));
+    }
+
+    #[test]
+    fn test_parents_empty_for_root() {
+        let soup = Soup::parse("<html><body></body></html>");
+        let html = soup.find("html").unwrap().unwrap();
+
+        assert_eq!(html.parents().count(), 0);
+    }
+
+    #[test]
+    fn test_ancestors_alias() {
+        let soup = Soup::parse("<div><span>text</span></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        assert_eq!(span.parents().count(), span.ancestors().count());
+    }
+
+    #[test]
+    fn test_closest_basic() {
+        let soup =
+            Soup::parse("<div class='outer'><div class='inner'><span>text</span></div></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        let inner = span.closest("div.inner").unwrap().unwrap();
+        assert!(inner.has_class("inner"));
+
+        let outer = span.closest("div.outer").unwrap().unwrap();
+        assert!(outer.has_class("outer"));
+    }
+
+    #[test]
+    fn test_closest_not_found() {
+        let soup = Soup::parse("<div><span>text</span></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        let result = span.closest("section").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_closest_invalid_selector() {
+        let soup = Soup::parse("<div><span>text</span></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        // Use a truly invalid selector
+        let result = span.closest("::invalid-pseudo");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_closest_does_not_match_self() {
+        let soup = Soup::parse("<div><span class='target'>text</span></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        let result = span.closest("span.target").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_next_siblings() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+        let first = soup.find("li").unwrap().unwrap();
+
+        let siblings: Vec<_> = first.next_siblings().collect();
+        assert_eq!(siblings.len(), 2);
+        assert_eq!(siblings[0].get("id"), Some("b"));
+        assert_eq!(siblings[1].get("id"), Some("c"));
+    }
+
+    #[test]
+    fn test_next_siblings_empty() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li></ul>");
+        let last = soup.find("li#b").unwrap().unwrap();
+
+        assert_eq!(last.next_siblings().count(), 0);
+    }
+
+    #[test]
+    fn test_next_siblings_skips_text() {
+        let soup = Soup::parse("<ul><li id='a'>A</li> text <li id='b'>B</li></ul>");
+        let first = soup.find("li").unwrap().unwrap();
+
+        let siblings: Vec<_> = first.next_siblings().collect();
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(siblings[0].get("id"), Some("b"));
+    }
+
+    #[test]
+    fn test_prev_siblings() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+        let last = soup.find("li#c").unwrap().unwrap();
+
+        let siblings: Vec<_> = last.prev_siblings().collect();
+        assert_eq!(siblings.len(), 2);
+        assert_eq!(siblings[0].get("id"), Some("b"));
+        assert_eq!(siblings[1].get("id"), Some("a"));
+    }
+
+    #[test]
+    fn test_prev_siblings_empty() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li></ul>");
+        let first = soup.find("li").unwrap().unwrap();
+
+        assert_eq!(first.prev_siblings().count(), 0);
+    }
+
+    #[test]
+    fn test_siblings() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><li id='b'>B</li><li id='c'>C</li></ul>");
+        let middle = soup.find("li#b").unwrap().unwrap();
+
+        let siblings: Vec<_> = middle.siblings().collect();
+        assert_eq!(siblings.len(), 2);
+        assert_eq!(siblings[0].get("id"), Some("a"));
+        assert_eq!(siblings[1].get("id"), Some("c"));
+    }
+
+    #[test]
+    fn test_siblings_only_child() {
+        let soup = Soup::parse("<div><span>only</span></div>");
+        let span = soup.find("span").unwrap().unwrap();
+
+        assert_eq!(span.siblings().count(), 0);
+    }
+
+    #[test]
+    fn test_siblings_skips_text_and_comments() {
+        let soup = Soup::parse("<ul><li id='a'>A</li><!-- comment --> text <li id='b'>B</li></ul>");
+        let first = soup.find("li").unwrap().unwrap();
+
+        let siblings: Vec<_> = first.siblings().collect();
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(siblings[0].get("id"), Some("b"));
     }
 }

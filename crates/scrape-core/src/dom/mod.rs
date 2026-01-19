@@ -22,5 +22,9 @@ mod arena;
 mod document;
 mod node;
 
-pub use document::{AncestorsIter, ChildrenIter, DescendantsIter, Document};
+#[allow(unused_imports)]
+pub use document::{
+    AncestorsIter, ChildrenIter, DescendantsIter, Document, NextSiblingsIter, PrevSiblingsIter,
+    SiblingsIter,
+};
 pub use node::{Node, NodeId, NodeKind};

@@ -268,6 +268,96 @@ impl Document {
     pub fn descendants(&self, id: NodeId) -> DescendantsIter<'_> {
         DescendantsIter { doc: self, root: id, stack: vec![id], started: false }
     }
+
+    /// Returns an iterator over siblings following a node.
+    ///
+    /// Does not include the node itself.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// use scrape_core::Document;
+    ///
+    /// let mut doc = Document::new();
+    /// let parent = doc.create_element("ul", HashMap::new());
+    /// let child1 = doc.create_element("li", HashMap::new());
+    /// let child2 = doc.create_element("li", HashMap::new());
+    /// let child3 = doc.create_element("li", HashMap::new());
+    ///
+    /// doc.append_child(parent, child1);
+    /// doc.append_child(parent, child2);
+    /// doc.append_child(parent, child3);
+    ///
+    /// let next: Vec<_> = doc.next_siblings(child1).collect();
+    /// assert_eq!(next.len(), 2); // child2, child3
+    /// ```
+    #[must_use]
+    pub fn next_siblings(&self, id: NodeId) -> NextSiblingsIter<'_> {
+        NextSiblingsIter { doc: self, current: self.next_sibling(id) }
+    }
+
+    /// Returns an iterator over siblings preceding a node.
+    ///
+    /// Does not include the node itself. Iterates in reverse order
+    /// (from immediate predecessor toward first sibling).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// use scrape_core::Document;
+    ///
+    /// let mut doc = Document::new();
+    /// let parent = doc.create_element("ul", HashMap::new());
+    /// let child1 = doc.create_element("li", HashMap::new());
+    /// let child2 = doc.create_element("li", HashMap::new());
+    /// let child3 = doc.create_element("li", HashMap::new());
+    ///
+    /// doc.append_child(parent, child1);
+    /// doc.append_child(parent, child2);
+    /// doc.append_child(parent, child3);
+    ///
+    /// let prev: Vec<_> = doc.prev_siblings(child3).collect();
+    /// assert_eq!(prev.len(), 2); // child2, child1 (reverse order)
+    /// ```
+    #[must_use]
+    pub fn prev_siblings(&self, id: NodeId) -> PrevSiblingsIter<'_> {
+        PrevSiblingsIter { doc: self, current: self.prev_sibling(id) }
+    }
+
+    /// Returns an iterator over all siblings of a node (excluding the node itself).
+    ///
+    /// Iterates in document order from first sibling to last.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// use scrape_core::Document;
+    ///
+    /// let mut doc = Document::new();
+    /// let parent = doc.create_element("ul", HashMap::new());
+    /// let child1 = doc.create_element("li", HashMap::new());
+    /// let child2 = doc.create_element("li", HashMap::new());
+    /// let child3 = doc.create_element("li", HashMap::new());
+    ///
+    /// doc.append_child(parent, child1);
+    /// doc.append_child(parent, child2);
+    /// doc.append_child(parent, child3);
+    ///
+    /// let siblings: Vec<_> = doc.siblings(child2).collect();
+    /// assert_eq!(siblings.len(), 2); // child1, child3
+    /// ```
+    #[must_use]
+    pub fn siblings(&self, id: NodeId) -> SiblingsIter<'_> {
+        // Find first sibling by going to parent's first child
+        let first = self.parent(id).and_then(|p| self.first_child(p));
+        SiblingsIter { doc: self, current: first, exclude: id }
+    }
 }
 
 /// Iterator over direct children of a node.
@@ -346,6 +436,69 @@ impl Iterator for DescendantsIter<'_> {
         }
 
         Some(current)
+    }
+}
+
+/// Iterator over siblings following a node.
+///
+/// Created by [`Document::next_siblings`].
+#[derive(Debug)]
+pub struct NextSiblingsIter<'a> {
+    doc: &'a Document,
+    current: Option<NodeId>,
+}
+
+impl Iterator for NextSiblingsIter<'_> {
+    type Item = NodeId;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = self.current?;
+        self.current = self.doc.next_sibling(current);
+        Some(current)
+    }
+}
+
+/// Iterator over siblings preceding a node.
+///
+/// Created by [`Document::prev_siblings`].
+#[derive(Debug)]
+pub struct PrevSiblingsIter<'a> {
+    doc: &'a Document,
+    current: Option<NodeId>,
+}
+
+impl Iterator for PrevSiblingsIter<'_> {
+    type Item = NodeId;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = self.current?;
+        self.current = self.doc.prev_sibling(current);
+        Some(current)
+    }
+}
+
+/// Iterator over all siblings of a node (excluding the node itself).
+///
+/// Created by [`Document::siblings`].
+/// Iterates in document order (from first sibling to last).
+#[derive(Debug)]
+pub struct SiblingsIter<'a> {
+    doc: &'a Document,
+    current: Option<NodeId>,
+    exclude: NodeId,
+}
+
+impl Iterator for SiblingsIter<'_> {
+    type Item = NodeId;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let current = self.current?;
+            self.current = self.doc.next_sibling(current);
+            if current != self.exclude {
+                return Some(current);
+            }
+        }
     }
 }
 
@@ -558,5 +711,89 @@ mod tests {
 
         // Depth-first pre-order: a -> a1 -> a2 -> b
         assert_eq!(names, vec!["a", "a1", "a2", "b"]);
+    }
+
+    #[test]
+    fn next_siblings_iteration() {
+        let doc = create_test_doc();
+        let root = doc.root().unwrap();
+        let head = doc.first_child(root).unwrap();
+
+        assert_eq!(doc.next_siblings(head).count(), 1); // body
+    }
+
+    #[test]
+    fn next_siblings_empty_for_last() {
+        let doc = create_test_doc();
+        let root = doc.root().unwrap();
+        let body = doc.last_child(root).unwrap();
+
+        assert!(doc.next_siblings(body).next().is_none());
+    }
+
+    #[test]
+    fn prev_siblings_iteration() {
+        let doc = create_test_doc();
+        let root = doc.root().unwrap();
+        let body = doc.last_child(root).unwrap();
+
+        assert_eq!(doc.prev_siblings(body).count(), 1); // head
+    }
+
+    #[test]
+    fn prev_siblings_empty_for_first() {
+        let doc = create_test_doc();
+        let root = doc.root().unwrap();
+        let head = doc.first_child(root).unwrap();
+
+        assert!(doc.prev_siblings(head).next().is_none());
+    }
+
+    #[test]
+    fn siblings_iteration() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("ul", HashMap::new());
+        let child1 = doc.create_element("li", HashMap::new());
+        let child2 = doc.create_element("li", HashMap::new());
+        let child3 = doc.create_element("li", HashMap::new());
+
+        doc.append_child(parent, child1);
+        doc.append_child(parent, child2);
+        doc.append_child(parent, child3);
+
+        let siblings: Vec<_> = doc.siblings(child2).collect();
+        assert_eq!(siblings.len(), 2);
+        assert_eq!(siblings[0], child1); // Document order
+        assert_eq!(siblings[1], child3);
+    }
+
+    #[test]
+    fn siblings_empty_for_only_child() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("div", HashMap::new());
+        let child = doc.create_element("span", HashMap::new());
+
+        doc.append_child(parent, child);
+
+        assert!(doc.siblings(child).next().is_none());
+    }
+
+    #[test]
+    fn siblings_excludes_self() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("ul", HashMap::new());
+        let child1 = doc.create_element("li", HashMap::new());
+        let child2 = doc.create_element("li", HashMap::new());
+
+        doc.append_child(parent, child1);
+        doc.append_child(parent, child2);
+
+        let siblings1: Vec<_> = doc.siblings(child1).collect();
+        assert_eq!(siblings1.len(), 1);
+        assert_eq!(siblings1[0], child2);
+
+        let siblings2: Vec<_> = doc.siblings(child2).collect();
+        assert_eq!(siblings2.len(), 1);
+        assert_eq!(siblings2[0], child1);
     }
 }

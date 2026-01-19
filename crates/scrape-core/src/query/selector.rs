@@ -614,6 +614,38 @@ pub fn matches_selector_with_caches(
     })
 }
 
+/// Checks if an element matches a selector list.
+///
+/// This is a convenience wrapper around [`matches_selector`] for use with `Tag::closest()`.
+///
+/// # Examples
+///
+/// ```rust
+/// use scrape_core::{
+///     Html5everParser, Parser,
+///     query::{matches_selector_list, parse_selector},
+/// };
+///
+/// let parser = Html5everParser;
+/// let doc = parser.parse("<div class='foo'><span id='bar'>text</span></div>").unwrap();
+/// let selectors = parse_selector("span#bar").unwrap();
+///
+/// // Find span element and check if it matches
+/// for (id, node) in doc.nodes() {
+///     if node.kind.tag_name() == Some("span") {
+///         assert!(matches_selector_list(&doc, id, &selectors));
+///     }
+/// }
+/// ```
+#[must_use]
+pub fn matches_selector_list(
+    doc: &Document,
+    id: NodeId,
+    selector_list: &SelectorList<ScrapeSelector>,
+) -> bool {
+    matches_selector(doc, id, selector_list)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

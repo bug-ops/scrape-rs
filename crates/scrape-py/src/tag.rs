@@ -216,6 +216,108 @@ impl PyTag {
             .collect()
     }
 
+    /// Get all ancestor elements (from parent toward root).
+    #[getter]
+    fn parents(&self) -> Vec<PyTag> {
+        let doc = self.doc();
+        doc.ancestors(self.id)
+            .filter_map(|ancestor_id| {
+                let node = doc.get(ancestor_id)?;
+                if node.kind.is_element() {
+                    Some(PyTag::new(Arc::clone(&self.soup), ancestor_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all ancestor elements (alias for parents).
+    #[getter]
+    fn ancestors(&self) -> Vec<PyTag> {
+        self.parents()
+    }
+
+    /// Find the nearest ancestor matching a CSS selector.
+    ///
+    /// Args:
+    ///     selector: CSS selector string.
+    ///
+    /// Returns:
+    ///     The nearest matching ancestor Tag, or None if not found.
+    ///
+    /// Raises:
+    ///     ValueError: If the selector syntax is invalid.
+    fn closest(&self, selector: &str) -> PyResult<Option<PyTag>> {
+        use scrape_core::query::{matches_selector_list, parse_selector};
+
+        let selector_list = parse_selector(selector).map_err(IntoPyErr::into_py_err)?;
+        let doc = self.doc();
+
+        for ancestor_id in doc.ancestors(self.id) {
+            let Some(node) = doc.get(ancestor_id) else {
+                continue;
+            };
+            if !node.kind.is_element() {
+                continue;
+            }
+
+            if matches_selector_list(doc, ancestor_id, &selector_list) {
+                return Ok(Some(PyTag::new(Arc::clone(&self.soup), ancestor_id)));
+            }
+        }
+
+        Ok(None)
+    }
+
+    /// Get all following sibling elements.
+    #[getter]
+    fn next_siblings(&self) -> Vec<PyTag> {
+        let doc = self.doc();
+        doc.next_siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all preceding sibling elements (in reverse order).
+    #[getter]
+    fn prev_siblings(&self) -> Vec<PyTag> {
+        let doc = self.doc();
+        doc.prev_siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all sibling elements (excluding self, in document order).
+    #[getter]
+    fn siblings(&self) -> Vec<PyTag> {
+        let doc = self.doc();
+        doc.siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     // ==================== Scoped Query Methods ====================
 
     /// Find the first descendant matching a CSS selector.
@@ -334,6 +436,10 @@ impl PyTagIterator {
 }
 
 // ==================== Helper Functions ====================
+
+// TODO: extract helper functions to scrape-core to reduce duplication
+// These functions are duplicated in scrape-py, scrape-node, and scrape-wasm
+// Consider adding to scrape-core::utils or making them public methods on Document
 
 fn collect_text(doc: &Document, id: NodeId, result: &mut String) {
     let Some(node) = doc.get(id) else { return };
