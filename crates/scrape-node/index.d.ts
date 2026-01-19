@@ -145,6 +145,24 @@ export declare class Tag {
   get prevSibling(): Tag | null
   /** Get all descendant elements. */
   get descendants(): Array<Tag>
+  /** Get all ancestor elements (from parent toward root). */
+  get parents(): Array<Tag>
+  /** Get all ancestor elements (alias for parents). */
+  get ancestors(): Array<Tag>
+  /**
+   * Find the nearest ancestor matching a CSS selector.
+   *
+   * @param selector - CSS selector string
+   * @returns The nearest matching ancestor Tag, or null if not found
+   * @throws Error if the selector syntax is invalid
+   */
+  closest(selector: string): Tag | null
+  /** Get all following sibling elements. */
+  get nextSiblings(): Array<Tag>
+  /** Get all preceding sibling elements (in reverse order). */
+  get prevSiblings(): Array<Tag>
+  /** Get all sibling elements (excluding self, in document order). */
+  get siblings(): Array<Tag>
   /**
    * Find the first descendant matching a CSS selector.
    *

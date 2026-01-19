@@ -214,6 +214,104 @@ impl Tag {
             .collect()
     }
 
+    /// Get all ancestor elements (from parent toward root).
+    #[napi(getter)]
+    pub fn parents(&self) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.ancestors(self.id)
+            .filter_map(|ancestor_id| {
+                let node = doc.get(ancestor_id)?;
+                if node.kind.is_element() {
+                    Some(Tag::new(Arc::clone(&self.soup), ancestor_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all ancestor elements (alias for parents).
+    #[napi(getter)]
+    pub fn ancestors(&self) -> Vec<Tag> {
+        self.parents()
+    }
+
+    /// Find the nearest ancestor matching a CSS selector.
+    ///
+    /// @param selector - CSS selector string
+    /// @returns The nearest matching ancestor Tag, or null if not found
+    /// @throws Error if the selector syntax is invalid
+    #[napi]
+    pub fn closest(&self, selector: String) -> Result<Option<Tag>> {
+        use scrape_core::query::{matches_selector_list, parse_selector};
+
+        let selector_list = parse_selector(&selector).map_err(IntoNapiError::into_napi_error)?;
+        let doc = self.doc();
+
+        for ancestor_id in doc.ancestors(self.id) {
+            let Some(node) = doc.get(ancestor_id) else {
+                continue;
+            };
+            if !node.kind.is_element() {
+                continue;
+            }
+
+            if matches_selector_list(doc, ancestor_id, &selector_list) {
+                return Ok(Some(Tag::new(Arc::clone(&self.soup), ancestor_id)));
+            }
+        }
+
+        Ok(None)
+    }
+
+    /// Get all following sibling elements.
+    #[napi(getter, js_name = "nextSiblings")]
+    pub fn next_siblings(&self) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.next_siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(Tag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all preceding sibling elements (in reverse order).
+    #[napi(getter, js_name = "prevSiblings")]
+    pub fn prev_siblings(&self) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.prev_siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(Tag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Get all sibling elements (excluding self, in document order).
+    #[napi(getter)]
+    pub fn siblings(&self) -> Vec<Tag> {
+        let doc = self.doc();
+        doc.siblings(self.id)
+            .filter_map(|sibling_id| {
+                let node = doc.get(sibling_id)?;
+                if node.kind.is_element() {
+                    Some(Tag::new(Arc::clone(&self.soup), sibling_id))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     // ==================== Scoped Query Methods ====================
 
     /// Find the first descendant matching a CSS selector.

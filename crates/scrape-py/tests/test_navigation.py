@@ -117,3 +117,181 @@ class TestScopedQueries:
         container = nav_soup.find("#container")
         with pytest.raises(ValueError):
             container.find("[[[invalid")
+
+
+class TestParentsAndAncestors:
+    """Test parents() and ancestors() methods from Phase 12."""
+
+    def test_parents_returns_ancestor_list(self):
+        html = "<html><body><div><span><a>link</a></span></div></body></html>"
+        soup = Soup(html)
+        link = soup.find("a")
+
+        parents = link.parents
+        assert len(parents) == 4  # span, div, body, html
+        assert parents[0].name == "span"
+        assert parents[1].name == "div"
+        assert parents[2].name == "body"
+        assert parents[3].name == "html"
+
+    def test_ancestors_is_alias_for_parents(self):
+        html = "<html><body><div><span>text</span></div></body></html>"
+        soup = Soup(html)
+        span = soup.find("span")
+
+        parents = span.parents
+        ancestors = span.ancestors
+
+        assert len(parents) == len(ancestors)
+        for p, a in zip(parents, ancestors, strict=True):
+            assert p.name == a.name
+
+    def test_parents_empty_for_root(self):
+        html = "<html><body><div>text</div></body></html>"
+        soup = Soup(html)
+        root = soup.root
+
+        assert len(root.parents) == 0
+
+    def test_parents_partial_chain(self):
+        html = '<div id="outer"><div id="middle"><div id="inner">text</div></div></div>'
+        soup = Soup(html)
+        inner = soup.find("#inner")
+
+        parents = inner.parents
+        assert len(parents) == 4  # middle, outer, body, html
+        assert parents[0].get("id") == "middle"
+        assert parents[1].get("id") == "outer"
+        assert parents[2].name == "body"
+        assert parents[3].name == "html"
+
+
+class TestClosest:
+    """Test closest() method from Phase 12."""
+
+    def test_closest_finds_matching_ancestor(self):
+        html = '<div class="outer"><div class="middle"><span>text</span></div></div>'
+        soup = Soup(html)
+        span = soup.find("span")
+
+        result = span.closest(".outer")
+        assert result is not None
+        assert result.get("class") == "outer"
+
+    def test_closest_finds_nearest_match(self):
+        html = '<div class="target"><div class="target"><span>text</span></div></div>'
+        soup = Soup(html)
+        span = soup.find("span")
+
+        result = span.closest(".target")
+        assert result is not None
+        # Should be the inner div (nearest)
+        parent = span.parent
+        assert result.outer_html == parent.outer_html
+
+    def test_closest_returns_none_when_not_found(self):
+        html = "<div><span>text</span></div>"
+        soup = Soup(html)
+        span = soup.find("span")
+
+        result = span.closest(".nonexistent")
+        assert result is None
+
+    def test_closest_raises_on_invalid_selector(self):
+        html = "<div><span>text</span></div>"
+        soup = Soup(html)
+        span = soup.find("span")
+
+        with pytest.raises(ValueError):
+            span.closest("[[[invalid")
+
+    def test_closest_excludes_self(self):
+        html = '<div class="target"><span class="target">text</span></div>'
+        soup = Soup(html)
+        span = soup.find("span")
+
+        result = span.closest(".target")
+        assert result is not None
+        assert result.name == "div"  # Parent, not self
+
+
+class TestNextSiblings:
+    """Test next_siblings() method from Phase 12."""
+
+    def test_next_siblings_returns_following_elements(self):
+        html = '<div><span id="a">A</span><span id="b">B</span><span id="c">C</span></div>'
+        soup = Soup(html)
+        first = soup.find("#a")
+
+        siblings = first.next_siblings
+        assert len(siblings) == 2
+        assert siblings[0].get("id") == "b"
+        assert siblings[1].get("id") == "c"
+
+    def test_next_siblings_empty_for_last(self):
+        html = '<div><span id="a">A</span><span id="b">B</span></div>'
+        soup = Soup(html)
+        last = soup.find("#b")
+
+        assert len(last.next_siblings) == 0
+
+    def test_next_siblings_skips_text_nodes(self):
+        html = '<div><span id="a">A</span>text<span id="b">B</span></div>'
+        soup = Soup(html)
+        first = soup.find("#a")
+
+        siblings = first.next_siblings
+        assert len(siblings) == 1
+        assert siblings[0].get("id") == "b"
+
+
+class TestPrevSiblings:
+    """Test prev_siblings() method from Phase 12."""
+
+    def test_prev_siblings_returns_preceding_elements(self):
+        html = '<div><span id="a">A</span><span id="b">B</span><span id="c">C</span></div>'
+        soup = Soup(html)
+        last = soup.find("#c")
+
+        siblings = last.prev_siblings
+        assert len(siblings) == 2
+        # Note: prev_siblings returns in reverse order
+        assert siblings[0].get("id") == "b"
+        assert siblings[1].get("id") == "a"
+
+    def test_prev_siblings_empty_for_first(self):
+        html = '<div><span id="a">A</span><span id="b">B</span></div>'
+        soup = Soup(html)
+        first = soup.find("#a")
+
+        assert len(first.prev_siblings) == 0
+
+
+class TestSiblings:
+    """Test siblings() method from Phase 12."""
+
+    def test_siblings_returns_all_except_self(self):
+        html = '<div><span id="a">A</span><span id="b">B</span><span id="c">C</span></div>'
+        soup = Soup(html)
+        middle = soup.find("#b")
+
+        siblings = middle.siblings
+        assert len(siblings) == 2
+        assert siblings[0].get("id") == "a"
+        assert siblings[1].get("id") == "c"
+
+    def test_siblings_empty_for_only_child(self):
+        html = '<div><span id="only">text</span></div>'
+        soup = Soup(html)
+        only = soup.find("#only")
+
+        assert len(only.siblings) == 0
+
+    def test_siblings_skips_text_nodes(self):
+        html = '<div>text1<span id="a">A</span>text2<span id="b">B</span>text3</div>'
+        soup = Soup(html)
+        first = soup.find("#a")
+
+        siblings = first.siblings
+        assert len(siblings) == 1
+        assert siblings[0].get("id") == "b"

@@ -261,6 +261,198 @@ fn test_tag_descendants() {
     assert!(descendants.len() >= 3);
 }
 
+// ==================== Phase 12: Parents and Ancestors ====================
+
+#[wasm_bindgen_test]
+fn test_tag_parents() {
+    let html = "<html><body><div><span><a>link</a></span></div></body></html>";
+    let soup = Soup::new(html, None);
+    let link = soup.find("a").unwrap().unwrap();
+
+    let parents = link.parents();
+    assert_eq!(parents.len(), 4); // span, div, body, html
+    assert_eq!(parents[0].name(), Some("span".to_string()));
+    assert_eq!(parents[1].name(), Some("div".to_string()));
+    assert_eq!(parents[2].name(), Some("body".to_string()));
+    assert_eq!(parents[3].name(), Some("html".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn test_tag_ancestors() {
+    let html = "<html><body><div><span>text</span></div></body></html>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let parents = span.parents();
+    let ancestors = span.ancestors();
+
+    assert_eq!(parents.len(), ancestors.len());
+    for i in 0..parents.len() {
+        assert_eq!(parents[i].name(), ancestors[i].name());
+    }
+}
+
+#[wasm_bindgen_test]
+fn test_tag_parents_empty_for_root() {
+    let html = "<html><body><div>text</div></body></html>";
+    let soup = Soup::new(html, None);
+    let root = soup.root().unwrap();
+
+    assert_eq!(root.parents().len(), 0);
+}
+
+// ==================== Phase 12: Closest ====================
+
+#[wasm_bindgen_test]
+fn test_tag_closest() {
+    let html = "<div class='outer'><div class='middle'><span>text</span></div></div>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let result = span.closest(".outer").unwrap();
+    assert!(result.is_some());
+    let closest = result.unwrap();
+    assert_eq!(closest.get("class"), Some("outer".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn test_tag_closest_finds_nearest() {
+    let html = "<div class='target'><div class='target'><span>text</span></div></div>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let result = span.closest(".target").unwrap();
+    assert!(result.is_some());
+    let closest = result.unwrap();
+    // Should be the inner div (nearest)
+    let parent = span.parent().unwrap();
+    assert_eq!(closest.outer_html(), parent.outer_html());
+}
+
+#[wasm_bindgen_test]
+fn test_tag_closest_not_found() {
+    let html = "<div><span>text</span></div>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let result = span.closest(".nonexistent").unwrap();
+    assert!(result.is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_tag_closest_invalid_selector() {
+    let html = "<div><span>text</span></div>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let result = span.closest("[[[invalid");
+    assert!(result.is_err());
+}
+
+#[wasm_bindgen_test]
+fn test_tag_closest_excludes_self() {
+    let html = "<div class='target'><span class='target'>text</span></div>";
+    let soup = Soup::new(html, None);
+    let span = soup.find("span").unwrap().unwrap();
+
+    let result = span.closest(".target").unwrap();
+    assert!(result.is_some());
+    let closest = result.unwrap();
+    assert_eq!(closest.name(), Some("div".to_string())); // Parent, not self
+}
+
+// ==================== Phase 12: NextSiblings ====================
+
+#[wasm_bindgen_test]
+fn test_tag_next_siblings() {
+    let html = "<div><span id='a'>A</span><span id='b'>B</span><span id='c'>C</span></div>";
+    let soup = Soup::new(html, None);
+    let first = soup.find("#a").unwrap().unwrap();
+
+    let siblings = first.next_siblings();
+    assert_eq!(siblings.len(), 2);
+    assert_eq!(siblings[0].get("id"), Some("b".to_string()));
+    assert_eq!(siblings[1].get("id"), Some("c".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn test_tag_next_siblings_empty_for_last() {
+    let html = "<div><span id='a'>A</span><span id='b'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let last = soup.find("#b").unwrap().unwrap();
+
+    assert_eq!(last.next_siblings().len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_tag_next_siblings_skips_text() {
+    let html = "<div><span id='a'>A</span>text<span id='b'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let first = soup.find("#a").unwrap().unwrap();
+
+    let siblings = first.next_siblings();
+    assert_eq!(siblings.len(), 1);
+    assert_eq!(siblings[0].get("id"), Some("b".to_string()));
+}
+
+// ==================== Phase 12: PrevSiblings ====================
+
+#[wasm_bindgen_test]
+fn test_tag_prev_siblings() {
+    let html = "<div><span id='a'>A</span><span id='b'>B</span><span id='c'>C</span></div>";
+    let soup = Soup::new(html, None);
+    let last = soup.find("#c").unwrap().unwrap();
+
+    let siblings = last.prev_siblings();
+    assert_eq!(siblings.len(), 2);
+    // Note: prevSiblings returns in reverse order
+    assert_eq!(siblings[0].get("id"), Some("b".to_string()));
+    assert_eq!(siblings[1].get("id"), Some("a".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn test_tag_prev_siblings_empty_for_first() {
+    let html = "<div><span id='a'>A</span><span id='b'>B</span></div>";
+    let soup = Soup::new(html, None);
+    let first = soup.find("#a").unwrap().unwrap();
+
+    assert_eq!(first.prev_siblings().len(), 0);
+}
+
+// ==================== Phase 12: Siblings ====================
+
+#[wasm_bindgen_test]
+fn test_tag_siblings() {
+    let html = "<div><span id='a'>A</span><span id='b'>B</span><span id='c'>C</span></div>";
+    let soup = Soup::new(html, None);
+    let middle = soup.find("#b").unwrap().unwrap();
+
+    let siblings = middle.siblings();
+    assert_eq!(siblings.len(), 2);
+    assert_eq!(siblings[0].get("id"), Some("a".to_string()));
+    assert_eq!(siblings[1].get("id"), Some("c".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn test_tag_siblings_empty_for_only_child() {
+    let html = "<div><span id='only'>text</span></div>";
+    let soup = Soup::new(html, None);
+    let only = soup.find("#only").unwrap().unwrap();
+
+    assert_eq!(only.siblings().len(), 0);
+}
+
+#[wasm_bindgen_test]
+fn test_tag_siblings_skips_text() {
+    let html = "<div>text1<span id='a'>A</span>text2<span id='b'>B</span>text3</div>";
+    let soup = Soup::new(html, None);
+    let first = soup.find("#a").unwrap().unwrap();
+
+    let siblings = first.siblings();
+    assert_eq!(siblings.len(), 1);
+    assert_eq!(siblings[0].get("id"), Some("b".to_string()));
+}
+
 // ==================== Tag Scoped Query Tests ====================
 
 #[wasm_bindgen_test]

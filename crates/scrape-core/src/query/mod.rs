@@ -76,5 +76,5 @@ pub use find::{
 };
 pub use selector::{
     ElementWrapper, NonTSPseudoClass, PseudoElement, ScrapeSelector, matches_selector,
-    matches_selector_with_caches, parse_selector,
+    matches_selector_list, matches_selector_with_caches, parse_selector,
 };
