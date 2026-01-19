@@ -10,6 +10,7 @@
 use selectors::{context::SelectorCaches, parser::SelectorList};
 
 use super::{
+    CompiledSelector,
     error::QueryResult,
     selector::{ScrapeSelector, matches_selector_with_caches, parse_selector},
 };
@@ -203,6 +204,95 @@ pub fn find_all_within_with_selector(
     }
 
     results
+}
+
+/// Finds the first element matching a compiled selector.
+///
+/// # Examples
+///
+/// ```rust
+/// use scrape_core::{
+///     Html5everParser, Parser,
+///     query::{CompiledSelector, find_compiled},
+/// };
+///
+/// let parser = Html5everParser;
+/// let doc = parser.parse("<div><span class=\"item\">text</span></div>").unwrap();
+/// let selector = CompiledSelector::compile("span.item").unwrap();
+///
+/// let result = find_compiled(&doc, &selector);
+/// assert!(result.is_some());
+/// ```
+#[must_use]
+pub fn find_compiled(doc: &Document, selector: &CompiledSelector) -> Option<NodeId> {
+    find_with_selector(doc, selector.selector_list())
+}
+
+/// Finds all elements matching a compiled selector.
+///
+/// # Examples
+///
+/// ```rust
+/// use scrape_core::{
+///     Html5everParser, Parser,
+///     query::{CompiledSelector, find_all_compiled},
+/// };
+///
+/// let parser = Html5everParser;
+/// let doc = parser.parse("<ul><li>A</li><li>B</li><li>C</li></ul>").unwrap();
+/// let selector = CompiledSelector::compile("li").unwrap();
+///
+/// let items = find_all_compiled(&doc, &selector);
+/// assert_eq!(items.len(), 3);
+/// ```
+#[must_use]
+pub fn find_all_compiled(doc: &Document, selector: &CompiledSelector) -> Vec<NodeId> {
+    find_all_with_selector(doc, selector.selector_list())
+}
+
+/// Finds the first element matching a compiled selector within a subtree.
+///
+/// # Examples
+///
+/// ```rust
+/// use scrape_core::{
+///     Html5everParser, Parser,
+///     query::{CompiledSelector, find_within_compiled},
+/// };
+///
+/// let parser = Html5everParser;
+/// let doc = parser
+///     .parse("<div id=\"a\"><span>A</span></div><div id=\"b\"><span>B</span></div>")
+///     .unwrap();
+/// let selector = CompiledSelector::compile("span").unwrap();
+///
+/// // Find div#a first
+/// let scope = doc
+///     .nodes()
+///     .find(|(_, n)| n.kind.attributes().and_then(|a| a.get("id")) == Some(&"a".to_string()))
+///     .map(|(id, _)| id)
+///     .unwrap();
+///
+/// let result = find_within_compiled(&doc, scope, &selector);
+/// assert!(result.is_some());
+/// ```
+#[must_use]
+pub fn find_within_compiled(
+    doc: &Document,
+    scope: NodeId,
+    selector: &CompiledSelector,
+) -> Option<NodeId> {
+    find_within_with_selector(doc, scope, selector.selector_list())
+}
+
+/// Finds all elements matching a compiled selector within a subtree.
+#[must_use]
+pub fn find_all_within_compiled(
+    doc: &Document,
+    scope: NodeId,
+    selector: &CompiledSelector,
+) -> Vec<NodeId> {
+    find_all_within_with_selector(doc, scope, selector.selector_list())
 }
 
 #[cfg(test)]

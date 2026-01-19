@@ -7,7 +7,10 @@ use std::{borrow::Cow, collections::HashMap};
 
 use crate::{
     dom::{Document, NodeId, NodeKind},
-    query::{QueryResult, find_all_within, find_within},
+    query::{
+        CompiledSelector, QueryResult, TextNodesIter, find_all_within, find_all_within_compiled,
+        find_within, find_within_compiled,
+    },
 };
 
 /// A reference to an element in the document.
@@ -626,6 +629,125 @@ impl<'a> Tag<'a> {
     pub fn select(&self, selector: &str) -> QueryResult<Vec<Tag<'a>>> {
         self.find_all(selector)
     }
+
+    /// Finds the first descendant using a pre-compiled selector.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::{Soup, query::CompiledSelector};
+    ///
+    /// let selector = CompiledSelector::compile(".item").unwrap();
+    /// let soup = Soup::parse("<div><ul><li class=\"item\">text</li></ul></div>");
+    /// if let Ok(Some(div)) = soup.find("div") {
+    ///     let item = div.find_compiled(&selector);
+    ///     assert!(item.is_some());
+    /// }
+    /// ```
+    #[must_use]
+    pub fn find_compiled(&self, selector: &CompiledSelector) -> Option<Tag<'a>> {
+        find_within_compiled(self.doc, self.id, selector).map(|id| Tag::new(self.doc, id))
+    }
+
+    /// Finds all descendants using a pre-compiled selector.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::{Soup, query::CompiledSelector};
+    ///
+    /// let selector = CompiledSelector::compile("li").unwrap();
+    /// let soup = Soup::parse("<ul><li>A</li><li>B</li><li>C</li></ul>");
+    /// if let Ok(Some(ul)) = soup.find("ul") {
+    ///     let items = ul.select_compiled(&selector);
+    ///     assert_eq!(items.len(), 3);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn select_compiled(&self, selector: &CompiledSelector) -> Vec<Tag<'a>> {
+        find_all_within_compiled(self.doc, self.id, selector)
+            .into_iter()
+            .map(|id| Tag::new(self.doc, id))
+            .collect()
+    }
+
+    /// Returns an iterator over all text nodes in this subtree.
+    ///
+    /// Only text node content is returned; element tags and comments are skipped.
+    /// Iterates in depth-first order.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div>Hello <b>World</b>!</div>");
+    /// if let Ok(Some(div)) = soup.find("div") {
+    ///     let texts: Vec<_> = div.text_nodes().collect();
+    ///     assert_eq!(texts, vec!["Hello ", "World", "!"]);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn text_nodes(&self) -> TextNodesIter<'a> {
+        TextNodesIter::new(self.doc, self.id)
+    }
+
+    /// Returns an iterator over child elements with the given tag name.
+    ///
+    /// Only direct children are included (not descendants).
+    /// Tag name matching is case-insensitive.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<ul><li>A</li><span>X</span><li>B</li></ul>");
+    /// if let Ok(Some(ul)) = soup.find("ul") {
+    ///     let lis: Vec<_> = ul.children_by_name("li").collect();
+    ///     assert_eq!(lis.len(), 2);
+    /// }
+    /// ```
+    pub fn children_by_name(&self, name: &'a str) -> impl Iterator<Item = Tag<'a>> + 'a {
+        let doc = self.doc;
+        let id = self.id;
+        doc.children(id).filter_map(move |child_id| {
+            let node = doc.get(child_id)?;
+            let tag_name = node.kind.tag_name()?;
+            if tag_name.eq_ignore_ascii_case(name) { Some(Tag::new(doc, child_id)) } else { None }
+        })
+    }
+
+    /// Returns an iterator over child elements with the given class.
+    ///
+    /// Only direct children are included (not descendants).
+    /// Elements are matched if they have the class in their class attribute.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div><span class=\"a\">A</span><span class=\"b\">B</span></div>");
+    /// if let Ok(Some(div)) = soup.find("div") {
+    ///     let results: Vec<_> = div.children_by_class("a").collect();
+    ///     assert_eq!(results.len(), 1);
+    /// }
+    /// ```
+    pub fn children_by_class(&self, class: &'a str) -> impl Iterator<Item = Tag<'a>> + 'a {
+        let doc = self.doc;
+        let id = self.id;
+        doc.children(id).filter_map(move |child_id| {
+            let node = doc.get(child_id)?;
+            let attrs = node.kind.attributes()?;
+            let classes = attrs.get("class")?;
+            if classes.split_whitespace().any(|c| c == class) {
+                Some(Tag::new(doc, child_id))
+            } else {
+                None
+            }
+        })
+    }
 }
 
 impl PartialEq for Tag<'_> {
@@ -1039,5 +1161,97 @@ mod tests {
         let siblings: Vec<_> = first.siblings().collect();
         assert_eq!(siblings.len(), 1);
         assert_eq!(siblings[0].get("id"), Some("b"));
+    }
+
+    #[test]
+    fn test_tag_find_compiled() {
+        use crate::query::CompiledSelector;
+
+        let selector = CompiledSelector::compile(".item").unwrap();
+        let soup = Soup::parse("<div><ul><li class=\"item\">text</li></ul></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let item = div.find_compiled(&selector);
+        assert!(item.is_some());
+        assert_eq!(item.unwrap().name(), Some("li"));
+    }
+
+    #[test]
+    fn test_tag_select_compiled() {
+        use crate::query::CompiledSelector;
+
+        let selector = CompiledSelector::compile("li").unwrap();
+        let soup = Soup::parse("<ul><li>A</li><li>B</li><li>C</li></ul>");
+        let ul = soup.find("ul").unwrap().unwrap();
+        let items = ul.select_compiled(&selector);
+        assert_eq!(items.len(), 3);
+    }
+
+    #[test]
+    fn test_children_by_name() {
+        let soup = Soup::parse("<ul><li>A</li><span>X</span><li>B</li></ul>");
+        let ul = soup.find("ul").unwrap().unwrap();
+        let lis: Vec<_> = ul.children_by_name("li").collect();
+        assert_eq!(lis.len(), 2);
+        assert_eq!(lis[0].text(), "A");
+        assert_eq!(lis[1].text(), "B");
+    }
+
+    #[test]
+    fn test_children_by_name_case_insensitive() {
+        let soup = Soup::parse("<div><LI>A</LI><li>B</li></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert_eq!(div.children_by_name("li").count(), 2);
+    }
+
+    #[test]
+    fn test_children_by_name_none_matching() {
+        let soup = Soup::parse("<div><span>A</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert!(div.children_by_name("li").next().is_none());
+    }
+
+    #[test]
+    fn test_children_by_name_only_direct_children() {
+        let soup = Soup::parse("<div><span><li>Nested</li></span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert!(div.children_by_name("li").next().is_none());
+    }
+
+    #[test]
+    fn test_children_by_class() {
+        let soup = Soup::parse("<div><span class=\"a\">A</span><span class=\"b\">B</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        let class_a: Vec<_> = div.children_by_class("a").collect();
+        assert_eq!(class_a.len(), 1);
+        assert_eq!(class_a[0].text(), "A");
+    }
+
+    #[test]
+    fn test_children_by_class_multiple_classes() {
+        let soup =
+            Soup::parse("<div><span class=\"a b\">AB</span><span class=\"a c\">AC</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert_eq!(div.children_by_class("a").count(), 2);
+    }
+
+    #[test]
+    fn test_children_by_class_exact_match() {
+        let soup = Soup::parse("<div><span class=\"abc\">X</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert!(div.children_by_class("a").next().is_none());
+    }
+
+    #[test]
+    fn test_children_by_class_none_matching() {
+        let soup = Soup::parse("<div><span class=\"b\">B</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert!(div.children_by_class("a").next().is_none());
+    }
+
+    #[test]
+    fn test_children_by_class_only_direct_children() {
+        let soup = Soup::parse("<div><ul><li class=\"item\">Nested</li></ul></div>");
+        let div = soup.find("div").unwrap().unwrap();
+        assert!(div.children_by_class("item").next().is_none());
     }
 }

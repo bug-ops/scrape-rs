@@ -6,7 +6,7 @@ use crate::{
     Result, Tag,
     dom::{Document, NodeId, NodeKind},
     parser::{Html5everParser, ParseConfig, Parser},
-    query::{QueryResult, find, find_all},
+    query::{CompiledSelector, QueryResult, find, find_all, find_all_compiled, find_compiled},
 };
 
 /// Configuration options for HTML parsing.
@@ -274,6 +274,43 @@ impl Soup {
         self.find_all(selector)
     }
 
+    /// Finds the first element using a pre-compiled selector.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::{Soup, query::CompiledSelector};
+    ///
+    /// let selector = CompiledSelector::compile("div.item").unwrap();
+    /// let soup = Soup::parse("<div class=\"item\">Text</div>");
+    /// let result = soup.find_compiled(&selector);
+    /// assert!(result.is_some());
+    /// ```
+    #[must_use]
+    pub fn find_compiled(&self, selector: &CompiledSelector) -> Option<Tag<'_>> {
+        find_compiled(&self.document, selector).map(|id| Tag::new(&self.document, id))
+    }
+
+    /// Finds all elements using a pre-compiled selector.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::{Soup, query::CompiledSelector};
+    ///
+    /// let selector = CompiledSelector::compile("li").unwrap();
+    /// let soup = Soup::parse("<ul><li>A</li><li>B</li></ul>");
+    /// let items = soup.select_compiled(&selector);
+    /// assert_eq!(items.len(), 2);
+    /// ```
+    #[must_use]
+    pub fn select_compiled(&self, selector: &CompiledSelector) -> Vec<Tag<'_>> {
+        find_all_compiled(&self.document, selector)
+            .into_iter()
+            .map(|id| Tag::new(&self.document, id))
+            .collect()
+    }
+
     // ==================== Document Methods ====================
 
     /// Returns the root element of the document.
@@ -535,5 +572,39 @@ mod tests {
         let soup = Soup::parse("<input type=\"text\"><input type=\"password\">");
         let result = soup.find("input[type=\"text\"]").unwrap();
         assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_soup_find_compiled() {
+        use crate::query::CompiledSelector;
+
+        let selector = CompiledSelector::compile("div.item").unwrap();
+        let soup = Soup::parse("<div class=\"item\">Text</div>");
+        let result = soup.find_compiled(&selector);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().text(), "Text");
+    }
+
+    #[test]
+    fn test_soup_select_compiled() {
+        use crate::query::CompiledSelector;
+
+        let selector = CompiledSelector::compile("li").unwrap();
+        let soup = Soup::parse("<ul><li>A</li><li>B</li></ul>");
+        let items = soup.select_compiled(&selector);
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn test_compiled_selector_reuse() {
+        use crate::query::CompiledSelector;
+
+        let selector = CompiledSelector::compile("li").unwrap();
+
+        let soup1 = Soup::parse("<ul><li>A</li></ul>");
+        let soup2 = Soup::parse("<ul><li>X</li><li>Y</li></ul>");
+
+        assert_eq!(soup1.select_compiled(&selector).len(), 1);
+        assert_eq!(soup2.select_compiled(&selector).len(), 2);
     }
 }

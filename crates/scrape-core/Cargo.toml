@@ -50,6 +50,10 @@ harness = false
 name = "simd"
 harness = false
 
+[[bench]]
+name = "selector_optimization"
+harness = false
+
 [[test]]
 name = "integration"
 path = "../../tests/integration/mod.rs"
