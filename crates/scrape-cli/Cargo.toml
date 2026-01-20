@@ -23,7 +23,7 @@ clap = { workspace = true, features = ["derive", "env", "wrap_help"] }
 csv.workspace = true
 is-terminal.workspace = true
 rayon.workspace = true
-scrape-core.workspace = true
+scrape-core = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror.workspace = true

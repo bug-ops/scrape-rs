@@ -9,7 +9,9 @@
 #[cfg(feature = "streaming")]
 use std::hint::black_box;
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+#[cfg(feature = "streaming")]
+use criterion::{BenchmarkId, Throughput};
+use criterion::{Criterion, criterion_group, criterion_main};
 #[cfg(feature = "streaming")]
 use scrape_core::StreamingSoup;
 
