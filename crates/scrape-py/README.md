@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/fast-scrape)](https://pypi.org/project/fast-scrape)
 [![License](https://img.shields.io/pypi/l/fast-scrape)](../../LICENSE-MIT)
 
-**10-50x faster** HTML parsing for Python. Rust-powered, BeautifulSoup-compatible API.
+**8x faster** HTML parsing than BeautifulSoup4. Rust-powered with **3000x faster** CSS selector queries.
 
 ## Installation
 
@@ -113,56 +113,63 @@ def extract_links(soup: Soup) -> list[str]:
 
 ## Performance
 
-v0.2.0 delivers massive performance improvements across all operations:
+Measured benchmarks comparing against BeautifulSoup4 and lxml:
 
 <details open>
 <summary><strong>Parse speed comparison</strong></summary>
 
-| File size | fast-scrape | BeautifulSoup4 | lxml | Speedup |
-|-----------|-------------|----------------|------|---------|
-| 1 KB | **11 µs** | 0.23 ms | 0.31 ms | **20-28x faster** |
-| 100 KB | **2.96 ms** | 31.4 ms | 28.2 ms | **9.5-10.6x faster** |
-| 1 MB | **15.5 ms** | 1247 ms | 1032 ms | **66-80x faster** |
+| File size | fast-scrape | BeautifulSoup4 | lxml | vs BS4 | vs lxml |
+|-----------|-------------|----------------|------|--------|---------|
+| 1 KB | **0.030 ms** | 0.247 ms | 0.015 ms | **8.3x faster** | 2x slower |
+| 218 KB | **3.79 ms** | 30.02 ms | 1.79 ms | **7.9x faster** | 2x slower |
+| 5.9 MB | **118.88 ms** | 1095.22 ms | 71.59 ms | **9.2x faster** | 1.7x slower |
 
-**Throughput:** 64 MB/s on 1MB files — handles large documents efficiently.
+**Average:** **8.5x faster than BeautifulSoup4**
+
+> [!NOTE]
+> lxml uses libxml2 (optimized C library) and is faster for parsing. However, fast-scrape dominates in query operations (see below).
 
 </details>
 
 <details>
-<summary><strong>Query performance</strong></summary>
+<summary><strong>Query performance (on 218 KB HTML)</strong></summary>
 
 | Operation | fast-scrape | BeautifulSoup4 | Speedup |
 |-----------|-------------|----------------|---------|
-| `find("div")` | **208 ns** | 16 µs | **77x** |
-| `find(".class")` | **20 ns** | 797 µs | **40,000x** |
-| `find("#id")` | **20 ns** | 799 µs | **40,000x** |
-| `select("div > p")` | **24.7 µs** | 4.361 ms | **176x** |
+| `find("div")` | **0.001 ms** | 0.016 ms | **20x** |
+| `find(".product-card")` | **<0.001 ms** | 0.830 ms | **7,353x** |
+| `find("#product-100")` | **<0.001 ms** | 0.828 ms | **6,928x** |
+| `find_all("div")` | **0.037 ms** | 0.310 ms | **8x** |
+| `select(".product-card")` | **0.004 ms** | 4.705 ms | **1,294x** |
 
-**CSS selectors dominate:** Class and ID selectors run in nanoseconds vs microseconds.
+**Average:** **3,121x faster than BeautifulSoup4**
 
-</details>
-
-<details>
-<summary><strong>Memory efficiency (100MB HTML)</strong></summary>
-
-| Library | Memory | Efficiency |
-|---------|--------|------------|
-| fast-scrape | **145 MB** | 1x baseline |
-| lxml | 2,100 MB | 14.5x larger |
-| BeautifulSoup4 | 3,200 MB | **22x larger** |
-
-**Result:** 14-22x more memory-efficient than Python competitors.
+**CSS selectors dominate:** Class and ID selectors are **thousands of times faster**.
 
 </details>
 
-**v0.2.0 architecture optimizations:**
-- **SIMD-accelerated class matching** — 2-10x faster selector execution
-- **Zero-copy serialization** — 50-70% memory reduction in HTML output
-- **Batch processing** — Parallel parsing uses all CPU cores automatically
+**When to use fast-scrape:**
+- **Web scraping** — Many queries per document (fast-scrape excels)
+- **Data extraction** — CSS selector-heavy workloads
+- **Batch processing** — `Soup.parse_batch()` uses all CPU cores
 
-## Built on Servo
+**When lxml might be better:**
+- **Parse-only workloads** — If you only parse and don't query, lxml is faster
+- **XML processing** — lxml has better XML support
 
-Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+**v0.2.0 optimizations:**
+- **SIMD-accelerated CSS selectors** — 2-10x faster class/ID matching
+- **Zero-copy serialization** — 50-70% memory reduction
+- **Batch processing** — Rayon parallelization across CPU cores
+
+## Built on Servo and Cloudflare
+
+**Parsing & Selection (Servo browser engine):**
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
+
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## Related packages
 

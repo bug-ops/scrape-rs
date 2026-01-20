@@ -69,24 +69,39 @@ scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 
 ## Performance
 
-v0.2.0 includes massive performance improvements across all metrics:
+Measured benchmarks for the Rust core implementation:
 
-| Metric | Result | vs Competitors |
-|--------|--------|----------------|
-| **Parse 1KB** | 11 µs | 20-38x faster |
-| **Parse 100KB** | 2.96 ms | 9.5-22x faster |
-| **Parse 1MB** | 15.5 ms | 66-135x faster |
-| **Query (by class)** | 20 ns | 40,000x faster |
-| **Memory (100MB doc)** | 145 MB | 14-22x smaller |
+**Parse throughput:**
+
+| File size | Time | Throughput |
+|-----------|------|------------|
+| 1 KB | **11.36 µs** | 33.9 MiB/s |
+| 100 KB | **3.02 ms** | 43.4 MiB/s |
+| 1 MB | **16.05 ms** | 39.0 MiB/s |
+
+**Query performance (on 218 KB HTML):**
+
+| Operation | Time | Iterations/sec |
+|-----------|------|----------------|
+| `find("div")` (tag) | **211 ns** | 4.7M |
+| `find(".product-card")` (class) | **20.5 ns** | 48.8M |
+| `find("#product-100")` (id) | **21.0 ns** | 47.6M |
+| `find_all("div")` | **26.4 µs** | 37.8k |
+| `select(".product-card")` | **237 ns** | 4.2M |
+
+**Key insights:**
+- **Class and ID selectors** are **10x faster** than tag selectors (20 ns vs 211 ns) due to direct optimization
+- **Consistent throughput** across file sizes (33-43 MiB/s)
+- **Nanosecond-scale queries** for simple selectors
 
 **Architecture optimizations:**
-- **SIMD-accelerated class selector matching** — 2-10x faster on large documents
+- **SIMD-accelerated selector matching** — 2-10x faster on large documents (with `simd` feature)
 - **Selector fast-paths** — Direct optimization for tag-only, class-only, ID-only patterns
 - **Arena-based DOM allocation** — Cache-friendly, zero per-node heap allocations
-- **50-70% memory reduction** — Zero-copy serialization via Cow<str>
-- **Parallel batch processing** — Rayon-powered when `parallel` feature is enabled
+- **Zero-copy serialization** — 50-70% memory reduction via Cow<str>
+- **Parallel batch processing** — Rayon-powered (with `parallel` feature)
 
-See full comparative benchmarks in the [main project README](https://github.com/bug-ops/scrape-rs#performance) comparing against BeautifulSoup4, lxml, Cheerio, and other Rust parsers.
+See ecosystem-specific benchmarks in the [main project README](https://github.com/bug-ops/scrape-rs#performance) comparing Python, Node.js, and WASM bindings against their competitors.
 
 ## Type Safety
 
@@ -110,14 +125,16 @@ scrape-core/
 └── parallel/  # Rayon-based parallelization
 ```
 
-### Built on Servo
+### Built on Servo and Cloudflare
 
-The parsing and selector engine is powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine:
-
+**Parsing & Selection (Servo browser engine):**
 - [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
 - [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
 - [cssparser](https://crates.io/crates/cssparser) — CSS parser
 - [markup5ever](https://crates.io/crates/markup5ever) — Common HTML/XML tree data structures
+
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## MSRV policy
 

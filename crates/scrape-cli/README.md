@@ -181,9 +181,14 @@ v0.2.0 includes significant improvements:
 | 2 | Runtime error (invalid selector, I/O error) |
 | 4 | Argument validation error |
 
-## Built on Servo
+## Built on Servo and Cloudflare
 
-Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+**Parsing & Selection (Servo browser engine):**
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
+
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## Related packages
 
