@@ -52,32 +52,29 @@ pub enum FetchError {
 /// Returns `FetchError` if the request fails.
 #[cfg(feature = "url")]
 pub fn fetch_url(url: &str, config: &FetchConfig) -> Result<String, FetchError> {
-    let response = ureq::get(url)
-        .set("User-Agent", &config.user_agent)
-        .timeout(config.timeout)
-        .call()
-        .map_err(|e| FetchError::Http(e.to_string()))?;
+    // Make GET request with User-Agent header
+    // Note: ureq 3.x uses default global timeout, custom timeout per-request not directly supported
+    let mut response =
+        ureq::get(url).header("User-Agent", &config.user_agent).call().map_err(|e| match e {
+            ureq::Error::StatusCode(code) => FetchError::Http(format!("HTTP {code}")),
+            ureq::Error::Timeout(_) => FetchError::Timeout(config.timeout),
+            ureq::Error::BadUri(msg) => FetchError::InvalidUrl(msg),
+            ureq::Error::Io(io_err) => FetchError::Http(format!("I/O error: {io_err}")),
+            other => FetchError::Http(format!("{other}")),
+        })?;
 
-    // Check content length
-    if let Some(len) = response.header("content-length") {
-        if let Ok(size) = len.parse::<usize>() {
-            if size > config.max_size {
-                return Err(FetchError::TooLarge { size, max: config.max_size });
-            }
-        }
+    // Read response body to string
+    let body_str = response
+        .body_mut()
+        .read_to_string()
+        .map_err(|e| FetchError::Http(format!("Failed to read response: {e}")))?;
+
+    // Check size limit
+    if body_str.len() > config.max_size {
+        return Err(FetchError::TooLarge { size: body_str.len(), max: config.max_size });
     }
 
-    let mut reader = response.into_reader();
-    let mut body = String::new();
-
-    // Read with size limit
-    use std::io::Read;
-    reader
-        .take(config.max_size as u64)
-        .read_to_string(&mut body)
-        .map_err(|e| FetchError::Http(e.to_string()))?;
-
-    Ok(body)
+    Ok(body_str)
 }
 
 #[cfg(not(feature = "url"))]
