@@ -3,7 +3,6 @@ title = "scrape-rs Documentation"
 authors = ["scrape-rs contributors"]
 description = "High-performance cross-platform HTML parsing library"
 language = "en"
-multilingual = false
 src = "src"
 
 [build]
