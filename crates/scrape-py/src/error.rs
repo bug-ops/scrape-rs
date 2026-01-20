@@ -14,8 +14,8 @@ pub trait IntoPyErr {
 impl IntoPyErr for QueryError {
     fn into_py_err(self) -> PyErr {
         match self {
-            QueryError::InvalidSelector(msg) => {
-                PyValueError::new_err(format!("Invalid CSS selector: {msg}"))
+            QueryError::InvalidSelector { message, .. } => {
+                PyValueError::new_err(format!("Invalid CSS selector: {message}"))
             }
         }
     }

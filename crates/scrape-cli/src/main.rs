@@ -3,7 +3,9 @@
 mod args;
 mod batch;
 mod extract;
+mod fetch;
 mod output;
+mod repl;
 
 use std::{
     io::{self, Read, Write},
@@ -40,7 +42,32 @@ fn main() -> ExitCode {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn run(args: &Args) -> anyhow::Result<bool> {
+    // Handle interactive mode
+    if args.interactive {
+        let mut repl = repl::Repl::new();
+        repl.run()?;
+        return Ok(true);
+    }
+
+    // Handle explain mode
+    if args.explain {
+        if let Some(ref selector) = args.selector {
+            use scrape_core::query::explain;
+            match explain(selector) {
+                Ok(explanation) => {
+                    println!("{}", explanation.format());
+                    return Ok(true);
+                }
+                Err(e) => {
+                    return Err(anyhow::anyhow!("Invalid selector: {e}"));
+                }
+            }
+        }
+        return Err(anyhow::anyhow!("--explain requires a selector"));
+    }
+
     let use_color = match args.color {
         ColorMode::Always => true,
         ColorMode::Never => false,

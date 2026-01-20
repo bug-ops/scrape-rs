@@ -65,14 +65,17 @@
 
 mod compiled;
 mod error;
+mod explain;
 mod extraction;
 mod filter;
 mod find;
 mod selector;
+mod specificity;
 mod text;
 
 pub use compiled::{CompiledSelector, compile_selector};
 pub use error::{QueryError, QueryResult};
+pub use explain::{OptimizationHint, SelectorExplanation, explain, explain_with_document};
 pub use extraction::{select_attr, select_attr_within, select_text, select_text_within};
 pub use filter::{Filter, find_by_filter, find_first_by_filter};
 pub use find::{
@@ -84,4 +87,5 @@ pub use selector::{
     ElementWrapper, NonTSPseudoClass, PseudoElement, ScrapeSelector, matches_selector,
     matches_selector_list, matches_selector_with_caches, parse_selector,
 };
+pub use specificity::Specificity;
 pub use text::TextNodesIter;

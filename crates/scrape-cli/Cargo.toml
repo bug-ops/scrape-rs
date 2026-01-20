@@ -13,6 +13,10 @@ publish = true
 name = "scrape"
 path = "src/main.rs"
 
+[features]
+default = []
+url = ["dep:ureq", "ureq/native-tls"]
+
 [dependencies]
 anyhow.workspace = true
 clap = { workspace = true, features = ["derive", "env", "wrap_help"] }
@@ -22,6 +26,8 @@ rayon.workspace = true
 scrape-core.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+thiserror.workspace = true
+ureq = { workspace = true, optional = true }
 
 [dev-dependencies]
 assert_cmd.workspace = true

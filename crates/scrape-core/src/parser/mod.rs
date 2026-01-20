@@ -24,9 +24,11 @@ pub mod fragment;
 mod html5;
 #[cfg(test)]
 mod tests;
+pub mod warnings;
 
 pub use error::{ParseError, ParseResult};
 pub use html5::Html5everParser;
+pub use warnings::{ParseResultWithWarnings, ParseWarning, WarningSeverity};
 
 use crate::dom::Document;
 

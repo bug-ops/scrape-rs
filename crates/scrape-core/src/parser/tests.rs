@@ -55,7 +55,7 @@ fn test_parse_with_max_depth_exceeded() {
     let html = "<div><div><div><div><div>deep</div></div></div></div></div>";
     let result = parser.parse_with_config(html, &config);
 
-    assert!(matches!(result, Err(ParseError::MaxDepthExceeded { max_depth: 3 })));
+    assert!(matches!(result, Err(ParseError::MaxDepthExceeded { max_depth: 3, .. })));
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn test_parse_with_max_depth_zero() {
     let html = "<div>text</div>";
     let result = parser.parse_with_config(html, &config);
 
-    assert!(matches!(result, Err(ParseError::MaxDepthExceeded { max_depth: 0 })));
+    assert!(matches!(result, Err(ParseError::MaxDepthExceeded { max_depth: 0, .. })));
 }
 
 #[test]
