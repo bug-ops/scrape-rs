@@ -54,8 +54,6 @@ jobs:
 
       - name: Build rustdoc
         run: cargo doc --no-deps --all-features --workspace
-        env:
-          RUSTDOCFLAGS: --enable-index-page -Zunstable-options
 
       - name: Test doc examples
         run: cargo test --doc --all-features --workspace
