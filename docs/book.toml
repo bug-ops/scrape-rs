@@ -1,0 +1,36 @@
+[book]
+title = "scrape-rs Documentation"
+authors = ["scrape-rs contributors"]
+description = "High-performance cross-platform HTML parsing library"
+language = "en"
+multilingual = false
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true
+
+[preprocessor.index]
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/bug-ops/scrape-rs"
+edit-url-template = "https://github.com/bug-ops/scrape-rs/edit/main/docs/{path}"
+site-url = "/scrape-rs/"
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+
+[output.html.playground]
+editable = true
+copyable = true
+copy-js = true
+line-numbers = true
+runnable = true

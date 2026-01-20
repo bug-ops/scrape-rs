@@ -1,0 +1,89 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index/
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-registry-
+
+      - name: Cache Cargo git
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git/db/
+          key: cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-git-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: target/
+          key: cargo-target-docs-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-target-docs-${{ runner.os }}-
+
+      - name: Install mdBook
+        run: |
+          mkdir -p ~/.cargo/bin
+          curl -L https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar xz -C ~/.cargo/bin
+
+      - name: Build rustdoc
+        run: cargo doc --no-deps --all-features --workspace
+        env:
+          RUSTDOCFLAGS: --enable-index-page -Zunstable-options
+
+      - name: Test doc examples
+        run: cargo test --doc --all-features --workspace
+
+      - name: Build mdBook
+        run: mdbook build docs
+
+      - name: Combine documentation
+        run: |
+          mkdir -p public
+          cp -r docs/book/* public/
+          mkdir -p public/api
+          cp -r target/doc/* public/api/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
