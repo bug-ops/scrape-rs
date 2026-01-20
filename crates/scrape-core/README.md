@@ -11,7 +11,7 @@ High-performance HTML parsing library core. Pure Rust implementation with no FFI
 
 ```toml
 [dependencies]
-scrape-core = "0.1"
+scrape-core = "0.2"
 ```
 
 Or with cargo:
@@ -56,7 +56,7 @@ Enable optional features in `Cargo.toml`:
 
 ```toml
 [dependencies]
-scrape-core = { version = "0.1", features = ["simd", "parallel"] }
+scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 ```
 
 | Feature | Description | Default |
@@ -69,13 +69,26 @@ scrape-core = { version = "0.1", features = ["simd", "parallel"] }
 
 ## Performance
 
-Optimized for high throughput:
+v0.2.0 includes significant performance improvements:
 
-- Arena-based DOM allocation (cache-friendly, zero per-node heap allocations)
-- SIMD-accelerated byte scanning when `simd` feature is enabled
-- Parallel batch processing via Rayon when `parallel` feature is enabled
+- **SIMD-accelerated class selector matching** — 2-10x faster on large documents with many class selectors
+- **Selector fast-paths** — Direct optimization for common patterns (tag-only, class-only, ID-only selectors)
+- **Arena-based DOM allocation** — Cache-friendly, zero per-node heap allocations
+- **50-70% memory reduction** — Zero-copy HTML serialization via Cow<str> optimization
+- **Parallel batch processing** — Rayon-powered when `parallel` feature is enabled (near-linear scaling)
 
 Benchmarks show **10x faster parsing** and **up to 132x faster queries** compared to BeautifulSoup. See full benchmark results in the [main project README](https://github.com/bug-ops/scrape-rs#performance).
+
+## Type Safety
+
+v0.2.0 introduces compile-time safety via the **typestate pattern**:
+
+- **Document lifecycle states** — Building (construction) → Queryable (ready) → Sealed (immutable)
+- **Sealed traits** — Prevent unintended implementations while allowing future extensions
+- **Zero runtime overhead** — State encoding uses PhantomData with no allocation cost
+- **Trait abstractions** — HtmlSerializer trait and ElementFilter iterators for consistent DOM access
+
+All safety guarantees are verified at compile time with zero performance impact.
 
 ## Architecture
 

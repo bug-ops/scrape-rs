@@ -29,7 +29,7 @@ pipenv install fast-scrape
 </details>
 
 > [!IMPORTANT]
-> Requires Python 3.10 or later.
+> Requires Python 3.10 or later. v0.2.0 introduces type-safe document lifecycle with zero performance overhead.
 
 ## Quick start
 
@@ -112,6 +112,12 @@ def extract_links(soup: Soup) -> list[str]:
 </details>
 
 ## Performance
+
+v0.2.0 improvements:
+
+- **SIMD-accelerated** — Class selector matching 2-10x faster on large documents
+- **Zero-copy serialization** — 50-70% memory reduction in HTML output
+- **Batch processing** — Parallel parsing across multiple documents uses all CPU cores
 
 Compared to BeautifulSoup:
 

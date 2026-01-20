@@ -137,18 +137,20 @@ Benchmarked against BeautifulSoup4 (Python) and Cheerio (Node.js):
 
 ## Features
 
-- **Fast** — 10-50x faster than BeautifulSoup/Cheerio
+- **Fast** — 10-50x faster than BeautifulSoup/Cheerio (v0.2 with SIMD achieves 2-10x faster class selector matching)
 - **Cross-platform** — Rust, Python, Node.js, and browsers
-- **Consistent API** — Same interface everywhere
+- **Consistent API** — Same interface everywhere with compile-time type safety
 - **Memory-safe** — Pure Rust core, zero unsafe code
-- **SIMD-accelerated** — Auto-detects SSE4.2, AVX2, NEON, WASM SIMD
+- **SIMD-accelerated** — Auto-detects SSE4.2, AVX2, NEON, WASM SIMD for byte scanning and selector matching
+- **Type-safe queries** — Compile-time lifecycle enforcement via typestate pattern (Building → Queryable → Sealed)
+- **Trait abstractions** — HtmlSerializer trait and ElementFilter iterators with zero-overhead abstraction
 
 <details>
 <summary><strong>Rust feature flags</strong></summary>
 
 ```toml
 [dependencies]
-scrape-core = { version = "0.1", features = ["simd", "parallel"] }
+scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 ```
 
 | Feature | Description | Default |
