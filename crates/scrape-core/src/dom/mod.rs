@@ -22,14 +22,18 @@ mod arena;
 mod document;
 mod index;
 mod node;
+pub mod node_type;
+pub mod state;
 mod tag_id;
 
 #[allow(unused_imports)]
 pub use document::{
-    AncestorsIter, ChildrenIter, DescendantsIter, Document, ElementAncestorsIter,
+    AncestorsIter, ChildrenIter, DescendantsIter, Document, DocumentImpl, ElementAncestorsIter,
     ElementChildrenIter, ElementDescendantsIter, ElementNextSiblingsIter, ElementPrevSiblingsIter,
     ElementSiblingsIter, NextSiblingsIter, PrevSiblingsIter, SiblingsIter,
 };
 pub use index::DocumentIndex;
 pub use node::{Node, NodeId, NodeKind};
+pub use node_type::{CommentMarker, ElementMarker, NodeType, TextMarker};
+pub use state::{Building, DocumentState, MutableState, Queryable, QueryableState, Sealed};
 pub use tag_id::TagId;

@@ -185,7 +185,7 @@ impl Soup {
         let estimated_nodes = estimate_node_count(html.len());
         let document = parser
             .parse_with_config_and_capacity(html, &parse_config, estimated_nodes)
-            .unwrap_or_else(|_| Document::new());
+            .unwrap_or_default();
 
         Self { document, config }
     }
@@ -266,7 +266,7 @@ impl Soup {
         };
 
         let document = crate::parser::fragment::parse_fragment_impl(html, context, &parse_config)
-            .unwrap_or_else(|_| Document::new());
+            .unwrap_or_default();
 
         Self { document, config }
     }

@@ -70,12 +70,13 @@ fn convert_rcdom_to_document_with_capacity(
     config: &ParseConfig,
     capacity: usize,
 ) -> ParseResult<Document> {
-    let mut document = Document::with_capacity(capacity);
+    let mut document = crate::dom::DocumentImpl::<crate::dom::Building>::with_capacity(capacity);
     let mut depth = 0;
     let mut index = DocumentIndex::new();
 
     convert_node(&dom.document, &mut document, None, &mut depth, config, &mut index)?;
 
+    let mut document = document.build();
     document.set_index(index);
     Ok(document)
 }
@@ -83,7 +84,7 @@ fn convert_rcdom_to_document_with_capacity(
 /// Recursively converts an `RcDom` node and its children to our DOM representation.
 fn convert_node(
     handle: &Handle,
-    document: &mut Document,
+    document: &mut crate::dom::DocumentImpl<crate::dom::Building>,
     parent: Option<NodeId>,
     depth: &mut usize,
     config: &ParseConfig,

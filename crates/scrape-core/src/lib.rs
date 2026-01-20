@@ -93,10 +93,11 @@ pub mod utils;
 // Error types
 // DOM types
 pub use dom::{
-    AncestorsIter, ChildrenIter, DescendantsIter, Document, DocumentIndex, ElementAncestorsIter,
-    ElementChildrenIter, ElementDescendantsIter, ElementNextSiblingsIter, ElementPrevSiblingsIter,
-    ElementSiblingsIter, NextSiblingsIter, Node, NodeId, NodeKind, PrevSiblingsIter, SiblingsIter,
-    TagId,
+    AncestorsIter, Building, ChildrenIter, CommentMarker, DescendantsIter, Document, DocumentImpl,
+    DocumentIndex, DocumentState, ElementAncestorsIter, ElementChildrenIter,
+    ElementDescendantsIter, ElementMarker, ElementNextSiblingsIter, ElementPrevSiblingsIter,
+    ElementSiblingsIter, MutableState, NextSiblingsIter, Node, NodeId, NodeKind, NodeType,
+    PrevSiblingsIter, Queryable, QueryableState, Sealed, SiblingsIter, TagId, TextMarker,
 };
 pub use error::{Error, Result};
 // Parser types
