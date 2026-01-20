@@ -14,8 +14,8 @@ pub trait IntoNapiError {
 impl IntoNapiError for QueryError {
     fn into_napi_error(self) -> Error {
         match self {
-            QueryError::InvalidSelector(msg) => {
-                Error::new(Status::InvalidArg, format!("Invalid CSS selector: {msg}"))
+            QueryError::InvalidSelector { message, .. } => {
+                Error::new(Status::InvalidArg, format!("Invalid CSS selector: {message}"))
             }
         }
     }

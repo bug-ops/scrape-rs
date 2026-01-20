@@ -76,7 +76,7 @@ jobs:
       - run: cargo make fmt-check
 
   clippy:
-    name: Clippy
+    name: Clippy (default features)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [changes]
@@ -91,6 +91,25 @@ jobs:
         with:
           tool: cargo-make
       - run: cargo make clippy
+
+  clippy-all-features:
+    name: Clippy (all features)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [changes]
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: clippy-all-features
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
+      - run: cargo make clippy-all-features
 
   security:
     name: Security
@@ -124,14 +143,20 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: msrv
-      - run: cargo check --workspace
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-make
+      - name: Check workspace (default features)
+        run: cargo check --workspace
+      - name: Check workspace (all features)
+        run: cargo check --workspace --all-features
 
   # ==========================================================================
   # STAGE 2: Tests (depends on fmt + clippy passing)
   # ==========================================================================
 
   test:
-    name: Test (${{ matrix.os }})
+    name: Test (${{ matrix.os }}, default features)
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     needs: [changes, fmt, clippy]
@@ -157,6 +182,33 @@ jobs:
       - name: Check benchmarks compile
         if: matrix.os == 'ubuntu-latest'
         run: cargo build --release --benches
+
+  test-all-features:
+    name: Test (${{ matrix.os }}, all features)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    needs: [changes, fmt, clippy-all-features]
+    if: |
+      always() &&
+      (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true') &&
+      needs.fmt.result == 'success' &&
+      needs.clippy-all-features.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: test-all-features-${{ matrix.os }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest,cargo-make
+      - run: cargo make test-all-features
+      - name: Build CLI with all features
+        run: cargo make cli-build-all-features
 
   # ==========================================================================
   # STAGE 2 (parallel): Bindings (run in parallel with Rust tests)
@@ -307,14 +359,14 @@ jobs:
   # ==========================================================================
 
   coverage:
-    name: Coverage
+    name: Coverage (all features)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [changes, fmt, clippy]
+    needs: [changes, fmt, clippy-all-features]
     if: |
       always() &&
       needs.fmt.result == 'success' &&
-      needs.clippy.result == 'success' &&
+      needs.clippy-all-features.result == 'success' &&
       (needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true')
     steps:
       - uses: actions/checkout@v6
@@ -328,7 +380,7 @@ jobs:
         with:
           tool: cargo-llvm-cov
       - name: Generate coverage
-        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:

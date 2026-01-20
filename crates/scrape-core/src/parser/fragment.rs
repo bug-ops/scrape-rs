@@ -138,7 +138,7 @@ fn convert_node(
     config: &ParseConfig,
 ) -> ParseResult<Option<NodeId>> {
     if *depth > config.max_depth {
-        return Err(ParseError::MaxDepthExceeded { max_depth: config.max_depth });
+        return Err(ParseError::MaxDepthExceeded { max_depth: config.max_depth, span: None });
     }
     *depth = depth.saturating_add(1);
 

@@ -101,12 +101,16 @@ pub use dom::{
     ElementSiblingsIter, MutableState, NextSiblingsIter, Node, NodeId, NodeKind, NodeType,
     PrevSiblingsIter, Queryable, QueryableState, Sealed, SiblingsIter, TagId, TextMarker,
 };
-pub use error::{Error, Result};
+pub use error::{Error, Result, SourcePosition, SourceSpan, SpanContext};
 // Parser types
-pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};
+pub use parser::{
+    Html5everParser, ParseConfig, ParseError, ParseResult, ParseResultWithWarnings, ParseWarning,
+    Parser, WarningSeverity,
+};
 // Query types
 pub use query::{
-    CompiledSelector, Filter, QueryError, QueryResult, TextNodesIter, compile_selector,
+    CompiledSelector, Filter, OptimizationHint, QueryError, QueryResult, SelectorExplanation,
+    Specificity, TextNodesIter, compile_selector, explain, explain_with_document,
 };
 // Serialization utilities
 pub use serialize::{HtmlSerializer, collect_text, serialize_inner_html, serialize_node};

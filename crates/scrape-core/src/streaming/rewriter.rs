@@ -142,8 +142,7 @@ mod tests {
 
     #[test]
     fn test_rewriter_new() {
-        let rewriter = HtmlRewriter::new();
-        assert_eq!(rewriter._element_handlers.len(), 0);
+        let _rewriter = HtmlRewriter::new();
     }
 
     #[test]

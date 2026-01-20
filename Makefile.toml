@@ -31,14 +31,24 @@ command = "cargo"
 args = ["fmt", "--check"]
 
 [tasks.clippy]
-description = "Run clippy lints"
+description = "Run clippy lints (default features)"
 command = "cargo"
 args = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
 
+[tasks.clippy-all-features]
+description = "Run clippy lints with all features enabled"
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
+
 [tasks.test]
-description = "Run tests with nextest"
+description = "Run tests with nextest (default features)"
 command = "cargo"
 args = ["nextest", "run", "--workspace"]
+
+[tasks.test-all-features]
+description = "Run tests with nextest (all features)"
+command = "cargo"
+args = ["nextest", "run", "--workspace", "--all-features"]
 
 [tasks.test-core]
 description = "Run scrape-core tests only"
@@ -67,11 +77,11 @@ command = "cargo"
 args = ["doc", "--workspace", "--no-deps", "--open"]
 
 [tasks.verify-rust]
-description = "Full Rust verification: fmt + clippy + test + deny"
-dependencies = ["fmt-check", "clippy", "test", "deny"]
+description = "Full Rust verification: fmt + clippy + test + deny (both default and all features)"
+dependencies = ["fmt-check", "clippy", "clippy-all-features", "test", "test-all-features", "deny"]
 
 [tasks.verify-rust-quick]
-description = "Quick Rust verification: fmt + clippy + test (no deny)"
+description = "Quick Rust verification: fmt + clippy + test (no deny, default features only)"
 dependencies = ["fmt-check", "clippy", "test-core"]
 
 # ============================================================================
@@ -301,9 +311,14 @@ grep "^version" Cargo.toml | head -1
 # ============================================================================
 
 [tasks.cli-build]
-description = "Build CLI tool"
+description = "Build CLI tool (default features)"
 command = "cargo"
 args = ["build", "-p", "scrape-cli", "--release"]
+
+[tasks.cli-build-all-features]
+description = "Build CLI tool with all features (including URL fetch)"
+command = "cargo"
+args = ["build", "-p", "scrape-cli", "--release", "--all-features"]
 
 [tasks.cli-build-dev]
 description = "Build CLI tool (dev mode)"
@@ -311,15 +326,25 @@ command = "cargo"
 args = ["build", "-p", "scrape-cli"]
 
 [tasks.cli-test]
-description = "Run CLI tests"
+description = "Run CLI tests (default features)"
 command = "cargo"
 args = ["nextest", "run", "-p", "scrape-cli"]
 
+[tasks.cli-test-all-features]
+description = "Run CLI tests with all features"
+command = "cargo"
+args = ["nextest", "run", "-p", "scrape-cli", "--all-features"]
+
 [tasks.cli-install]
-description = "Install CLI locally"
+description = "Install CLI locally (default features)"
 command = "cargo"
 args = ["install", "--path", "crates/scrape-cli"]
 
+[tasks.cli-install-all-features]
+description = "Install CLI locally with all features"
+command = "cargo"
+args = ["install", "--path", "crates/scrape-cli", "--all-features"]
+
 [tasks.verify-cli]
-description = "Full CLI verification: build + test"
-dependencies = ["cli-build", "cli-test"]
+description = "Full CLI verification: build + test (both default and all features)"
+dependencies = ["cli-build", "cli-build-all-features", "cli-test", "cli-test-all-features"]

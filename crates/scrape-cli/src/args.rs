@@ -78,6 +78,24 @@ pub struct Args {
     /// Suppress filename prefix in output.
     #[arg(long = "no-filename")]
     pub no_filename: bool,
+
+    /// Fetch HTML from URL instead of file.
+    #[cfg(feature = "url")]
+    #[arg(short = 'u', long = "url", value_name = "URL")]
+    pub url: Option<String>,
+
+    /// Start interactive REPL mode.
+    #[arg(short = 'i', long = "interactive")]
+    pub interactive: bool,
+
+    /// Explain selector (show specificity and hints).
+    #[arg(long = "explain")]
+    pub explain: bool,
+
+    /// Request timeout in seconds (for URL fetch).
+    #[cfg(feature = "url")]
+    #[arg(long = "timeout", default_value = "30", value_name = "SECONDS")]
+    pub timeout: u64,
 }
 
 /// Output format for extraction results.
@@ -112,6 +130,11 @@ impl Args {
     /// Returns an error if arguments are invalid or conflicting.
     pub fn parse_and_validate() -> Result<Self, String> {
         let args = Self::parse();
+
+        // Interactive and explain modes don't need selectors
+        if args.interactive || args.explain {
+            return Ok(args);
+        }
 
         if args.selector.is_none() && args.selects.is_empty() {
             return Err("Either <SELECTOR> or --select must be provided".into());
@@ -179,6 +202,12 @@ mod tests {
             parallel: None,
             with_filename: false,
             no_filename: false,
+            #[cfg(feature = "url")]
+            url: None,
+            interactive: false,
+            explain: false,
+            #[cfg(feature = "url")]
+            timeout: 30,
         };
 
         let selects = args.parse_selects();
@@ -203,6 +232,12 @@ mod tests {
             parallel: None,
             with_filename: true,
             no_filename: false,
+            #[cfg(feature = "url")]
+            url: None,
+            interactive: false,
+            explain: false,
+            #[cfg(feature = "url")]
+            timeout: 30,
         };
 
         assert!(args.show_filename());
@@ -228,6 +263,12 @@ mod tests {
             parallel: None,
             with_filename: false,
             no_filename: false,
+            #[cfg(feature = "url")]
+            url: None,
+            interactive: false,
+            explain: false,
+            #[cfg(feature = "url")]
+            timeout: 30,
         };
 
         assert!(!args.show_filename());

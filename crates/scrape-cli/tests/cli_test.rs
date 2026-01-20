@@ -237,3 +237,164 @@ fn test_nonexistent_file() {
         .code(1)
         .stderr(predicate::str::contains("nonexistent"));
 }
+
+// Phase 19 Tests - Selector Explanation
+
+#[test]
+fn test_explain_simple_selector() {
+    scrape()
+        .args(["--explain", "div.container"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector: div.container"))
+        .stdout(predicate::str::contains("Specificity:"));
+}
+
+#[test]
+fn test_explain_complex_selector() {
+    scrape()
+        .args(["--explain", "#main > ul.nav li a[href]"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"))
+        .stdout(predicate::str::contains("Specificity:"));
+}
+
+#[test]
+fn test_explain_invalid_selector() {
+    scrape()
+        .args(["--explain", "div[[["])
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("Invalid selector"));
+}
+
+#[test]
+fn test_explain_requires_selector() {
+    scrape().args(["--explain"]).assert().code(2).stderr(predicate::str::contains("requires"));
+}
+
+#[test]
+fn test_explain_with_attribute_selector() {
+    scrape()
+        .args(["--explain", "a[href^='https']"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_with_pseudo_class() {
+    scrape()
+        .args(["--explain", "li:first-child"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_universal_selector() {
+    scrape()
+        .args(["--explain", "*"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_descendant_combinator() {
+    scrape()
+        .args(["--explain", "div span"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_child_combinator() {
+    scrape()
+        .args(["--explain", "ul > li"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_adjacent_sibling() {
+    scrape()
+        .args(["--explain", "h1 + p"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+#[test]
+fn test_explain_multiple_classes() {
+    scrape()
+        .args(["--explain", ".class1.class2.class3"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Selector:"));
+}
+
+// Edge case tests for complex selectors
+
+#[test]
+fn test_deeply_nested_selector() {
+    scrape()
+        .arg("html > body > div > main > section > article > p > span")
+        .write_stdin(
+            "<html><body><div><main><section><article><p><span>Deep</span></p></article></\
+             section></main></div></body></html>",
+        )
+        .assert()
+        .success()
+        .stdout("Deep\n");
+}
+
+#[test]
+fn test_selector_with_unicode_content() {
+    scrape()
+        .arg("p.emoji")
+        .write_stdin(r#"<p class="emoji">🚀 Unicode Test 你好</p>"#)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("🚀 Unicode Test 你好"));
+}
+
+#[test]
+fn test_empty_selector_error() {
+    scrape().arg("").write_stdin("<div>Test</div>").assert().code(2);
+}
+
+#[test]
+fn test_malformed_html_with_warnings() {
+    scrape()
+        .arg("p")
+        .write_stdin("<html><body><p>Unclosed paragraph<div>Nested div</div>")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unclosed paragraph"));
+}
+
+#[test]
+fn test_large_document_performance() {
+    use std::fmt::Write;
+    let items = (0..1000).fold(String::new(), |mut acc, i| {
+        let _ = write!(acc, "<div class='item{i}'>Item {i}</div>");
+        acc
+    });
+    let large_html = format!("<html><body>{items}</body></html>");
+    scrape().arg("div").write_stdin(large_html).assert().success();
+}
+
+#[test]
+fn test_very_large_document() {
+    use std::fmt::Write;
+    let items = (0..10000).fold(String::new(), |mut acc, i| {
+        let _ = write!(acc, "<p id='p{i}'>Para {i}</p>");
+        acc
+    });
+    let very_large = format!("<html><body>{items}</body></html>");
+    scrape().arg("p").write_stdin(very_large).assert().success();
+}
