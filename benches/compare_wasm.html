@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@fast-scrape/wasm vs DOMParser Benchmark</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #569cd6;
+            margin-top: 30px;
+        }
+        .result {
+            background: #2d2d2d;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #4ec9b0;
+        }
+        .speedup {
+            color: #ce9178;
+            font-weight: bold;
+        }
+        .passed {
+            color: #6a9955;
+            font-weight: bold;
+        }
+        .failed {
+            color: #f48771;
+            font-weight: bold;
+        }
+        #output {
+            white-space: pre-wrap;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>@fast-scrape/wasm vs DOMParser Benchmark</h1>
+    <button id="runBtn" onclick="runBenchmarks()">Run Benchmarks</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import init, { Soup } from '../crates/scrape-wasm/pkg/scrape_wasm.js';
+
+        const output = document.getElementById('output');
+        const runBtn = document.getElementById('runBtn');
+
+        function log(msg) {
+            output.textContent += msg + '\n';
+        }
+
+        function timed(fn, iterations = 100, warmup = 10) {
+            // Warmup
+            for (let i = 0; i < warmup; i++) {
+                fn();
+            }
+
+            // Measure
+            const times = [];
+            for (let i = 0; i < iterations; i++) {
+                const start = performance.now();
+                fn();
+                const end = performance.now();
+                times.push(end - start);
+            }
+
+            const mean = times.reduce((a, b) => a + b, 0) / times.length;
+            const variance = times.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / times.length;
+            const stdev = Math.sqrt(variance);
+
+            return [mean, stdev];
+        }
+
+        async function loadFixture(name) {
+            const response = await fetch(`./fixtures/${name}`);
+            return await response.text();
+        }
+
+        window.runBenchmarks = async function() {
+            output.textContent = '';
+            runBtn.disabled = true;
+
+            try {
+                log('Initializing WASM module...');
+                await init();
+                log('WASM initialized successfully!\n');
+
+                log('='.repeat(60));
+                log('@fast-scrape/wasm vs DOMParser Benchmark');
+                log('='.repeat(60));
+                log('');
+
+                // Load fixtures
+                const smallHtml = await loadFixture('small.html');
+                const mediumHtml = await loadFixture('medium.html');
+                const largeHtml = await loadFixture('large.html');
+
+                const results = [];
+
+                // Parse benchmarks
+                log('=== Parse Benchmarks ===');
+                log('');
+
+                for (const [name, html] of [['small', smallHtml], ['medium', mediumHtml], ['large', largeHtml]]) {
+                    const sizeKb = (html.length / 1024).toFixed(1);
+
+                    // @fast-scrape/wasm
+                    const [wasmMean, wasmStd] = timed(() => new Soup(html), 100);
+
+                    // DOMParser
+                    const parser = new DOMParser();
+                    const [domMean, domStd] = timed(() => parser.parseFromString(html, 'text/html'), 100);
+
+                    const speedup = domMean / wasmMean;
+
+                    log(`${name} (${sizeKb} KB):`);
+                    log(`  @fast-scrape/wasm: ${wasmMean.toFixed(3)}ms +/- ${wasmStd.toFixed(3)}ms`);
+                    log(`  DOMParser:         ${domMean.toFixed(3)}ms +/- ${domStd.toFixed(3)}ms`);
+                    log(`  Speedup:           ${speedup.toFixed(1)}x`);
+                    log('');
+
+                    results.push(['parse', name, speedup]);
+                }
+
+                // Query benchmarks
+                log('=== Query Benchmarks (on medium.html) ===');
+                log('');
+
+                const soupWasm = new Soup(mediumHtml);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(mediumHtml, 'text/html');
+
+                const queryTests = [
+                    ['find div', () => soupWasm.find('div'), () => doc.querySelector('div')],
+                    ['find .product-card', () => soupWasm.find('.product-card'), () => doc.querySelector('.product-card')],
+                    ['find #product-100', () => soupWasm.find('#product-100'), () => doc.querySelector('#product-100')],
+                    ['select .product-card', () => soupWasm.select('.product-card'), () => doc.querySelectorAll('.product-card')],
+                ];
+
+                for (const [name, wasmFn, domFn] of queryTests) {
+                    // @fast-scrape/wasm
+                    const [wasmMean, wasmStd] = timed(wasmFn, 100);
+
+                    // DOMParser
+                    const [domMean, domStd] = timed(domFn, 100);
+
+                    const speedup = domMean / wasmMean;
+
+                    log(`${name}:`);
+                    log(`  @fast-scrape/wasm: ${wasmMean.toFixed(3)}ms +/- ${wasmStd.toFixed(3)}ms`);
+                    log(`  DOMParser:         ${domMean.toFixed(3)}ms +/- ${domStd.toFixed(3)}ms`);
+                    log(`  Speedup:           ${speedup.toFixed(1)}x`);
+                    log('');
+
+                    results.push(['query', name, speedup]);
+                }
+
+                // Summary
+                log('='.repeat(60));
+                log('Summary');
+                log('='.repeat(60));
+                log('');
+
+                const parseSpeedups = results.filter(r => r[0] === 'parse').map(r => r[2]);
+                const querySpeedups = results.filter(r => r[0] === 'query').map(r => r[2]);
+
+                const avgParse = parseSpeedups.reduce((a, b) => a + b, 0) / parseSpeedups.length;
+                const avgQuery = querySpeedups.reduce((a, b) => a + b, 0) / querySpeedups.length;
+
+                log(`Average Parse Speedup:  ${avgParse.toFixed(1)}x vs DOMParser`);
+                log(`Average Query Speedup:  ${avgQuery.toFixed(1)}x vs DOMParser`);
+                log('');
+
+                log('Note: DOMParser is a native browser API implemented in C++.');
+                log('Comparable performance shows excellent WASM optimization.');
+
+            } catch (err) {
+                log('Error: ' + err.message);
+                console.error(err);
+            } finally {
+                runBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -73,6 +73,14 @@ harness = false
 name = "streaming"
 harness = false
 
+[[bench]]
+name = "batch_processing"
+harness = false
+
+[[bench]]
+name = "streaming_memory"
+harness = false
+
 [[test]]
 name = "integration"
 path = "../../tests/integration/mod.rs"
