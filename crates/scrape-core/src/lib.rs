@@ -93,7 +93,9 @@ pub mod utils;
 // Error types
 // DOM types
 pub use dom::{
-    AncestorsIter, ChildrenIter, DescendantsIter, Document, DocumentIndex, Node, NodeId, NodeKind,
+    AncestorsIter, ChildrenIter, DescendantsIter, Document, DocumentIndex, ElementAncestorsIter,
+    ElementChildrenIter, ElementDescendantsIter, ElementNextSiblingsIter, ElementPrevSiblingsIter,
+    ElementSiblingsIter, NextSiblingsIter, Node, NodeId, NodeKind, PrevSiblingsIter, SiblingsIter,
     TagId,
 };
 pub use error::{Error, Result};
@@ -104,7 +106,7 @@ pub use query::{
     CompiledSelector, Filter, QueryError, QueryResult, TextNodesIter, compile_selector,
 };
 // Serialization utilities
-pub use serialize::{collect_text, serialize_inner_html, serialize_node};
+pub use serialize::{HtmlSerializer, collect_text, serialize_inner_html, serialize_node};
 // High-level API
 pub use soup::{Soup, SoupConfig};
 pub use tag::Tag;

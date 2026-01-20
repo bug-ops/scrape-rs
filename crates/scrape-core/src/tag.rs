@@ -70,6 +70,15 @@ impl<'a> Tag<'a> {
         self.id
     }
 
+    /// Returns a reference to the document containing this tag.
+    ///
+    /// This method is primarily useful for advanced operations that need
+    /// direct document access, such as custom serialization or traversal.
+    #[must_use]
+    pub fn document(&self) -> &'a Document {
+        self.doc
+    }
+
     /// Returns the tag name (e.g., "div", "span", "a").
     ///
     /// Returns `None` if this is not an element node.

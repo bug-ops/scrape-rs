@@ -157,16 +157,10 @@ impl Tag {
     /// Get all direct child elements.
     #[wasm_bindgen(getter)]
     pub fn children(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.children(self.id)
-            .filter_map(|child_id| {
-                let node = doc.get(child_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), child_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .children(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 
@@ -205,32 +199,20 @@ impl Tag {
     /// Get all descendant elements.
     #[wasm_bindgen(getter)]
     pub fn descendants(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.descendants(self.id)
-            .filter_map(|desc_id| {
-                let node = doc.get(desc_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), desc_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .descendants(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all ancestor elements (from parent toward root).
     #[wasm_bindgen(getter)]
     pub fn parents(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.ancestors(self.id)
-            .filter_map(|ancestor_id| {
-                let node = doc.get(ancestor_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), ancestor_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .ancestors(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 
@@ -270,48 +252,30 @@ impl Tag {
     /// Get all following sibling elements.
     #[wasm_bindgen(getter, js_name = "nextSiblings")]
     pub fn next_siblings(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.next_siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .next_siblings(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all preceding sibling elements (in reverse order).
     #[wasm_bindgen(getter, js_name = "prevSiblings")]
     pub fn prev_siblings(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.prev_siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .prev_siblings(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all sibling elements (excluding self, in document order).
     #[wasm_bindgen(getter)]
     pub fn siblings(&self) -> Vec<Tag> {
-        let doc = self.doc();
-        doc.siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(Tag::new(Rc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .siblings(self.id)
+            .elements()
+            .map(|id| Tag::new(Rc::clone(&self.soup), id))
             .collect()
     }
 

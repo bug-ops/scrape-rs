@@ -26,8 +26,9 @@ mod tag_id;
 
 #[allow(unused_imports)]
 pub use document::{
-    AncestorsIter, ChildrenIter, DescendantsIter, Document, NextSiblingsIter, PrevSiblingsIter,
-    SiblingsIter,
+    AncestorsIter, ChildrenIter, DescendantsIter, Document, ElementAncestorsIter,
+    ElementChildrenIter, ElementDescendantsIter, ElementNextSiblingsIter, ElementPrevSiblingsIter,
+    ElementSiblingsIter, NextSiblingsIter, PrevSiblingsIter, SiblingsIter,
 };
 pub use index::DocumentIndex;
 pub use node::{Node, NodeId, NodeKind};

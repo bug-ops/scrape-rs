@@ -6,7 +6,7 @@
 //! properties.
 
 use crate::{
-    Document, NodeId, NodeKind,
+    Document, NodeId, NodeKind, Tag,
     utils::{escape_attr, escape_text, is_void_element},
 };
 
@@ -129,6 +129,94 @@ pub fn collect_text(doc: &Document, id: NodeId, buf: &mut String) {
             }
         }
         NodeKind::Comment { .. } => {}
+    }
+}
+
+/// Trait for types that can be serialized to HTML.
+///
+/// This trait provides a unified interface for HTML serialization operations.
+/// It is implemented for [`Tag`] to enable consistent serialization across
+/// the library and bindings.
+///
+/// # Design Rationale
+///
+/// The trait uses buffer-based methods (`_into` suffix) as the primitive
+/// operations, with convenience methods that allocate and return `String`.
+/// This enables zero-allocation usage in performance-critical paths while
+/// providing ergonomic APIs for common use cases.
+///
+/// # Examples
+///
+/// ```rust
+/// use scrape_core::{Soup, serialize::HtmlSerializer};
+///
+/// let soup = Soup::parse("<div><span>Hello</span></div>");
+/// let div = soup.find("div").unwrap().unwrap();
+///
+/// // Convenience method (allocates)
+/// let html = div.serialize_html();
+/// assert!(html.contains("<span>"));
+///
+/// // Buffer method (no allocation if buffer has capacity)
+/// let mut buf = String::with_capacity(100);
+/// div.serialize_html_into(&mut buf);
+/// assert_eq!(html, buf);
+/// ```
+pub trait HtmlSerializer {
+    /// Serializes this node and its subtree to HTML.
+    ///
+    /// This is the outer HTML including the node's own tags.
+    #[must_use]
+    fn serialize_html(&self) -> String {
+        let mut buf = String::new();
+        self.serialize_html_into(&mut buf);
+        buf
+    }
+
+    /// Serializes this node to HTML, appending to the provided buffer.
+    fn serialize_html_into(&self, buf: &mut String);
+
+    /// Serializes only the children of this node to HTML.
+    ///
+    /// This is the inner HTML excluding the node's own tags.
+    #[must_use]
+    fn serialize_inner(&self) -> String {
+        let mut buf = String::new();
+        self.serialize_inner_into(&mut buf);
+        buf
+    }
+
+    /// Serializes children to HTML, appending to the provided buffer.
+    fn serialize_inner_into(&self, buf: &mut String);
+
+    /// Extracts text content from this node and its descendants.
+    ///
+    /// HTML tags are stripped; only text node content is included.
+    #[must_use]
+    fn extract_text(&self) -> String {
+        let mut buf = String::new();
+        self.extract_text_into(&mut buf);
+        buf
+    }
+
+    /// Extracts text content, appending to the provided buffer.
+    fn extract_text_into(&self, buf: &mut String);
+}
+
+impl HtmlSerializer for Tag<'_> {
+    #[inline]
+    fn serialize_html_into(&self, buf: &mut String) {
+        serialize_node(self.document(), self.node_id(), buf);
+    }
+
+    #[inline]
+    fn serialize_inner_into(&self, buf: &mut String) {
+        serialize_inner_html(self.document(), self.node_id(), buf);
+    }
+
+    #[inline]
+    fn extract_text_into(&self, buf: &mut String) {
+        collect_text(self.document(), self.node_id(), buf);
     }
 }
 
@@ -266,5 +354,50 @@ mod tests {
         let mut buf = String::new();
         collect_text(doc, div.node_id(), &mut buf);
         assert_eq!(buf, "");
+    }
+
+    #[test]
+    fn test_html_serializer_serialize_html() {
+        let soup = Soup::parse("<div class=\"test\"><span>Hi</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+
+        let html = div.serialize_html();
+        assert!(html.starts_with("<div"));
+        assert!(html.ends_with("</div>"));
+        assert!(html.contains("<span>Hi</span>"));
+    }
+
+    #[test]
+    fn test_html_serializer_serialize_inner() {
+        let soup = Soup::parse("<div><span>A</span><span>B</span></div>");
+        let div = soup.find("div").unwrap().unwrap();
+
+        let inner = div.serialize_inner();
+        assert_eq!(inner, "<span>A</span><span>B</span>");
+    }
+
+    #[test]
+    fn test_html_serializer_extract_text() {
+        let soup = Soup::parse("<div>Hello <b>World</b>!</div>");
+        let div = soup.find("div").unwrap().unwrap();
+
+        let text = div.extract_text();
+        assert_eq!(text, "Hello World!");
+    }
+
+    #[test]
+    fn test_html_serializer_buffer_reuse() {
+        let soup = Soup::parse("<div>Test</div>");
+        let div = soup.find("div").unwrap().unwrap();
+
+        let mut buf = String::with_capacity(100);
+        div.serialize_html_into(&mut buf);
+        let cap1 = buf.capacity();
+
+        buf.clear();
+        div.serialize_html_into(&mut buf);
+        let cap2 = buf.capacity();
+
+        assert_eq!(cap1, cap2); // No reallocation
     }
 }
