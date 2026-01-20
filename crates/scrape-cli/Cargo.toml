@@ -14,7 +14,7 @@ name = "scrape"
 path = "src/main.rs"
 
 [features]
-default = []
+default = ["url"]
 url = ["dep:ureq", "ureq/native-tls"]
 
 [dependencies]
