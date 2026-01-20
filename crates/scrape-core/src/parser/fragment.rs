@@ -70,7 +70,7 @@ pub fn parse_fragment_impl(
 
 /// Converts an html5ever fragment `RcDom` to our Document representation.
 fn convert_fragment_to_document(dom: &RcDom, config: &ParseConfig) -> ParseResult<Document> {
-    let mut document = Document::new();
+    let mut document = crate::dom::DocumentImpl::<crate::dom::Building>::new();
     let mut depth = 0;
 
     // html5ever fragment parsing may wrap content in html/body elements
@@ -78,7 +78,7 @@ fn convert_fragment_to_document(dom: &RcDom, config: &ParseConfig) -> ParseResul
     let fragment_children = extract_fragment_children(&dom.document);
 
     if fragment_children.is_empty() {
-        return Ok(document);
+        return Ok(document.build());
     }
 
     if fragment_children.len() == 1 {
@@ -98,7 +98,7 @@ fn convert_fragment_to_document(dom: &RcDom, config: &ParseConfig) -> ParseResul
         }
     }
 
-    Ok(document)
+    Ok(document.build())
 }
 
 /// Extracts the actual fragment children, unwrapping html/body wrappers.
@@ -132,7 +132,7 @@ fn extract_fragment_children(document_node: &Handle) -> Vec<Handle> {
 /// Recursively converts a fragment node and its children to our DOM representation.
 fn convert_node(
     handle: &Handle,
-    document: &mut Document,
+    document: &mut crate::dom::DocumentImpl<crate::dom::Building>,
     parent: Option<NodeId>,
     depth: &mut usize,
     config: &ParseConfig,
