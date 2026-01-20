@@ -9,7 +9,7 @@
 #[cfg(feature = "streaming")]
 use std::hint::black_box;
 
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 #[cfg(feature = "streaming")]
 use scrape_core::StreamingSoup;
 
@@ -69,7 +69,7 @@ fn bench_handler_registration(c: &mut Criterion) {
             b.iter(|| {
                 let mut streaming = StreamingSoup::new();
                 for i in 0..count {
-                    streaming.on_element(&format!("div.class-{}", i), |_el| Ok(())).unwrap();
+                    streaming.on_element(&format!("div.class-{i}"), |_el| Ok(())).unwrap();
                 }
                 black_box(streaming);
             });
@@ -133,7 +133,7 @@ fn bench_write_operations(c: &mut Criterion) {
         let chunk = vec![b'<'; size];
         group.throughput(Throughput::Bytes(size as u64));
         group.bench_with_input(
-            BenchmarkId::new("single_chunk", format!("{}b", size)),
+            BenchmarkId::new("single_chunk", format!("{size}b")),
             &chunk,
             |b, chunk| {
                 b.iter(|| {

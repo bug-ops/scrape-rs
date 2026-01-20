@@ -2,7 +2,7 @@
 
 #![cfg(feature = "streaming")]
 
-use std::{cell::RefCell, rc::Rc};
+use std::sync::{Arc, Mutex};
 
 use scrape_core::{Result, StreamingSoup};
 
@@ -11,11 +11,11 @@ fn test_streaming_element_handler() -> Result<()> {
     let mut streaming = StreamingSoup::new();
 
     // Track elements found
-    let found_elements = Rc::new(RefCell::new(Vec::new()));
-    let found_clone = Rc::clone(&found_elements);
+    let found_elements = Arc::new(Mutex::new(Vec::new()));
+    let found_clone = Arc::clone(&found_elements);
 
     streaming.on_element("div", move |el| {
-        found_clone.borrow_mut().push(el.tag_name());
+        found_clone.lock().unwrap().push(el.tag_name());
         Ok(())
     })?;
 
@@ -24,9 +24,9 @@ fn test_streaming_element_handler() -> Result<()> {
     let finished = processor.end()?;
 
     // Verify elements were found
-    assert_eq!(found_elements.borrow().len(), 2);
-    assert_eq!(found_elements.borrow()[0], "div");
-    assert_eq!(found_elements.borrow()[1], "div");
+    assert_eq!(found_elements.lock().unwrap().len(), 2);
+    assert_eq!(found_elements.lock().unwrap()[0], "div");
+    assert_eq!(found_elements.lock().unwrap()[1], "div");
 
     // Verify stats
     assert_eq!(finished.stats().elements_count, 2);
@@ -62,11 +62,11 @@ fn test_streaming_element_modification() -> Result<()> {
 fn test_streaming_multi_chunk() -> Result<()> {
     let mut streaming = StreamingSoup::new();
 
-    let count = Rc::new(RefCell::new(0));
-    let count_clone = Rc::clone(&count);
+    let count = Arc::new(Mutex::new(0));
+    let count_clone = Arc::clone(&count);
 
     streaming.on_element("p", move |_el| {
-        *count_clone.borrow_mut() += 1;
+        *count_clone.lock().unwrap() += 1;
         Ok(())
     })?;
 
@@ -83,8 +83,9 @@ fn test_streaming_multi_chunk() -> Result<()> {
     // Each write() creates a new rewriter, so stats accumulate
     // But because we write 4 times, we get counts for each chunk
     // The actual count depends on how lol_html parses across chunks
-    assert!(*count.borrow() >= 2, "Should find at least 2 paragraphs");
-    assert_eq!(finished.stats().elements_count, *count.borrow());
+    let count_value = *count.lock().unwrap();
+    assert!(count_value >= 2, "Should find at least 2 paragraphs");
+    assert_eq!(finished.stats().elements_count, count_value);
 
     Ok(())
 }
@@ -93,12 +94,12 @@ fn test_streaming_multi_chunk() -> Result<()> {
 fn test_streaming_selector_specificity() -> Result<()> {
     let mut streaming = StreamingSoup::new();
 
-    let classes = Rc::new(RefCell::new(Vec::new()));
-    let classes_clone = Rc::clone(&classes);
+    let classes = Arc::new(Mutex::new(Vec::new()));
+    let classes_clone = Arc::clone(&classes);
 
     streaming.on_element("div.special", move |el| {
         if let Some(class) = el.get_attribute("class") {
-            classes_clone.borrow_mut().push(class);
+            classes_clone.lock().unwrap().push(class);
         }
         Ok(())
     })?;
@@ -108,8 +109,8 @@ fn test_streaming_selector_specificity() -> Result<()> {
     let finished = processor.end()?;
 
     // Should only match .special
-    assert_eq!(classes.borrow().len(), 1);
-    assert_eq!(classes.borrow()[0], "special");
+    assert_eq!(classes.lock().unwrap().len(), 1);
+    assert_eq!(classes.lock().unwrap()[0], "special");
     assert_eq!(finished.stats().elements_count, 1);
 
     Ok(())
@@ -135,13 +136,13 @@ fn test_streaming_handler_error_propagation() -> Result<()> {
 fn test_streaming_attribute_operations() -> Result<()> {
     let mut streaming = StreamingSoup::new();
 
-    let attrs = Rc::new(RefCell::new(Vec::new()));
-    let attrs_clone = Rc::clone(&attrs);
+    let attrs = Arc::new(Mutex::new(Vec::new()));
+    let attrs_clone = Arc::clone(&attrs);
 
     streaming.on_element("img", move |el| {
         // Read attribute
         if let Some(src) = el.get_attribute("src") {
-            attrs_clone.borrow_mut().push(src);
+            attrs_clone.lock().unwrap().push(src);
         }
 
         // Modify attributes
@@ -156,8 +157,8 @@ fn test_streaming_attribute_operations() -> Result<()> {
     let finished = processor.end()?;
 
     // Verify attribute was read
-    assert_eq!(attrs.borrow().len(), 1);
-    assert_eq!(attrs.borrow()[0], "test.jpg");
+    assert_eq!(attrs.lock().unwrap().len(), 1);
+    assert_eq!(attrs.lock().unwrap()[0], "test.jpg");
 
     // Verify output has modifications
     let output = String::from_utf8_lossy(finished.output());
