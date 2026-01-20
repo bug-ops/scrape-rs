@@ -522,6 +522,221 @@ impl Iterator for SiblingsIter<'_> {
     }
 }
 
+// ==================== Iterator Extensions ====================
+
+impl<'a> ChildrenIter<'a> {
+    /// Returns an iterator over only element children (skipping text/comment nodes).
+    ///
+    /// This is more efficient than using `.filter()` externally because
+    /// it avoids closure overhead and can be specialized.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div>text<span>A</span>more<span>B</span></div>");
+    /// let div = soup.find("div").unwrap().unwrap();
+    /// let doc = soup.document();
+    ///
+    /// // Only elements, skipping text nodes
+    /// let count = doc.children(div.node_id()).elements().count();
+    /// assert_eq!(count, 2); // span, span
+    /// ```
+    #[must_use]
+    pub fn elements(self) -> ElementChildrenIter<'a> {
+        ElementChildrenIter { inner: self }
+    }
+}
+
+/// Iterator over element children only.
+///
+/// Created by [`ChildrenIter::elements`].
+#[derive(Debug)]
+pub struct ElementChildrenIter<'a> {
+    inner: ChildrenIter<'a>,
+}
+
+impl Iterator for ElementChildrenIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
+impl<'a> DescendantsIter<'a> {
+    /// Returns an iterator over only element descendants (skipping text/comment nodes).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use scrape_core::Soup;
+    ///
+    /// let soup = Soup::parse("<div>text<p>para</p></div>");
+    /// let div = soup.find("div").unwrap().unwrap();
+    /// let doc = soup.document();
+    ///
+    /// let count = doc.descendants(div.node_id()).elements().count();
+    /// assert_eq!(count, 1); // p only
+    /// ```
+    #[must_use]
+    pub fn elements(self) -> ElementDescendantsIter<'a> {
+        ElementDescendantsIter { inner: self }
+    }
+}
+
+/// Iterator over element descendants only.
+///
+/// Created by [`DescendantsIter::elements`].
+#[derive(Debug)]
+pub struct ElementDescendantsIter<'a> {
+    inner: DescendantsIter<'a>,
+}
+
+impl Iterator for ElementDescendantsIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
+impl<'a> AncestorsIter<'a> {
+    /// Returns an iterator over only element ancestors (skipping non-element nodes).
+    ///
+    /// In practice, ancestors are almost always elements, but this method
+    /// provides consistent API with other iterators.
+    #[must_use]
+    pub fn elements(self) -> ElementAncestorsIter<'a> {
+        ElementAncestorsIter { inner: self }
+    }
+}
+
+/// Iterator over element ancestors only.
+///
+/// Created by [`AncestorsIter::elements`].
+#[derive(Debug)]
+pub struct ElementAncestorsIter<'a> {
+    inner: AncestorsIter<'a>,
+}
+
+impl Iterator for ElementAncestorsIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
+impl<'a> NextSiblingsIter<'a> {
+    /// Returns an iterator over only element siblings (skipping text/comment nodes).
+    #[must_use]
+    pub fn elements(self) -> ElementNextSiblingsIter<'a> {
+        ElementNextSiblingsIter { inner: self }
+    }
+}
+
+/// Iterator over next element siblings only.
+///
+/// Created by [`NextSiblingsIter::elements`].
+#[derive(Debug)]
+pub struct ElementNextSiblingsIter<'a> {
+    inner: NextSiblingsIter<'a>,
+}
+
+impl Iterator for ElementNextSiblingsIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
+impl<'a> PrevSiblingsIter<'a> {
+    /// Returns an iterator over only element siblings (skipping text/comment nodes).
+    #[must_use]
+    pub fn elements(self) -> ElementPrevSiblingsIter<'a> {
+        ElementPrevSiblingsIter { inner: self }
+    }
+}
+
+/// Iterator over previous element siblings only.
+///
+/// Created by [`PrevSiblingsIter::elements`].
+#[derive(Debug)]
+pub struct ElementPrevSiblingsIter<'a> {
+    inner: PrevSiblingsIter<'a>,
+}
+
+impl Iterator for ElementPrevSiblingsIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
+impl<'a> SiblingsIter<'a> {
+    /// Returns an iterator over only element siblings (skipping text/comment nodes).
+    #[must_use]
+    pub fn elements(self) -> ElementSiblingsIter<'a> {
+        ElementSiblingsIter { inner: self }
+    }
+}
+
+/// Iterator over all element siblings (excluding self).
+///
+/// Created by [`SiblingsIter::elements`].
+#[derive(Debug)]
+pub struct ElementSiblingsIter<'a> {
+    inner: SiblingsIter<'a>,
+}
+
+impl Iterator for ElementSiblingsIter<'_> {
+    type Item = NodeId;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let id = self.inner.next()?;
+            if self.inner.doc.get(id).is_some_and(|n| n.kind.is_element()) {
+                return Some(id);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -815,5 +1030,103 @@ mod tests {
         let siblings2: Vec<_> = doc.siblings(child2).collect();
         assert_eq!(siblings2.len(), 1);
         assert_eq!(siblings2[0], child1);
+    }
+
+    #[test]
+    fn test_children_elements() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("div", HashMap::new());
+        let text = doc.create_text("text");
+        let child1 = doc.create_element("span", HashMap::new());
+        let child2 = doc.create_element("p", HashMap::new());
+
+        doc.append_child(parent, text);
+        doc.append_child(parent, child1);
+        doc.append_child(parent, child2);
+
+        let mut iter = doc.children(parent).elements();
+        assert_eq!(iter.next(), Some(child1));
+        assert_eq!(iter.next(), Some(child2));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_descendants_elements() {
+        let mut doc = Document::new();
+        let root = doc.create_element("div", HashMap::new());
+        let text = doc.create_text("text");
+        let child = doc.create_element("span", HashMap::new());
+        let grandchild = doc.create_element("b", HashMap::new());
+
+        doc.append_child(root, text);
+        doc.append_child(root, child);
+        doc.append_child(child, grandchild);
+
+        assert_eq!(doc.descendants(root).elements().count(), 2); // span, b
+    }
+
+    #[test]
+    fn test_ancestors_elements() {
+        let mut doc = Document::new();
+        let root = doc.create_element("html", HashMap::new());
+        let body = doc.create_element("body", HashMap::new());
+        let div = doc.create_element("div", HashMap::new());
+
+        doc.set_root(root);
+        doc.append_child(root, body);
+        doc.append_child(body, div);
+
+        assert_eq!(doc.ancestors(div).elements().count(), 2);
+    }
+
+    #[test]
+    fn test_next_siblings_elements() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("ul", HashMap::new());
+        let li1 = doc.create_element("li", HashMap::new());
+        let text = doc.create_text(" ");
+        let li2 = doc.create_element("li", HashMap::new());
+
+        doc.append_child(parent, li1);
+        doc.append_child(parent, text);
+        doc.append_child(parent, li2);
+
+        let siblings: Vec<_> = doc.next_siblings(li1).elements().collect();
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(siblings[0], li2);
+    }
+
+    #[test]
+    fn test_prev_siblings_elements() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("ul", HashMap::new());
+        let li1 = doc.create_element("li", HashMap::new());
+        let text = doc.create_text(" ");
+        let li2 = doc.create_element("li", HashMap::new());
+
+        doc.append_child(parent, li1);
+        doc.append_child(parent, text);
+        doc.append_child(parent, li2);
+
+        let siblings: Vec<_> = doc.prev_siblings(li2).elements().collect();
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(siblings[0], li1);
+    }
+
+    #[test]
+    fn test_siblings_elements() {
+        let mut doc = Document::new();
+        let parent = doc.create_element("ul", HashMap::new());
+        let li1 = doc.create_element("li", HashMap::new());
+        let text = doc.create_text(" ");
+        let li2 = doc.create_element("li", HashMap::new());
+        let li3 = doc.create_element("li", HashMap::new());
+
+        doc.append_child(parent, li1);
+        doc.append_child(parent, text);
+        doc.append_child(parent, li2);
+        doc.append_child(parent, li3);
+
+        assert_eq!(doc.siblings(li2).elements().count(), 2); // li1, li3
     }
 }

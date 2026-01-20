@@ -153,16 +153,10 @@ impl PyTag {
     /// Get all child elements.
     #[getter]
     fn children(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.children(self.id)
-            .filter_map(|child_id| {
-                let node = doc.get(child_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), child_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .children(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
@@ -201,32 +195,20 @@ impl PyTag {
     /// Get all descendant elements.
     #[getter]
     fn descendants(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.descendants(self.id)
-            .filter_map(|desc_id| {
-                let node = doc.get(desc_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), desc_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .descendants(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all ancestor elements (from parent toward root).
     #[getter]
     fn parents(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.ancestors(self.id)
-            .filter_map(|ancestor_id| {
-                let node = doc.get(ancestor_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), ancestor_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .ancestors(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
@@ -271,48 +253,30 @@ impl PyTag {
     /// Get all following sibling elements.
     #[getter]
     fn next_siblings(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.next_siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .next_siblings(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all preceding sibling elements (in reverse order).
     #[getter]
     fn prev_siblings(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.prev_siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .prev_siblings(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
     /// Get all sibling elements (excluding self, in document order).
     #[getter]
     fn siblings(&self) -> Vec<PyTag> {
-        let doc = self.doc();
-        doc.siblings(self.id)
-            .filter_map(|sibling_id| {
-                let node = doc.get(sibling_id)?;
-                if node.kind.is_element() {
-                    Some(PyTag::new(Arc::clone(&self.soup), sibling_id))
-                } else {
-                    None
-                }
-            })
+        self.doc()
+            .siblings(self.id)
+            .elements()
+            .map(|id| PyTag::new(Arc::clone(&self.soup), id))
             .collect()
     }
 
