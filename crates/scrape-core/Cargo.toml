@@ -21,6 +21,7 @@ include = [
 
 [dependencies]
 cssparser.workspace = true
+encoding_rs = { workspace = true, optional = true }
 html5ever.workspace = true
 lol_html = { workspace = true, optional = true }
 markup5ever.workspace = true
@@ -44,7 +45,7 @@ workspace = true
 default = []
 simd = []
 parallel = ["rayon"]
-streaming = ["lol_html"]
+streaming = ["lol_html", "encoding_rs"]
 mmap = ["memmap2"]
 full = ["streaming", "mmap", "simd", "parallel"]
 

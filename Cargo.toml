@@ -8,22 +8,23 @@ edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 publish = false
-authors = ["scrape-rs contributors"]
+authors = ["Andrei G. <k05h31@gmail.com>"]
 repository = "https://github.com/bug-ops/scrape-rs"
 keywords = ["html", "parser", "scraping", "css-selectors", "dom"]
 categories = ["parsing", "web-programming"]
 
 [workspace.dependencies]
 anyhow = "1.0"
-assert_cmd = "2.0"
+assert_cmd = "2.1"
 clap = "4.5"
 criterion = { version = "0.8", default-features = false }
 csv = "1.4"
 cssparser = "0.36"
+encoding_rs = "0.8"
 html5ever = "0.36"
 is-terminal = "0.4"
 js-sys = "0.3"
-lol_html = "2.1"
+lol_html = "2.7"
 markup5ever = "0.36"
 markup5ever_rcdom = "0.36"
 memchr = "2.7"
@@ -40,7 +41,7 @@ scrape-core = { path = "crates/scrape-core", default-features = false, version =
 selectors = "0.35"
 serde = "1.0"
 serde_json = "1.0"
-tempfile = "3.20"
+tempfile = "3.24"
 thiserror = "2.0"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"

@@ -1,13 +1,14 @@
 //! Handler traits and registry for streaming parser.
 
-#[cfg(feature = "streaming")]
 use crate::{Result, streaming::element::StreamingElement};
 
 /// Handler for element events during streaming.
 ///
 /// Implement this trait to process elements as they are encountered
 /// during streaming parsing.
-#[cfg(feature = "streaming")]
+///
+/// Note: Send bound is required for cross-platform support. Python and Node.js
+/// bindings (Week 4) will invoke handlers from thread pools, requiring thread-safe handlers.
 pub trait ElementHandler: Send {
     /// Called when an element matching the selector is found.
     ///
@@ -21,7 +22,9 @@ pub trait ElementHandler: Send {
 ///
 /// Implement this trait to process text nodes as they are encountered
 /// during streaming parsing.
-#[cfg(feature = "streaming")]
+///
+/// Note: Send bound is required for cross-platform support. Python and Node.js
+/// bindings (Week 4) will invoke handlers from thread pools, requiring thread-safe handlers.
 pub trait TextHandler: Send {
     /// Called when text content is found.
     ///
@@ -35,7 +38,9 @@ pub trait TextHandler: Send {
 ///
 /// Implement this trait to process end tags as they are encountered
 /// during streaming parsing.
-#[cfg(feature = "streaming")]
+///
+/// Note: Send bound is required for cross-platform support. Python and Node.js
+/// bindings (Week 4) will invoke handlers from thread pools, requiring thread-safe handlers.
 pub trait EndTagHandler: Send {
     /// Called when an end tag is encountered.
     ///
@@ -46,7 +51,6 @@ pub trait EndTagHandler: Send {
 }
 
 /// Wrapper for boxed element handler functions.
-#[cfg(feature = "streaming")]
 struct BoxedElementHandler<F>
 where
     F: FnMut(&mut StreamingElement) -> Result<()> + Send,
@@ -54,7 +58,6 @@ where
     handler: F,
 }
 
-#[cfg(feature = "streaming")]
 impl<F> ElementHandler for BoxedElementHandler<F>
 where
     F: FnMut(&mut StreamingElement) -> Result<()> + Send,
@@ -65,7 +68,6 @@ where
 }
 
 /// Wrapper for boxed text handler functions.
-#[cfg(feature = "streaming")]
 struct BoxedTextHandler<F>
 where
     F: FnMut(&str) -> Result<()> + Send,
@@ -73,7 +75,6 @@ where
     handler: F,
 }
 
-#[cfg(feature = "streaming")]
 impl<F> TextHandler for BoxedTextHandler<F>
 where
     F: FnMut(&str) -> Result<()> + Send,
@@ -84,7 +85,6 @@ where
 }
 
 /// Wrapper for boxed end tag handler functions.
-#[cfg(feature = "streaming")]
 struct BoxedEndTagHandler<F>
 where
     F: FnMut(&str) -> Result<()> + Send,
@@ -92,7 +92,6 @@ where
     handler: F,
 }
 
-#[cfg(feature = "streaming")]
 impl<F> EndTagHandler for BoxedEndTagHandler<F>
 where
     F: FnMut(&str) -> Result<()> + Send,
@@ -105,7 +104,6 @@ where
 /// Registry for streaming handlers.
 ///
 /// Manages registered handlers and their associated selectors.
-#[cfg(feature = "streaming")]
 #[derive(Default)]
 #[allow(clippy::struct_field_names, clippy::redundant_pub_crate)]
 pub(crate) struct HandlerRegistry {
@@ -114,7 +112,6 @@ pub(crate) struct HandlerRegistry {
     end_tag_handlers: Vec<(String, Box<dyn EndTagHandler>)>,
 }
 
-#[cfg(feature = "streaming")]
 impl HandlerRegistry {
     /// Creates a new empty handler registry.
     #[must_use]
@@ -181,9 +178,24 @@ impl HandlerRegistry {
     pub fn end_tag_selectors(&self) -> impl Iterator<Item = &str> {
         self.end_tag_handlers.iter().map(|(sel, _)| sel.as_str())
     }
+
+    /// Returns a mutable reference to element handlers.
+    pub fn element_handlers_mut(&mut self) -> &mut Vec<(String, Box<dyn ElementHandler>)> {
+        &mut self.element_handlers
+    }
+
+    /// Returns a mutable reference to text handlers.
+    pub fn text_handlers_mut(&mut self) -> &mut Vec<(String, Box<dyn TextHandler>)> {
+        &mut self.text_handlers
+    }
+
+    /// Returns a mutable reference to end tag handlers.
+    pub fn end_tag_handlers_mut(&mut self) -> &mut Vec<(String, Box<dyn EndTagHandler>)> {
+        &mut self.end_tag_handlers
+    }
 }
 
-#[cfg(all(test, feature = "streaming"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 

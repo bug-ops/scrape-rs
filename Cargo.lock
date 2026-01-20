@@ -1307,6 +1307,7 @@ version = "0.2.0"
 dependencies = [
  "criterion",
  "cssparser",
+ "encoding_rs",
  "html5ever",
  "lol_html",
  "markup5ever",

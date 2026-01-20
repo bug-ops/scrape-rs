@@ -1,9 +1,7 @@
 //! HTML rewriter for streaming modification.
 
-#[cfg(feature = "streaming")]
 use std::io::Write;
 
-#[cfg(feature = "streaming")]
 use crate::{
     Error, Result,
     streaming::{RewriterConfig, StreamingElement},
@@ -48,13 +46,11 @@ type ElementHandlerFn = Box<dyn FnMut(&mut StreamingElement) -> Result<()> + Sen
 ///     Ok(())
 /// })?;
 /// ```
-#[cfg(feature = "streaming")]
 pub struct HtmlRewriter {
     _config: RewriterConfig,
     _element_handlers: Vec<(String, ElementHandlerFn)>,
 }
 
-#[cfg(feature = "streaming")]
 impl HtmlRewriter {
     /// Creates a new HTML rewriter with default configuration.
     #[must_use]
@@ -84,7 +80,7 @@ impl HtmlRewriter {
     /// ```
     pub fn on_element<F>(&mut self, selector: &str, _handler: F) -> Result<&mut Self>
     where
-        F: FnMut(&mut StreamingElement) -> Result<()> + Send + 'static,
+        F: FnMut(&mut StreamingElement) -> Result<()> + 'static,
     {
         // Basic validation
         if selector.is_empty() {
@@ -134,14 +130,13 @@ impl HtmlRewriter {
     }
 }
 
-#[cfg(feature = "streaming")]
 impl Default for HtmlRewriter {
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[cfg(all(test, feature = "streaming"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 

@@ -1,9 +1,11 @@
 //! Streaming HTML parser with typestate pattern.
 
-#[cfg(feature = "streaming")]
+use std::cell::RefCell;
 use std::marker::PhantomData;
+use std::rc::Rc;
 
-#[cfg(feature = "streaming")]
+use lol_html::AsciiCompatibleEncoding;
+
 use crate::{
     Error, Result,
     streaming::{StreamingConfig, StreamingElement, handlers::HandlerRegistry},
@@ -65,21 +67,19 @@ impl StreamingState for state::Finished {}
 /// let finished = processor.end()?;
 /// println!("Processed {} bytes", finished.stats().bytes_processed);
 /// ```
-#[cfg(feature = "streaming")]
 pub struct StreamingSoup<S: StreamingState = state::Idle> {
     inner: StreamingSoupInner,
     _state: PhantomData<S>,
 }
 
-#[cfg(feature = "streaming")]
 struct StreamingSoupInner {
     config: StreamingConfig,
     handlers: HandlerRegistry,
     stats: StreamingStats,
+    output_buffer: Vec<u8>,
 }
 
 /// Statistics collected during streaming parse.
-#[cfg(feature = "streaming")]
 #[derive(Debug, Clone, Default)]
 pub struct StreamingStats {
     /// Total bytes processed.
@@ -90,7 +90,6 @@ pub struct StreamingStats {
     pub text_nodes_count: usize,
 }
 
-#[cfg(feature = "streaming")]
 impl StreamingSoup<state::Idle> {
     /// Creates a new streaming parser with default configuration.
     #[must_use]
@@ -106,6 +105,7 @@ impl StreamingSoup<state::Idle> {
                 config,
                 handlers: HandlerRegistry::new(),
                 stats: StreamingStats::default(),
+                output_buffer: Vec::new(),
             },
             _state: PhantomData,
         }
@@ -207,7 +207,6 @@ impl StreamingSoup<state::Idle> {
     }
 }
 
-#[cfg(feature = "streaming")]
 impl StreamingSoup<state::Processing> {
     /// Writes a chunk of HTML to the streaming parser.
     ///
@@ -218,6 +217,11 @@ impl StreamingSoup<state::Processing> {
     ///
     /// Returns an error if parsing fails or a handler returns an error.
     ///
+    /// # Panics
+    ///
+    /// This method contains an `expect()` that should never panic as UTF-8 is always
+    /// ASCII-compatible. If it panics, it indicates a bug in `lol_html`.
+    ///
     /// # Examples
     ///
     /// ```ignore
@@ -227,8 +231,113 @@ impl StreamingSoup<state::Processing> {
         // Update stats
         self.inner.stats.bytes_processed += chunk.len();
 
-        // NOTE: Actual lol_html integration deferred to Week 2
-        // This is a stub implementation for Week 1 foundation
+        // Early return if no handlers registered - just pass through
+        if self.inner.handlers.element_count() == 0
+            && self.inner.handlers.text_count() == 0
+            && self.inner.handlers.end_tag_count() == 0
+        {
+            self.inner.output_buffer.extend_from_slice(chunk);
+            return Ok(());
+        }
+
+        // lol_html requires building handlers at Settings creation time
+        // We use Cell/RefCell to share mutable access safely within single-threaded context
+        let error_cell: Rc<RefCell<Option<Error>>> = Rc::new(RefCell::new(None));
+
+        // Share stats for updating counts
+        let element_count: Rc<RefCell<usize>> = Rc::new(RefCell::new(0));
+        let text_count: Rc<RefCell<usize>> = Rc::new(RefCell::new(0));
+
+        // Build element content handlers for lol_html
+        let mut element_handlers = Vec::new();
+
+        // We need to capture handlers but lol_html wants to own the closures
+        // Solution: use unsafe pointer + runtime checks to bridge the ownership gap
+        // SAFETY: This is safe because:
+        // 1. We're single-threaded (no Send/Sync issues)
+        // 2. Handlers live in StreamingSoupInner which outlives this method
+        // 3. lol_html closures don't outlive this method call
+        // 4. The pointer remains valid for the entire duration of HtmlRewriter usage
+
+        let handlers_ptr = &raw mut self.inner.handlers;
+
+        // Process element handlers
+        for (idx, (selector, _)) in self.inner.handlers.element_handlers_mut().iter().enumerate() {
+            let selector_owned = selector.clone();
+            let error_clone = Rc::clone(&error_cell);
+            let elem_count_clone = Rc::clone(&element_count);
+
+            element_handlers.push(lol_html::element!(selector_owned, move |el| {
+                // Stop processing if previous handler failed
+                if error_clone.borrow().is_some() {
+                    return Ok(());
+                }
+
+                // Increment element count
+                *elem_count_clone.borrow_mut() += 1;
+
+                // Get handler
+                // SAFETY: handlers_ptr points to self.inner.handlers which:
+                // 1. Is valid for the entire duration of this method
+                // 2. Will not be moved or dropped while HtmlRewriter is active
+                // 3. We are in single-threaded context (Rc<RefCell> is not Send)
+                // 4. Each handler is accessed at most once per element
+                #[allow(unsafe_code)]
+                let handler =
+                    unsafe { (*handlers_ptr).element_handlers_mut().get_mut(idx).map(|(_, h)| h) };
+
+                if let Some(handler) = handler {
+                    let mut streaming_el = StreamingElement::new(el);
+                    if let Err(e) = handler.handle(&mut streaming_el) {
+                        *error_clone.borrow_mut() = Some(e);
+                    }
+                }
+
+                Ok(())
+            }));
+        }
+
+        // Build lol_html settings
+        let settings: lol_html::Settings<'_, '_, lol_html::LocalHandlerTypes> =
+            lol_html::Settings {
+                element_content_handlers: element_handlers,
+                document_content_handlers: Vec::new(),
+                encoding: AsciiCompatibleEncoding::new(encoding_rs::UTF_8)
+                    .expect("UTF-8 is always ASCII-compatible"),
+                memory_settings: lol_html::MemorySettings::default(),
+                strict: self.inner.config.strict_mode,
+                enable_esi_tags: false,
+                adjust_charset_on_meta_tag: true,
+            };
+
+        // Create output sink
+        let mut output = Vec::new();
+
+        // Create rewriter
+        let mut rewriter = lol_html::HtmlRewriter::new(settings, |chunk: &[u8]| {
+            output.extend_from_slice(chunk);
+        });
+
+        // Write chunk through rewriter
+        rewriter
+            .write(chunk)
+            .map_err(|e| Error::handler_error(format!("lol_html write failed: {e}")))?;
+
+        // Finish rewriter to flush remaining output
+        rewriter.end().map_err(|e| Error::handler_error(format!("lol_html end failed: {e}")))?;
+
+        // Update stats with counts from this chunk
+        self.inner.stats.elements_count += *element_count.borrow();
+        self.inner.stats.text_nodes_count += *text_count.borrow();
+
+        // Append output to buffer
+        self.inner.output_buffer.extend_from_slice(&output);
+
+        // Check if any handler failed
+        if let Some(error) = error_cell.borrow_mut().take() {
+            return Err(error);
+        }
+
         Ok(())
     }
 
@@ -256,23 +365,35 @@ impl StreamingSoup<state::Processing> {
     }
 }
 
-#[cfg(feature = "streaming")]
 impl StreamingSoup<state::Finished> {
     /// Returns statistics about the streaming parse.
     #[must_use]
     pub fn stats(&self) -> &StreamingStats {
         &self.inner.stats
     }
+
+    /// Returns the output buffer (for rewriting scenarios).
+    ///
+    /// When handlers modify HTML content, this buffer contains the transformed output.
+    #[must_use]
+    pub fn output(&self) -> &[u8] {
+        &self.inner.output_buffer
+    }
+
+    /// Consumes the streaming parser and returns the output buffer.
+    #[must_use]
+    pub fn into_output(self) -> Vec<u8> {
+        self.inner.output_buffer
+    }
 }
 
-#[cfg(feature = "streaming")]
 impl Default for StreamingSoup<state::Idle> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[cfg(all(test, feature = "streaming"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 

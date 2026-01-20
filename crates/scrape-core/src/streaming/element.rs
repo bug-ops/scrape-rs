@@ -1,6 +1,5 @@
 //! Streaming element wrapper for `lol_html` Element.
 
-#[cfg(feature = "streaming")]
 use crate::{Error, Result};
 
 /// Content type for element manipulation.
@@ -16,16 +15,14 @@ pub enum ContentType {
 ///
 /// This type wraps `lol_html`'s `Element` to provide a stable API that is
 /// independent of upstream changes in `lol_html`.
-#[cfg(feature = "streaming")]
-pub struct StreamingElement<'r, 's> {
-    inner: lol_html::html_content::Element<'r, 's>,
+pub struct StreamingElement<'r, 's, 'e> {
+    inner: &'e mut lol_html::html_content::Element<'r, 's>,
 }
 
-#[cfg(feature = "streaming")]
-impl<'r, 's> StreamingElement<'r, 's> {
-    /// Creates a new `StreamingElement` from `lol_html`'s Element.
+impl<'r, 's, 'e> StreamingElement<'r, 's, 'e> {
+    /// Creates a new `StreamingElement` from a mutable reference to `lol_html`'s Element.
     #[must_use]
-    pub(crate) fn new(element: lol_html::html_content::Element<'r, 's>) -> Self {
+    pub(crate) fn new(element: &'e mut lol_html::html_content::Element<'r, 's>) -> Self {
         Self { inner: element }
     }
 
@@ -254,7 +251,7 @@ impl<'r, 's> StreamingElement<'r, 's> {
     }
 }
 
-#[cfg(all(test, feature = "streaming"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 

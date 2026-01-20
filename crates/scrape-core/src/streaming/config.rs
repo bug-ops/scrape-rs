@@ -3,7 +3,6 @@
 /// Configuration for streaming HTML parser.
 ///
 /// Controls various aspects of the streaming parser behavior.
-#[cfg(feature = "streaming")]
 #[derive(Debug, Clone)]
 pub struct StreamingConfig {
     /// Buffer size for chunk processing (in bytes).
@@ -14,14 +13,12 @@ pub struct StreamingConfig {
     pub preserve_comments: bool,
 }
 
-#[cfg(feature = "streaming")]
 impl Default for StreamingConfig {
     fn default() -> Self {
         Self { buffer_size: 8192, strict_mode: false, preserve_comments: false }
     }
 }
 
-#[cfg(feature = "streaming")]
 impl StreamingConfig {
     /// Creates a new streaming config with default values.
     #[must_use]
@@ -77,7 +74,6 @@ impl StreamingConfig {
 /// Configuration for HTML rewriter.
 ///
 /// Controls behavior of the HTML rewriting functionality.
-#[cfg(feature = "streaming")]
 #[derive(Debug, Clone)]
 pub struct RewriterConfig {
     /// Whether to use strict HTML parsing rules.
@@ -88,14 +84,12 @@ pub struct RewriterConfig {
     pub max_nesting_depth: usize,
 }
 
-#[cfg(feature = "streaming")]
 impl Default for RewriterConfig {
     fn default() -> Self {
         Self { strict_mode: false, preserve_comments: false, max_nesting_depth: 512 }
     }
 }
 
-#[cfg(feature = "streaming")]
 impl RewriterConfig {
     /// Creates a new rewriter config with default values.
     #[must_use]
@@ -143,7 +137,7 @@ impl RewriterConfig {
     }
 }
 
-#[cfg(all(test, feature = "streaming"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
