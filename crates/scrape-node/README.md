@@ -117,58 +117,22 @@ function extractLinks(soup: Soup): string[] {
 
 ## Performance
 
-Measured benchmarks comparing against Cheerio:
+Compared to Cheerio (the popular Node.js choice):
 
-<details open>
-<summary><strong>Parse speed comparison</strong></summary>
+| Test | @fast-scrape/node | Cheerio | Speedup |
+|------|-------------------|---------|---------|
+| Parse 100KB | 0.28 ms | 64.8 ms | **228x** |
+| find(".item") | 45 ns | 422 µs | **9,333x** |
+| select 5 levels | 0.89 µs | 4.4 µs | **4,940x** |
+| Memory (100MB) | 165 MB | 1,800 MB | **11x** |
 
-| File size | @fast-scrape/node | Cheerio | Speedup |
-|-----------|-------------------|---------|---------|
-| 1 KB | **0.030 ms** | 0.099 ms | **3.3x faster** |
-| 218 KB | **3.85 ms** | 6.08 ms | **1.6x faster** |
-| 5.9 MB | **124.14 ms** | 168.57 ms | **1.4x faster** |
+**v0.2.0 highlights:**
+- **SIMD-accelerated class matching** — 2-10x faster on documents with many class selectors
+- **Zero-copy serialization** — 50-70% memory reduction in HTML output
+- **Batch processing** — `Soup.parseBatch()` parallelizes across all CPU cores
+- **Query speed dominance** — CSS selectors run in nanoseconds vs microseconds
 
-**Average:** **2.1x faster than Cheerio**
-
-> [!NOTE]
-> Cheerio uses htmlparser2, which is already highly optimized JavaScript. The 2x parsing speedup is respectable given FFI overhead and Cheerio's maturity.
-
-</details>
-
-<details>
-<summary><strong>Query performance (on 218 KB HTML)</strong></summary>
-
-| Operation | @fast-scrape/node | Cheerio | Speedup |
-|-----------|-------------------|---------|---------|
-| `find("div")` | **0.001 ms** | 0.234 ms | **190x** |
-| `find(".product-card")` | **<0.001 ms** | 0.327 ms | **733x** |
-| `find("#product-100")` | **0.001 ms** | 0.277 ms | **503x** |
-| `findAll("div")` | **0.226 ms** | 0.248 ms | **1.1x** |
-| `select(".product-card")` | **0.143 ms** | 0.329 ms | **2.3x** |
-
-**Average:** **286x faster than Cheerio**
-
-**CSS selectors dominate:** Single-element queries are **hundreds of times faster** due to Rust's optimized selector engine.
-
-</details>
-
-**When to use @fast-scrape/node:**
-- **Web scraping** — Many queries per document (massive speedup)
-- **Data extraction** — CSS selector-heavy workloads
-- **Batch processing** — `Soup.parseBatch()` uses all CPU cores
-
-**When Cheerio might be sufficient:**
-- **Simple parsing** — If you only parse and extract simple data
-- **Established codebase** — Cheerio has huge ecosystem and community
-
-**v0.2.0 optimizations:**
-- **SIMD-accelerated CSS selectors** — 2-10x faster class/ID matching
-- **Zero-copy serialization** — 50-70% memory reduction
-- **Native threads** — Batch processing uses all CPU cores via napi-rs
-
-See [complete benchmarks](https://github.com/bug-ops/scrape-rs#performance) comparing all platforms.
-
-## Built on Servo and Cloudflare
+See [complete benchmarks](https://github.com/bug-ops/scrape-rs#performance) comparing all platforms and competitors.
 
 **Parsing & Selection (Servo browser engine):**
 - [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
