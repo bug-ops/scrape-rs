@@ -41,9 +41,9 @@ fn nested_html() -> String {
 
     let mut html = String::from("<html><body><ul>");
     for i in 0..50 {
-        write!(&mut html, r#"<li>Item {}<ul>"#, i).unwrap();
+        write!(&mut html, r"<li>Item {i}<ul>").unwrap();
         for j in 0..5 {
-            write!(&mut html, r#"<li>Subitem {}-{}</li>"#, i, j).unwrap();
+            write!(&mut html, r"<li>Subitem {i}-{j}</li>").unwrap();
         }
         html.push_str("</ul></li>");
     }
@@ -198,7 +198,7 @@ fn bench_element_filter_iterators(c: &mut Criterion) {
     });
 
     // Ancestors: .elements() vs filter_map
-    let deep_li = soup.find_all("li").unwrap().last().cloned().unwrap();
+    let deep_li = soup.find_all("li").unwrap().last().copied().unwrap();
     let deep_li_id = deep_li.node_id();
     group.bench_function("ancestors_elements_extension", |b| {
         b.iter(|| {
@@ -249,7 +249,7 @@ fn bench_binding_navigation(c: &mut Criterion) {
         });
     });
 
-    let deep_li = soup.find_all("li").unwrap().last().cloned().unwrap();
+    let deep_li = soup.find_all("li").unwrap().last().copied().unwrap();
     let deep_li_id = deep_li.node_id();
     group.bench_function("element_parents", |b| {
         b.iter(|| {
