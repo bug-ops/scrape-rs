@@ -87,6 +87,8 @@ pub mod serialize;
 #[cfg(feature = "simd")]
 pub mod simd;
 mod soup;
+#[cfg(feature = "streaming")]
+pub mod streaming;
 mod tag;
 pub mod utils;
 
@@ -110,6 +112,11 @@ pub use query::{
 pub use serialize::{HtmlSerializer, collect_text, serialize_inner_html, serialize_node};
 // High-level API
 pub use soup::{Soup, SoupConfig};
+#[cfg(feature = "streaming")]
+pub use streaming::{
+    ContentType, HtmlRewriter, RewriterConfig, StreamingConfig, StreamingElement, StreamingSoup,
+    StreamingStats, state,
+};
 pub use tag::Tag;
 // HTML utilities
 pub use utils::{escape_attr, escape_text, is_void_element};

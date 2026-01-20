@@ -39,6 +39,30 @@ pub enum Error {
     /// I/O error when reading from file or network.
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
+
+    /// Streaming parser in invalid state for this operation.
+    #[cfg(feature = "streaming")]
+    #[error("invalid streaming state: {message}")]
+    InvalidStreamingState {
+        /// Description of the invalid state.
+        message: String,
+    },
+
+    /// Handler callback failed during streaming.
+    #[cfg(feature = "streaming")]
+    #[error("handler error: {message}")]
+    HandlerError {
+        /// Description of the handler error.
+        message: String,
+    },
+
+    /// Streaming selector compilation failed.
+    #[cfg(feature = "streaming")]
+    #[error("streaming selector error: {message}")]
+    StreamingSelectorError {
+        /// Description of the selector error.
+        message: String,
+    },
 }
 
 impl Error {
@@ -64,6 +88,27 @@ impl Error {
     #[must_use]
     pub fn attribute_not_found(name: impl Into<String>) -> Self {
         Self::AttributeNotFound { name: name.into() }
+    }
+
+    /// Creates a new invalid streaming state error.
+    #[cfg(feature = "streaming")]
+    #[must_use]
+    pub fn invalid_streaming_state(message: impl Into<String>) -> Self {
+        Self::InvalidStreamingState { message: message.into() }
+    }
+
+    /// Creates a new handler error.
+    #[cfg(feature = "streaming")]
+    #[must_use]
+    pub fn handler_error(message: impl Into<String>) -> Self {
+        Self::HandlerError { message: message.into() }
+    }
+
+    /// Creates a new streaming selector error.
+    #[cfg(feature = "streaming")]
+    #[must_use]
+    pub fn streaming_selector_error(message: impl Into<String>) -> Self {
+        Self::StreamingSelectorError { message: message.into() }
     }
 }
 

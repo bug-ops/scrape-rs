@@ -22,9 +22,11 @@ include = [
 [dependencies]
 cssparser.workspace = true
 html5ever.workspace = true
+lol_html = { workspace = true, optional = true }
 markup5ever.workspace = true
 markup5ever_rcdom.workspace = true
 memchr.workspace = true
+memmap2 = { workspace = true, optional = true }
 precomputed-hash.workspace = true
 rayon = { workspace = true, optional = true }
 selectors.workspace = true
@@ -42,6 +44,9 @@ workspace = true
 default = []
 simd = []
 parallel = ["rayon"]
+streaming = ["lol_html"]
+mmap = ["memmap2"]
+full = ["streaming", "mmap", "simd", "parallel"]
 
 [[bench]]
 name = "parse"
@@ -61,6 +66,10 @@ harness = false
 
 [[bench]]
 name = "performance"
+harness = false
+
+[[bench]]
+name = "streaming"
 harness = false
 
 [[test]]
