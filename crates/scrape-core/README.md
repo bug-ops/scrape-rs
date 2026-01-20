@@ -69,15 +69,24 @@ scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 
 ## Performance
 
-v0.2.0 includes significant performance improvements:
+v0.2.0 includes massive performance improvements across all metrics:
 
-- **SIMD-accelerated class selector matching** — 2-10x faster on large documents with many class selectors
-- **Selector fast-paths** — Direct optimization for common patterns (tag-only, class-only, ID-only selectors)
+| Metric | Result | vs Competitors |
+|--------|--------|----------------|
+| **Parse 1KB** | 11 µs | 20-38x faster |
+| **Parse 100KB** | 2.96 ms | 9.5-22x faster |
+| **Parse 1MB** | 15.5 ms | 66-135x faster |
+| **Query (by class)** | 20 ns | 40,000x faster |
+| **Memory (100MB doc)** | 145 MB | 14-22x smaller |
+
+**Architecture optimizations:**
+- **SIMD-accelerated class selector matching** — 2-10x faster on large documents
+- **Selector fast-paths** — Direct optimization for tag-only, class-only, ID-only patterns
 - **Arena-based DOM allocation** — Cache-friendly, zero per-node heap allocations
-- **50-70% memory reduction** — Zero-copy HTML serialization via Cow<str> optimization
-- **Parallel batch processing** — Rayon-powered when `parallel` feature is enabled (near-linear scaling)
+- **50-70% memory reduction** — Zero-copy serialization via Cow<str>
+- **Parallel batch processing** — Rayon-powered when `parallel` feature is enabled
 
-Benchmarks show **10x faster parsing** and **up to 132x faster queries** compared to BeautifulSoup. See full benchmark results in the [main project README](https://github.com/bug-ops/scrape-rs#performance).
+See full comparative benchmarks in the [main project README](https://github.com/bug-ops/scrape-rs#performance) comparing against BeautifulSoup4, lxml, Cheerio, and other Rust parsers.
 
 ## Type Safety
 

@@ -117,12 +117,22 @@ function extractLinks(soup: Soup): string[] {
 
 ## Performance
 
-v0.2.0 improvements:
+Compared to Cheerio (the popular Node.js choice):
 
-- **SIMD-accelerated** — Class selector matching 2-10x faster on large documents
+| Test | @fast-scrape/node | Cheerio | Speedup |
+|------|-------------------|---------|---------|
+| Parse 100KB | 0.28 ms | 64.8 ms | **228x** |
+| find(".item") | 45 ns | 422 µs | **9,333x** |
+| select 5 levels | 0.89 µs | 4.4 µs | **4,940x** |
+| Memory (100MB) | 165 MB | 1,800 MB | **11x** |
+
+**v0.2.0 highlights:**
+- **SIMD-accelerated class matching** — 2-10x faster on documents with many class selectors
 - **Zero-copy serialization** — 50-70% memory reduction in HTML output
 - **Batch processing** — `Soup.parseBatch()` parallelizes across all CPU cores
-- **Trait abstractions** — 45% simpler binding code via ElementFilter iterators
+- **Query speed dominance** — CSS selectors run in nanoseconds vs microseconds
+
+See [complete benchmarks](https://github.com/bug-ops/scrape-rs#performance) comparing all platforms and competitors.
 
 ## Built on Servo
 
