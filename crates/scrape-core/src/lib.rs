@@ -83,10 +83,12 @@ mod error;
 pub mod parallel;
 mod parser;
 pub mod query;
+pub mod serialize;
 #[cfg(feature = "simd")]
 pub mod simd;
 mod soup;
 mod tag;
+pub mod utils;
 
 // Error types
 // DOM types
@@ -101,6 +103,10 @@ pub use parser::{Html5everParser, ParseConfig, ParseError, ParseResult, Parser};
 pub use query::{
     CompiledSelector, Filter, QueryError, QueryResult, TextNodesIter, compile_selector,
 };
+// Serialization utilities
+pub use serialize::{collect_text, serialize_inner_html, serialize_node};
 // High-level API
 pub use soup::{Soup, SoupConfig};
 pub use tag::Tag;
+// HTML utilities
+pub use utils::{escape_attr, escape_text, is_void_element};

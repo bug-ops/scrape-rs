@@ -53,7 +53,7 @@ impl Tag {
     #[wasm_bindgen(getter)]
     pub fn text(&self) -> String {
         let mut result = String::new();
-        collect_text(self.doc(), self.id, &mut result);
+        scrape_core::serialize::collect_text(self.doc(), self.id, &mut result);
         result
     }
 
@@ -61,9 +61,7 @@ impl Tag {
     #[wasm_bindgen(getter, js_name = "innerHTML")]
     pub fn inner_html(&self) -> String {
         let mut result = String::new();
-        for child_id in self.doc().children(self.id) {
-            serialize_node(self.doc(), child_id, &mut result);
-        }
+        scrape_core::serialize::serialize_inner_html(self.doc(), self.id, &mut result);
         result
     }
 
@@ -71,7 +69,7 @@ impl Tag {
     #[wasm_bindgen(getter, js_name = "outerHTML")]
     pub fn outer_html(&self) -> String {
         let mut result = String::new();
-        serialize_node(self.doc(), self.id, &mut result);
+        scrape_core::serialize::serialize_node(self.doc(), self.id, &mut result);
         result
     }
 
@@ -520,84 +518,4 @@ impl Clone for Tag {
     fn clone(&self) -> Self {
         Self { soup: Rc::clone(&self.soup), id: self.id }
     }
-}
-
-// ==================== Helper Functions ====================
-
-fn collect_text(doc: &Document, id: NodeId, result: &mut String) {
-    let Some(node) = doc.get(id) else { return };
-
-    match &node.kind {
-        NodeKind::Text { content } => result.push_str(content),
-        NodeKind::Element { .. } => {
-            for child_id in doc.children(id) {
-                collect_text(doc, child_id, result);
-            }
-        }
-        NodeKind::Comment { .. } => {}
-    }
-}
-// FIXME duplicate code
-fn serialize_node(doc: &Document, id: NodeId, result: &mut String) {
-    let Some(node) = doc.get(id) else { return };
-
-    match &node.kind {
-        NodeKind::Element { name, attributes, .. } => {
-            result.push('<');
-            result.push_str(name);
-            for (attr_name, attr_value) in attributes {
-                result.push(' ');
-                result.push_str(attr_name);
-                result.push_str("=\"");
-                result.push_str(&escape_attr(attr_value));
-                result.push('"');
-            }
-            result.push('>');
-
-            if !is_void_element(name) {
-                for child_id in doc.children(id) {
-                    serialize_node(doc, child_id, result);
-                }
-                result.push_str("</");
-                result.push_str(name);
-                result.push('>');
-            }
-        }
-        NodeKind::Text { content } => {
-            result.push_str(&escape_text(content));
-        }
-        NodeKind::Comment { content } => {
-            result.push_str("<!--");
-            result.push_str(content);
-            result.push_str("-->");
-        }
-    }
-}
-
-fn escape_text(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
-}
-
-fn escape_attr(s: &str) -> String {
-    s.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;").replace('>', "&gt;")
-}
-
-fn is_void_element(name: &str) -> bool {
-    matches!(
-        name,
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "param"
-            | "source"
-            | "track"
-            | "wbr"
-    )
 }

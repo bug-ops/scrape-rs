@@ -3,14 +3,15 @@
 //! The [`Tag`] struct represents a reference to an element in the DOM tree,
 //! providing navigation and content extraction methods.
 
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{
-    dom::{Document, NodeId, NodeKind},
+    dom::{Document, NodeId},
     query::{
         CompiledSelector, QueryResult, TextNodesIter, find_all_within, find_all_within_compiled,
         find_within, find_within_compiled, select_attr_within, select_text_within,
     },
+    serialize::{collect_text as serialize_collect_text, serialize_node},
 };
 
 /// A reference to an element in the document.
@@ -233,17 +234,7 @@ impl<'a> Tag<'a> {
     }
 
     fn collect_text(&self, buf: &mut String) {
-        let Some(node) = self.doc.get(self.id) else { return };
-
-        match &node.kind {
-            NodeKind::Text { content } => buf.push_str(content),
-            NodeKind::Element { .. } => {
-                for child_id in self.doc.children(self.id) {
-                    Tag::new(self.doc, child_id).collect_text(buf);
-                }
-            }
-            NodeKind::Comment { .. } => {}
-        }
+        serialize_collect_text(self.doc, self.id, buf);
     }
 
     /// Returns the inner HTML of this element.
@@ -285,42 +276,9 @@ impl<'a> Tag<'a> {
         self.serialize_to(&mut result);
         result
     }
-    // FIXME primitives
+
     fn serialize_to(&self, buf: &mut String) {
-        let Some(node) = self.doc.get(self.id) else { return };
-
-        match &node.kind {
-            NodeKind::Element { name, attributes, .. } => {
-                buf.push('<');
-                buf.push_str(name);
-
-                for (attr_name, attr_value) in attributes {
-                    buf.push(' ');
-                    buf.push_str(attr_name);
-                    buf.push_str("=\"");
-                    buf.push_str(&escape_attr(attr_value));
-                    buf.push('"');
-                }
-
-                buf.push('>');
-                if !is_void_element(name) {
-                    for child_id in self.doc.children(self.id) {
-                        Tag::new(self.doc, child_id).serialize_to(buf);
-                    }
-                    buf.push_str("</");
-                    buf.push_str(name);
-                    buf.push('>');
-                }
-            }
-            NodeKind::Text { content } => {
-                buf.push_str(&escape_text(content));
-            }
-            NodeKind::Comment { content } => {
-                buf.push_str("<!--");
-                buf.push_str(content);
-                buf.push_str("-->");
-            }
-        }
+        serialize_node(self.doc, self.id, buf);
     }
 
     // ==================== Navigation ====================
@@ -845,70 +803,6 @@ impl PartialEq for Tag<'_> {
 }
 
 impl Eq for Tag<'_> {}
-
-/// Escapes special characters for HTML text content.
-///
-/// Returns borrowed input when no escaping is needed (common case),
-/// avoiding allocation overhead.
-fn escape_text(s: &str) -> Cow<'_, str> {
-    if !s.contains(['&', '<', '>']) {
-        return Cow::Borrowed(s);
-    }
-
-    let mut result = String::with_capacity(s.len());
-    for c in s.chars() {
-        match c {
-            '&' => result.push_str("&amp;"),
-            '<' => result.push_str("&lt;"),
-            '>' => result.push_str("&gt;"),
-            _ => result.push(c),
-        }
-    }
-    Cow::Owned(result)
-}
-
-/// Escapes special characters for HTML attribute values.
-///
-/// Returns borrowed input when no escaping is needed (common case),
-/// avoiding allocation overhead.
-fn escape_attr(s: &str) -> Cow<'_, str> {
-    if !s.contains(['&', '"', '<', '>']) {
-        return Cow::Borrowed(s);
-    }
-
-    let mut result = String::with_capacity(s.len());
-    for c in s.chars() {
-        match c {
-            '&' => result.push_str("&amp;"),
-            '"' => result.push_str("&quot;"),
-            '<' => result.push_str("&lt;"),
-            '>' => result.push_str("&gt;"),
-            _ => result.push(c),
-        }
-    }
-    Cow::Owned(result)
-}
-
-/// Returns true if the element is a void element (no closing tag).
-fn is_void_element(name: &str) -> bool {
-    matches!(
-        name,
-        "area"
-            | "base"
-            | "br"
-            | "col"
-            | "embed"
-            | "hr"
-            | "img"
-            | "input"
-            | "link"
-            | "meta"
-            | "param"
-            | "source"
-            | "track"
-            | "wbr"
-    )
-}
 
 #[cfg(test)]
 mod tests {
