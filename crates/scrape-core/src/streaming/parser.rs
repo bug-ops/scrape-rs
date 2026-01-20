@@ -1,8 +1,6 @@
 //! Streaming HTML parser with typestate pattern.
 
-use std::cell::RefCell;
-use std::marker::PhantomData;
-use std::rc::Rc;
+use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
 use lol_html::AsciiCompatibleEncoding;
 
