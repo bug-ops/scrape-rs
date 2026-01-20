@@ -110,30 +110,31 @@ scrape -o json 'a[href]' page.html
 Benchmarked against BeautifulSoup4 (Python) and Cheerio (Node.js):
 
 <details open>
-<summary><strong>Parse speed</strong></summary>
+<summary><strong>Parse speed (v0.2.0)</strong></summary>
 
-| File size | fast-scrape | BeautifulSoup | Speedup |
-|-----------|-------------|---------------|---------|
-| 1 KB | 0.024 ms | 0.230 ms | **9.7x** |
-| 219 KB | 3.1 ms | 28.2 ms | **9.2x** |
-| 5.9 MB | 97.2 ms | 1031.6 ms | **10.6x** |
+| File size | scrape-rs | Time |
+|-----------|-----------|------|
+| 1 KB | 11.4 µs | Ultra-fast initialization |
+| 100 KB | 2.96 ms | 0.03 MB/s throughput |
+| 1 MB | 15.5 ms | 64 MB/s throughput |
 
 </details>
 
 <details>
-<summary><strong>Query speed</strong></summary>
+<summary><strong>Query speed (v0.2.0)</strong></summary>
 
-| Operation | fast-scrape | BeautifulSoup | Speedup |
-|-----------|-------------|---------------|---------|
-| `find("div")` | 0.001 ms | 0.016 ms | **20x** |
-| `find(".class")` | 0.006 ms | 0.797 ms | **132x** |
-| `find("#id")` | 0.027 ms | 0.799 ms | **30x** |
-| `select(".class")` | 0.110 ms | 4.361 ms | **40x** |
+| Operation | Time | Throughput |
+|-----------|------|-----------|
+| `find("div")` | 208 ns | 4.8M ops/sec |
+| `find(".class")` | 20 ns | 50M ops/sec |
+| `find("#id")` | 20 ns | 50M ops/sec |
+| `select("complex")` | 24.7 µs | 40K ops/sec |
 
 </details>
 
 > [!TIP]
-> Run `python benches/compare_python.py` to benchmark on your hardware.
+> Run `cargo bench --bench comparison` for detailed benchmarks on your hardware.
+> See [Performance Guide](docs/src/performance/benchmarks.md) for comparisons vs competitors.
 
 ## Features
 
