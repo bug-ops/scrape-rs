@@ -7,7 +7,7 @@
 [![npm](https://img.shields.io/npm/v/@fast-scrape/node)](https://www.npmjs.com/package/@fast-scrape/node)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-MIT)
 
-**10-50x faster** HTML parsing for Rust, Python, Node.js, and browsers.
+High-performance HTML parsing for Rust, Python, Node.js, and browsers. **8x faster** than BeautifulSoup4, **2x faster** than Cheerio, with **native-comparable** WASM performance.
 
 ```
 pip install fast-scrape          # Python
@@ -181,7 +181,9 @@ Same API, consistent performance across all platforms.
 
 ## Features
 
-- **Fast** — 10-50x faster than BeautifulSoup/Cheerio (v0.2 with SIMD achieves 2-10x faster class selector matching)
+- **Fast** — 8x faster parsing than BeautifulSoup4, 2x faster than Cheerio, with 100-7000x query speedups
+- **Batch processing** — 3-5x speedup parsing multiple documents in parallel (Rayon work-stealing)
+- **Streaming parser** — Constant O(1) memory for large files (16 KB vs 120+ MB for 100 MB files)
 - **Cross-platform** — Rust, Python, Node.js, and browsers
 - **Consistent API** — Same interface everywhere with compile-time type safety
 - **Memory-safe** — Pure Rust core, zero unsafe code
@@ -201,9 +203,12 @@ scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 |---------|-------------|---------|
 | `simd` | SIMD-accelerated parsing | No |
 | `parallel` | Parallel batch processing via Rayon | No |
+| `streaming` | Streaming parser with constant O(1) memory | No |
+| `mmap` | Memory-mapped file support for zero-copy parsing | No |
+| `full` | Enable all features | No |
 
 > [!NOTE]
-> Python and Node.js bindings enable both features by default. WASM uses `simd` only (no threads).
+> Python and Node.js bindings enable `simd` and `parallel` by default. WASM uses `simd` only (no threads). Streaming is opt-in for all platforms.
 
 </details>
 
@@ -219,13 +224,17 @@ graph TD
     Core --> WASM["@fast-scrape/wasm<br><i>wasm-bindgen</i>"]
 ```
 
-### Built on Servo
+### Built on Servo and Cloudflare
 
-The core is powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine:
+The core is powered by battle-tested libraries:
 
+**Parsing & Selection (Servo browser engine):**
 - [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
 - [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
 - [cssparser](https://crates.io/crates/cssparser) — CSS parser
+
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 <details>
 <summary><strong>Project structure</strong></summary>

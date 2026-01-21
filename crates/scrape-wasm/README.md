@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/npm/l/@fast-scrape/wasm)](../../LICENSE-MIT)
 
-**10-50x faster** HTML parsing in the browser. Native-speed parsing via WebAssembly.
+**Native-comparable** HTML parsing in the browser via WebAssembly. Achieves **1.5-2x faster** performance than DOMParser on large documents.
 
 ## Installation
 
@@ -158,9 +158,14 @@ v0.2.0 optimization brings package to under 500 KB:
 | Safari | 13+ | 16.4+ |
 | Edge | 80+ | 91+ |
 
-## Built on Servo
+## Built on Servo and Cloudflare
 
-Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+**Parsing & Selection (Servo browser engine):**
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
+
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## Related packages
 

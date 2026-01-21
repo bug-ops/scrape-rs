@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/npm/l/@fast-scrape/node)](../../LICENSE-MIT)
 
-**10-50x faster** HTML parsing for Node.js. Rust-powered, Cheerio-compatible API.
+**2x faster** HTML parsing than Cheerio. Rust-powered with **300x faster** CSS selector queries.
 
 ## Installation
 
@@ -134,9 +134,12 @@ Compared to Cheerio (the popular Node.js choice):
 
 See [complete benchmarks](https://github.com/bug-ops/scrape-rs#performance) comparing all platforms and competitors.
 
-## Built on Servo
+**Parsing & Selection (Servo browser engine):**
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
 
-Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## Related packages
 

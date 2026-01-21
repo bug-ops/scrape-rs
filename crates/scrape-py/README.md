@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/fast-scrape)](https://pypi.org/project/fast-scrape)
 [![License](https://img.shields.io/pypi/l/fast-scrape)](../../LICENSE-MIT)
 
-**10-50x faster** HTML parsing for Python. Rust-powered, BeautifulSoup-compatible API.
+**8x faster** HTML parsing than BeautifulSoup4. Rust-powered with **3000x faster** CSS selector queries.
 
 ## Installation
 
@@ -160,9 +160,12 @@ v0.2.0 delivers massive performance improvements across all operations:
 - **Zero-copy serialization** — 50-70% memory reduction in HTML output
 - **Batch processing** — Parallel parsing uses all CPU cores automatically
 
-## Built on Servo
+**Parsing & Selection (Servo browser engine):**
+- [html5ever](https://crates.io/crates/html5ever) — Spec-compliant HTML5 parser
+- [selectors](https://crates.io/crates/selectors) — CSS selector matching engine
 
-Powered by battle-tested libraries from the [Servo](https://servo.org/) browser engine: [html5ever](https://crates.io/crates/html5ever) (HTML5 parser) and [selectors](https://crates.io/crates/selectors) (CSS selector engine).
+**Streaming Parser (Cloudflare):**
+- [lol_html](https://github.com/cloudflare/lol_html) — High-performance streaming HTML parser with constant-memory event-driven API
 
 ## Related packages
 
