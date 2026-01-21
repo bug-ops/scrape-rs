@@ -3,8 +3,9 @@
 //! Measures parallel batch parsing performance with different document counts,
 //! sizes, and CPU utilization patterns.
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main, black_box};
+use std::{fmt::Write, hint::black_box};
 
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 #[cfg(feature = "parallel")]
 use scrape_core::parallel::parse_batch;
 
@@ -24,7 +25,8 @@ const MEDIUM_DOC: &str = include_str!("samples/medium.html");
 fn generate_large_doc() -> String {
     let mut html = String::from("<html><body>");
     for i in 0..1000 {
-        html.push_str(&format!(
+        let _ = write!(
+            html,
             r#"<div class="item" id="item-{i}">
             <h2>Item {i}</h2>
             <p>Description for item {i} with some text content.</p>
@@ -34,7 +36,7 @@ fn generate_large_doc() -> String {
                 <li>Feature 3</li>
             </ul>
         </div>"#
-        ));
+        );
     }
     html.push_str("</body></html>");
     html
@@ -49,30 +51,20 @@ fn bench_batch_small_documents(c: &mut Criterion) {
         let total_size = SMALL_DOC.len() * count;
 
         group.throughput(Throughput::Bytes(total_size as u64));
-        group.bench_with_input(
-            BenchmarkId::new("parallel", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results = parse_batch(black_box(docs));
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("parallel", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results = parse_batch(black_box(docs));
+                black_box(results);
+            });
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("sequential", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results: Vec<_> = docs
-                        .iter()
-                        .map(|html| scrape_core::Soup::parse(black_box(html)))
-                        .collect();
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results: Vec<_> =
+                    docs.iter().map(|html| scrape_core::Soup::parse(black_box(html))).collect();
+                black_box(results);
+            });
+        });
     }
 
     group.finish();
@@ -87,30 +79,20 @@ fn bench_batch_medium_documents(c: &mut Criterion) {
         let total_size = MEDIUM_DOC.len() * count;
 
         group.throughput(Throughput::Bytes(total_size as u64));
-        group.bench_with_input(
-            BenchmarkId::new("parallel", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results = parse_batch(black_box(docs));
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("parallel", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results = parse_batch(black_box(docs));
+                black_box(results);
+            });
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("sequential", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results: Vec<_> = docs
-                        .iter()
-                        .map(|html| scrape_core::Soup::parse(black_box(html)))
-                        .collect();
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results: Vec<_> =
+                    docs.iter().map(|html| scrape_core::Soup::parse(black_box(html))).collect();
+                black_box(results);
+            });
+        });
     }
 
     group.finish();
@@ -126,30 +108,20 @@ fn bench_batch_large_documents(c: &mut Criterion) {
         let total_size = large_doc.len() * count;
 
         group.throughput(Throughput::Bytes(total_size as u64));
-        group.bench_with_input(
-            BenchmarkId::new("parallel", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results = parse_batch(black_box(docs));
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("parallel", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results = parse_batch(black_box(docs));
+                black_box(results);
+            });
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("sequential", count),
-            &docs,
-            |b, docs| {
-                b.iter(|| {
-                    let results: Vec<_> = docs
-                        .iter()
-                        .map(|html| scrape_core::Soup::parse(black_box(html)))
-                        .collect();
-                    black_box(results);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", count), &docs, |b, docs| {
+            b.iter(|| {
+                let results: Vec<_> =
+                    docs.iter().map(|html| scrape_core::Soup::parse(black_box(html))).collect();
+                black_box(results);
+            });
+        });
     }
 
     group.finish();
@@ -185,10 +157,8 @@ fn bench_batch_mixed_sizes(c: &mut Criterion) {
 
     group.bench_function("sequential", |b| {
         b.iter(|| {
-            let results: Vec<_> = mixed_docs
-                .iter()
-                .map(|html| scrape_core::Soup::parse(black_box(html)))
-                .collect();
+            let results: Vec<_> =
+                mixed_docs.iter().map(|html| scrape_core::Soup::parse(black_box(html))).collect();
             black_box(results);
         });
     });
@@ -206,24 +176,18 @@ fn bench_batch_query_after_parse(c: &mut Criterion) {
     group.bench_function("parallel_parse_then_query", |b| {
         b.iter(|| {
             let results = parse_batch(black_box(&docs));
-            let query_results: Vec<_> = results
-                .iter()
-                .map(|soup| soup.find(".product-card").unwrap())
-                .collect();
+            let query_results: Vec<_> =
+                results.iter().map(|soup| soup.find(".product-card").unwrap()).collect();
             black_box(query_results);
         });
     });
 
     group.bench_function("sequential_parse_then_query", |b| {
         b.iter(|| {
-            let results: Vec<_> = docs
-                .iter()
-                .map(|html| scrape_core::Soup::parse(black_box(html)))
-                .collect();
-            let query_results: Vec<_> = results
-                .iter()
-                .map(|soup| soup.find(".product-card").unwrap())
-                .collect();
+            let results: Vec<_> =
+                docs.iter().map(|html| scrape_core::Soup::parse(black_box(html))).collect();
+            let query_results: Vec<_> =
+                results.iter().map(|soup| soup.find(".product-card").unwrap()).collect();
             black_box(query_results);
         });
     });

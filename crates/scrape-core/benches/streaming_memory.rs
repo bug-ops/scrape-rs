@@ -2,10 +2,9 @@
 //!
 //! Measures memory efficiency and throughput for large file processing.
 
-use std::hint::black_box;
+use std::{fmt::Write, hint::black_box};
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-
 #[cfg(feature = "streaming")]
 use scrape_core::StreamingSoup;
 
@@ -29,7 +28,7 @@ fn generate_large_html(size_mb: usize) -> String {
     let num_items = target_size / item_size;
 
     for i in 0..num_items {
-        html.push_str(&format!("<div id='item-{i}'>{item_template}</div>"));
+        let _ = write!(html, "<div id='item-{i}'>{item_template}</div>");
     }
 
     html.push_str("</body></html>");
@@ -56,7 +55,7 @@ fn bench_streaming_vs_singleshot_small(c: &mut Criterion) {
     group.bench_function("singleshot", |b| {
         b.iter(|| {
             let soup = scrape_core::Soup::parse(black_box(&html));
-            let count = soup.find_all(".product").len();
+            let count = soup.find_all(".product").ok().map_or(0, |v| v.len());
             black_box(count);
         });
     });
@@ -85,7 +84,7 @@ fn bench_streaming_vs_singleshot_medium(c: &mut Criterion) {
     group.bench_function("singleshot", |b| {
         b.iter(|| {
             let soup = scrape_core::Soup::parse(black_box(&html));
-            let count = soup.find_all(".product").len();
+            let count = soup.find_all(".product").ok().map_or(0, |v| v.len());
             black_box(count);
         });
     });
@@ -114,7 +113,7 @@ fn bench_streaming_vs_singleshot_large(c: &mut Criterion) {
     group.bench_function("singleshot", |b| {
         b.iter(|| {
             let soup = scrape_core::Soup::parse(black_box(&html));
-            let count = soup.find_all(".product").len();
+            let count = soup.find_all(".product").ok().map_or(0, |v| v.len());
             black_box(count);
         });
     });
@@ -171,7 +170,7 @@ fn bench_streaming_text_extraction(c: &mut Criterion) {
     group.bench_function("singleshot_parse", |b| {
         b.iter(|| {
             let soup = scrape_core::Soup::parse(black_box(&html));
-            let count = soup.find_all(".description").len();
+            let count = soup.find_all(".description").ok().map_or(0, |v| v.len());
             black_box(count);
         });
     });
@@ -199,9 +198,9 @@ fn bench_streaming_vs_singleshot(c: &mut Criterion) {
     group.bench_function("singleshot_parse_and_queries", |b| {
         b.iter(|| {
             let soup = scrape_core::Soup::parse(black_box(&html));
-            let products = soup.find_all(".product").len();
-            let descriptions = soup.find_all(".description").len();
-            let prices = soup.find_all(".price").len();
+            let products = soup.find_all(".product").ok().map_or(0, |v| v.len());
+            let descriptions = soup.find_all(".description").ok().map_or(0, |v| v.len());
+            let prices = soup.find_all(".price").ok().map_or(0, |v| v.len());
             black_box((products, descriptions, prices));
         });
     });
