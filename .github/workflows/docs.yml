@@ -27,21 +27,21 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry/index/
           key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-registry-
 
       - name: Cache Cargo git
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git/db/
           key: cargo-git-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-git-
 
       - name: Cache build artifacts
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: target/
           key: cargo-target-docs-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
