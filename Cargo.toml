@@ -21,7 +21,7 @@ criterion = { version = "0.8", default-features = false }
 csv = "1.4"
 cssparser = "0.36"
 encoding_rs = "0.8"
-html5ever = "0.36"
+html5ever = "0.38"
 is-terminal = "0.4"
 js-sys = "0.3"
 lol_html = "2.7"
