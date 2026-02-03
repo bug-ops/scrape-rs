@@ -18,7 +18,7 @@ use crate::{error::IntoPyErr, selector::PyCompiledSelector};
 ///     div
 ///     >>> print(div.get("class"))
 ///     test
-#[pyclass(name = "Tag")]
+#[pyclass(name = "Tag", skip_from_py_object)]
 pub struct PyTag {
     soup: Arc<Soup>,
     id: NodeId,

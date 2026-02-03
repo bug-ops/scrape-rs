@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 /// Example:
 ///     >>> config = SoupConfig(max_depth=256, strict_mode=True)
 ///     >>> soup = Soup("<div>Hello</div>", config=config)
-#[pyclass(name = "SoupConfig")]
+#[pyclass(name = "SoupConfig", skip_from_py_object)]
 #[derive(Debug, Clone)]
 pub struct PySoupConfig {
     /// Maximum nesting depth for DOM tree (default: 512).
