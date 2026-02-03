@@ -166,7 +166,7 @@ scrape --no-filename 'h1' *.html
 
 ## Performance
 
-v0.2.0 includes significant improvements:
+Performance improvements:
 
 - **SIMD-accelerated parsing** — 2-10x faster class selector matching on large documents
 - **Batch parallelization** — Scales near-linearly with thread count when processing multiple files

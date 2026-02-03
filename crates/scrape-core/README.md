@@ -69,7 +69,7 @@ scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 
 ## Performance
 
-v0.2.0 includes massive performance improvements across all metrics:
+Performance improvements across all metrics:
 
 | Metric | Result | vs Competitors |
 |--------|--------|----------------|
@@ -90,7 +90,7 @@ See full comparative benchmarks in the [main project README](https://github.com/
 
 ## Type Safety
 
-v0.2.0 introduces compile-time safety via the **typestate pattern**:
+Compile-time safety via the **typestate pattern**:
 
 - **Document lifecycle states** — Building (construction) → Queryable (ready) → Sealed (immutable)
 - **Sealed traits** — Prevent unintended implementations while allowing future extensions

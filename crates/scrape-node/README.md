@@ -126,7 +126,7 @@ Compared to Cheerio (the popular Node.js choice):
 | select 5 levels | 0.89 µs | 4.4 µs | **4,940x** |
 | Memory (100MB) | 165 MB | 1,800 MB | **11x** |
 
-**v0.2.0 highlights:**
+**Highlights:**
 - **SIMD-accelerated class matching** — 2-10x faster on documents with many class selectors
 - **Zero-copy serialization** — 50-70% memory reduction in HTML output
 - **Batch processing** — `Soup.parseBatch()` parallelizes across all CPU cores
