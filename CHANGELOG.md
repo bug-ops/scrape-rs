@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-03
+
+### Added
+
+- **Phase 18: Streaming & Advanced Performance**
+  - Full lol_html streaming integration with constant O(1) memory usage
+  - StreamingParser with event-driven architecture for large documents
+  - Memory-mapped file support via `mmap` feature
+  - Streaming text extraction and element handlers
+
+- **Phase 19: Developer Experience**
+  - Enhanced error tracking and diagnostics
+  - Improved error messages with source context
+  - Better panic handling and recovery
+
+- **Phase 20: Benchmark Infrastructure**
+  - Comprehensive benchmark suite with criterion
+  - Cross-platform performance comparison tools
+  - Memory profiling infrastructure
+
+- **Documentation**
+  - mdBook-based documentation site
+  - Getting Started guide
+  - User Guide with examples
+  - API reference documentation
+
+### Changed
+
+- Updated PyO3 to 0.28.0 with `skip_from_py_object` compatibility fix
+- Dependabot auto-merge workflow for patch updates
+
+### Fixed
+
+- CI wait-on-check circular dependency issue
+- Dependabot workflow auto-approve removal
+
+### Dependencies
+
+- pyo3: 0.27.2 → 0.28.0
+- bytes: 1.11.0 → 1.11.1
+- clap: 4.5.54 → 4.5.56
+- actions/checkout: 4 → 6
+- actions/cache: 4 → 5
+- actions/upload-pages-artifact: 3 → 4
+- @biomejs/biome: updated in Node.js and WASM packages
+
 ## [0.2.0] - 2026-01-20
 
 ### Added
@@ -164,7 +210,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/bug-ops/scrape-rs/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/bug-ops/scrape-rs/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/bug-ops/scrape-rs/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/bug-ops/scrape-rs/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/bug-ops/scrape-rs/compare/v0.1.3...v0.1.4

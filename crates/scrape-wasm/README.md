@@ -117,7 +117,7 @@ function extractLinks(soup: Soup): string[] {
 
 ## Performance
 
-v0.2.0 delivers native-speed parsing in browsers with SIMD acceleration:
+Native-speed parsing in browsers with SIMD acceleration:
 
 <details open>
 <summary><strong>Browser performance vs native DOMParser</strong></summary>
@@ -139,7 +139,7 @@ v0.2.0 delivers native-speed parsing in browsers with SIMD acceleration:
 
 ## Bundle size
 
-v0.2.0 optimization brings package to under 500 KB:
+Optimized package under 500 KB:
 
 | Build | Size |
 |-------|------|
@@ -147,7 +147,7 @@ v0.2.0 optimization brings package to under 500 KB:
 | Minified | ~400 KB |
 
 > [!TIP]
-> SIMD enabled automatically on Chrome 91+, Firefox 89+, Safari 16.4+. v0.2.0 includes zero-copy serialization for 50-70% memory savings in HTML extraction.
+> SIMD enabled automatically on Chrome 91+, Firefox 89+, Safari 16.4+. Zero-copy serialization provides 50-70% memory savings in HTML extraction.
 
 ## Browser support
 

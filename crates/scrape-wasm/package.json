@@ -1,6 +1,6 @@
 {
   "name": "@scrape-rs/wasm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "High-performance HTML parsing library for browsers (WASM)",
   "type": "module",
   "main": "pkg/scrape_wasm.js",

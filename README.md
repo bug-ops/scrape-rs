@@ -110,7 +110,7 @@ scrape -o json 'a[href]' page.html
 Comprehensive benchmarks against BeautifulSoup4, lxml, Cheerio, and other competitors:
 
 <details open>
-<summary><strong>Parse speed comparison (v0.2.0)</strong></summary>
+<summary><strong>Parse speed comparison</strong></summary>
 
 | File size | scrape-rs | Rust competitors | Python competitors | Node.js |
 |-----------|-----------|-----------------|-------------------|---------|
