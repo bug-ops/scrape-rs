@@ -1,6 +1,6 @@
 {
   "name": "@fast-scrape/node-linux-x64-gnu",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "fast-scrape native binding for Linux x64 (glibc)",
   "os": [
     "linux"

@@ -15,7 +15,7 @@ path = "src/main.rs"
 
 [features]
 default = ["url"]
-url = ["dep:ureq", "ureq/native-tls"]
+url = ["dep:ureq", "ureq/rustls"]
 
 [dependencies]
 anyhow.workspace = true
