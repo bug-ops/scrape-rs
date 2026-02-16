@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
@@ -36,8 +36,8 @@ precomputed-hash = "0.1"
 predicates = "3.1"
 pyo3 = "0.28"
 rayon = "1.11"
-scrape-cli = { path = "crates/scrape-cli", version = "0.2.2" }
-scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.2.2" }
+scrape-cli = { path = "crates/scrape-cli", version = "0.2.3" }
+scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.2.3" }
 scraper = "0.25"
 select = "0.6"
 selectors = "0.35"
