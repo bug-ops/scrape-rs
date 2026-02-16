@@ -9,30 +9,11 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.3.11
+        specifier: ^2.4
         version: 2.4.0
       '@napi-rs/cli':
         specifier: ^3.5.1
         version: 3.5.1(@emnapi/runtime@1.8.1)
-    optionalDependencies:
-      '@fast-scrape/node-darwin-arm64':
-        specifier: 0.2.2
-        version: 0.2.2
-      '@fast-scrape/node-darwin-x64':
-        specifier: 0.2.2
-        version: 0.2.2
-      '@fast-scrape/node-linux-arm64-gnu':
-        specifier: 0.2.2
-        version: 0.2.2
-      '@fast-scrape/node-linux-x64-gnu':
-        specifier: 0.2.2
-        version: 0.2.2
-      '@fast-scrape/node-linux-x64-musl':
-        specifier: 0.2.2
-        version: 0.2.2
-      '@fast-scrape/node-win32-x64-msvc':
-        specifier: 0.2.2
-        version: 0.2.2
 
 packages:
 
@@ -97,42 +78,6 @@ packages:
 
   '@emnapi/wasi-threads@1.1.0':
     resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
-
-  '@fast-scrape/node-darwin-arm64@0.2.2':
-    resolution: {integrity: sha512-XNcoyAqcqwMV+OFlaMroHsdpGabmDWDThH+Q9BojQQZGo01eNqEMZYjU5mAZWxWUYRlxr6rsiLMpydX1JgWWZw==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@fast-scrape/node-darwin-x64@0.2.2':
-    resolution: {integrity: sha512-M0y6/XdCK4w3HzjZeQ6IgT35Of+yk6LCUo+Ndc55MeM2GDjn1odj6dkFthe85M+VegGwdMGrm6FhlFeK+/tztA==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@fast-scrape/node-linux-arm64-gnu@0.2.2':
-    resolution: {integrity: sha512-fX/BaiuM+Q3N/LzOpbV1jbCrEa6MeveqEw9Y2t0E82siBLTKh1TqdMPvCppujpEZSKzMQkvI8EZReA6Lra6lKA==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@fast-scrape/node-linux-x64-gnu@0.2.2':
-    resolution: {integrity: sha512-6DZkq42N3c2OHtV3Ie3MkIEQm3PXRdBjWYLIZS3C6Y/dJsxEwrcU+vL/HmtjsSiY1XfFFa5ievWG34aiR/wf7w==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [linux]
-
-  '@fast-scrape/node-linux-x64-musl@0.2.2':
-    resolution: {integrity: sha512-lOiMifiVE2wmbCjwduUuehQ7QP/kJaJbmgRQYoYwEbqLQ2sRusPl3sgCi9jCKVUKzHZyzrlxgKoHXajPoBfOnQ==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [linux]
-
-  '@fast-scrape/node-win32-x64-msvc@0.2.2':
-    resolution: {integrity: sha512-ESccUtXtuSQDlBcwzGSSMzePV4rUZdulJeGjvLdVRpHZ23GdEImPXJg9L9xtaeU0PWPrzjgfcEkxM226k7eVnQ==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [win32]
 
   '@inquirer/ansi@2.0.3':
     resolution: {integrity: sha512-g44zhR3NIKVs0zUesa4iMzExmZpLUdTLRMCStqX3GE5NT6VkPcxQGJ+uC8tDgBUC/vB1rUhUd55cOf++4NZcmw==}
@@ -817,24 +762,6 @@ snapshots:
   '@emnapi/wasi-threads@1.1.0':
     dependencies:
       tslib: 2.8.1
-    optional: true
-
-  '@fast-scrape/node-darwin-arm64@0.2.2':
-    optional: true
-
-  '@fast-scrape/node-darwin-x64@0.2.2':
-    optional: true
-
-  '@fast-scrape/node-linux-arm64-gnu@0.2.2':
-    optional: true
-
-  '@fast-scrape/node-linux-x64-gnu@0.2.2':
-    optional: true
-
-  '@fast-scrape/node-linux-x64-musl@0.2.2':
-    optional: true
-
-  '@fast-scrape/node-win32-x64-msvc@0.2.2':
     optional: true
 
   '@inquirer/ansi@2.0.3': {}
