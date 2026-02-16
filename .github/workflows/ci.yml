@@ -388,3 +388,47 @@ jobs:
           flags: rust
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+
+  # ==========================================================================
+  # CI Gate: single required status check for branch protection
+  # ==========================================================================
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      - fmt
+      - clippy
+      - clippy-all-features
+      - security
+      - msrv
+      - test
+      - test-all-features
+      - build-python
+      - build-node
+      - build-wasm
+      - coverage
+    steps:
+      - name: Check required jobs
+        run: |
+          results=(
+            "${{ needs.fmt.result }}"
+            "${{ needs.clippy.result }}"
+            "${{ needs.clippy-all-features.result }}"
+            "${{ needs.security.result }}"
+            "${{ needs.msrv.result }}"
+            "${{ needs.test.result }}"
+            "${{ needs.test-all-features.result }}"
+            "${{ needs.build-python.result }}"
+            "${{ needs.build-node.result }}"
+            "${{ needs.build-wasm.result }}"
+            "${{ needs.coverage.result }}"
+          )
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::One or more required jobs failed or were cancelled"
+              exit 1
+            fi
+          done
+          echo "All required jobs passed or were skipped"
