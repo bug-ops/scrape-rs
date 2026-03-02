@@ -173,7 +173,7 @@ jobs:
           Remove-Item dist/scrape.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.platform.name }}
           path: dist/scrape-*
@@ -232,7 +232,7 @@ jobs:
           sccache: false
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.platform.name }}
           path: dist/*.whl
@@ -255,7 +255,7 @@ jobs:
           args: --out dist -m crates/scrape-py/Cargo.toml
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-sdist
           path: dist/*.tar.gz
@@ -375,7 +375,7 @@ jobs:
         run: pnpm run build --target ${{ matrix.platform.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: node-${{ matrix.platform.name }}
           path: crates/scrape-node/*.node
