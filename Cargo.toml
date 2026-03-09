@@ -40,7 +40,7 @@ scrape-cli = { path = "crates/scrape-cli", version = "0.2.4" }
 scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.2.4" }
 scraper = "0.25"
 select = "0.6"
-selectors = "0.35"
+selectors = "0.36"
 serde = "1.0"
 serde_json = "1.0"
 tempfile = "3.26"
