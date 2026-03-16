@@ -190,13 +190,13 @@ args = ["build", "crates/scrape-wasm", "--target", "web", "--dev"]
 description = "Lint WASM JavaScript with biome"
 cwd = "crates/scrape-wasm"
 command = "pnpm"
-args = ["exec", "biome", "check", "js/"]
+args = ["exec", "biome", "check", "--no-errors-on-unmatched", "js/"]
 
 [tasks.wasm-lint-fix]
 description = "Fix WASM lint issues"
 cwd = "crates/scrape-wasm"
 command = "pnpm"
-args = ["exec", "biome", "check", "js/", "--write"]
+args = ["exec", "biome", "check", "--no-errors-on-unmatched", "--write", "js/"]
 
 [tasks.wasm-test]
 description = "Run WASM tests in headless Firefox"

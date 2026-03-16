@@ -37,7 +37,6 @@ Issues = "https://github.com/bug-ops/scrape-rs/issues"
 features = ["pyo3/extension-module"]
 python-source = "python"
 module-name = "scrape_rs._core"
-strip = true
 
 [tool.ruff]
 line-length = 100

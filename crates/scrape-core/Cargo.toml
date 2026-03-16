@@ -25,7 +25,6 @@ encoding_rs = { workspace = true, optional = true }
 html5ever.workspace = true
 lol_html = { workspace = true, optional = true }
 markup5ever.workspace = true
-markup5ever_rcdom.workspace = true
 memchr.workspace = true
 memmap2 = { workspace = true, optional = true }
 precomputed-hash.workspace = true

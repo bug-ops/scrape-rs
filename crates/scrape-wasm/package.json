@@ -29,7 +29,7 @@
     "test": "wasm-pack test --headless --firefox",
     "test:chrome": "wasm-pack test --headless --chrome",
     "test:safari": "wasm-pack test --headless --safari",
-    "lint": "biome check js/",
+    "lint": "biome check --no-errors-on-unmatched js/",
     "size": "bash scripts/analyze-size.sh"
   },
   "repository": {
@@ -52,7 +52,7 @@
   ],
   "license": "MIT OR Apache-2.0",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.6"
+    "@biomejs/biome": "^2.4.7"
   },
   "engines": {
     "node": ">=18"
