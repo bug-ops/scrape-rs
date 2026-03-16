@@ -5,7 +5,7 @@ use std::{collections::HashMap, marker::PhantomData};
 use super::{
     arena::Arena,
     index::DocumentIndex,
-    node::{Node, NodeId},
+    node::{Node, NodeId, NodeKind},
     state::{Building, DocumentState, MutableState, Queryable, QueryableState, Sealed},
 };
 
@@ -143,6 +143,108 @@ impl DocumentImpl<Building> {
             }
             parent.last_child = Some(child_id);
         }
+    }
+
+    /// Inserts `new_child` immediately before `sibling` in the parent's child list.
+    ///
+    /// `sibling` must have a parent; `new_child` must not already be in the tree.
+    pub fn insert_before(&mut self, sibling: NodeId, new_child: NodeId) {
+        let Some(parent) = self.arena.get(sibling.index()).and_then(|n| n.parent) else {
+            return;
+        };
+
+        let prev = self.arena.get(sibling.index()).and_then(|n| n.prev_sibling);
+
+        // Wire new_child into the chain
+        if let Some(node) = self.arena.get_mut(new_child.index()) {
+            node.parent = Some(parent);
+            node.prev_sibling = prev;
+            node.next_sibling = Some(sibling);
+        }
+
+        // Update previous sibling's next pointer (or parent's first_child)
+        if let Some(prev_id) = prev {
+            if let Some(prev_node) = self.arena.get_mut(prev_id.index()) {
+                prev_node.next_sibling = Some(new_child);
+            }
+        } else if let Some(parent_node) = self.arena.get_mut(parent.index()) {
+            parent_node.first_child = Some(new_child);
+        }
+
+        // Update sibling's prev pointer
+        if let Some(sib) = self.arena.get_mut(sibling.index()) {
+            sib.prev_sibling = Some(new_child);
+        }
+    }
+
+    /// Detaches `target` from its parent, fixing up sibling and parent links.
+    pub fn remove_from_parent(&mut self, target: NodeId) {
+        let Some(parent) = self.arena.get(target.index()).and_then(|n| n.parent) else {
+            return;
+        };
+        let prev = self.arena.get(target.index()).and_then(|n| n.prev_sibling);
+        let next = self.arena.get(target.index()).and_then(|n| n.next_sibling);
+
+        // Bridge prev <-> next
+        if let Some(prev_id) = prev {
+            if let Some(prev_node) = self.arena.get_mut(prev_id.index()) {
+                prev_node.next_sibling = next;
+            }
+        } else if let Some(parent_node) = self.arena.get_mut(parent.index()) {
+            parent_node.first_child = next;
+        }
+
+        if let Some(next_id) = next {
+            if let Some(next_node) = self.arena.get_mut(next_id.index()) {
+                next_node.prev_sibling = prev;
+            }
+        } else if let Some(parent_node) = self.arena.get_mut(parent.index()) {
+            parent_node.last_child = prev;
+        }
+
+        // Detach target
+        if let Some(node) = self.arena.get_mut(target.index()) {
+            node.parent = None;
+            node.prev_sibling = None;
+            node.next_sibling = None;
+        }
+    }
+
+    /// Moves all children of `src` to become the last children of `dst`.
+    pub fn reparent_children(&mut self, src: NodeId, dst: NodeId) {
+        // Collect children of src first to avoid borrow conflicts
+        let mut child = self.arena.get(src.index()).and_then(|n| n.first_child);
+        while let Some(child_id) = child {
+            let next = self.arena.get(child_id.index()).and_then(|n| n.next_sibling);
+            // Disconnect from src chain first
+            if let Some(node) = self.arena.get_mut(child_id.index()) {
+                node.parent = None;
+                node.prev_sibling = None;
+                node.next_sibling = None;
+            }
+            self.append_child(dst, child_id);
+            child = next;
+        }
+        // Clear src's child pointers
+        if let Some(node) = self.arena.get_mut(src.index()) {
+            node.first_child = None;
+            node.last_child = None;
+        }
+    }
+
+    /// Appends text to the last child of `parent` if it is a text node;
+    /// returns `true` when the text was merged, `false` when a new node is needed.
+    pub fn try_append_text_to_last_child(&mut self, parent: NodeId, text: &str) -> bool {
+        let Some(last) = self.arena.get(parent.index()).and_then(|n| n.last_child) else {
+            return false;
+        };
+        if let Some(node) = self.arena.get_mut(last.index())
+            && let NodeKind::Text { content } = &mut node.kind
+        {
+            content.push_str(text);
+            return true;
+        }
+        false
     }
 
     /// Transitions the document from Building to Queryable state.

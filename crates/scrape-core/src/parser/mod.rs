@@ -22,6 +22,7 @@
 mod error;
 pub mod fragment;
 mod html5;
+pub mod sink;
 #[cfg(test)]
 mod tests;
 pub mod warnings;
