@@ -65,6 +65,8 @@ struct SinkInner {
     depth_map: HashMap<NodeId, usize>,
     /// Set to `true` when max depth was exceeded during parsing.
     depth_exceeded: bool,
+    /// Set of nodes that are `MathML` annotation-xml integration points.
+    mathml_annotation_integration_points: std::collections::HashSet<NodeId>,
 }
 
 impl SinkInner {
@@ -75,6 +77,23 @@ impl SinkInner {
             config,
             depth_map: HashMap::new(),
             depth_exceeded: false,
+            mathml_annotation_integration_points: std::collections::HashSet::new(),
+        }
+    }
+
+    /// Recursively recalculates `depth_map` for `node` and all its descendants,
+    /// given that `node` is now at `new_depth`.
+    fn recalc_subtree_depths(&mut self, node: NodeId, new_depth: usize) {
+        self.depth_map.insert(node, new_depth);
+        let mut stack = vec![node];
+        while let Some(current) = stack.pop() {
+            let child_depth = self.depth_map.get(&current).copied().unwrap_or(new_depth) + 1;
+            let mut child = self.document.get(current).and_then(|n| n.first_child);
+            while let Some(child_id) = child {
+                self.depth_map.insert(child_id, child_depth);
+                stack.push(child_id);
+                child = self.document.get(child_id).and_then(|n| n.next_sibling);
+            }
         }
     }
 
@@ -145,6 +164,10 @@ impl SinkInner {
             self.index.register_classes(class_attr, node_id);
         }
 
+        if flags.mathml_annotation_xml_integration_point {
+            self.mathml_annotation_integration_points.insert(node_id);
+        }
+
         if flags.template {
             let contents_id =
                 self.document.create_element("template-contents".to_string(), HashMap::new());
@@ -167,6 +190,7 @@ pub struct DocBuilderSink {
     /// Maps `NodeId` to the original `QualName` from html5ever.
     ///
     /// Kept separate from `inner` so `elem_name` can borrow it independently.
+    /// Not cleared after parsing — this is intentional for a single-use sink.
     qual_names: RefCell<HashMap<NodeId, QualName>>,
 }
 
@@ -260,8 +284,7 @@ impl TreeSink for DocBuilderSink {
 
     fn create_pi(&self, _target: StrTendril, _data: StrTendril) -> Self::Handle {
         // Processing instructions are not represented in our DOM.
-        let node_id = self.inner.borrow_mut().document.create_text(String::new());
-        SinkHandle::Node(node_id)
+        SinkHandle::Phantom
     }
 
     fn append(&self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
@@ -298,10 +321,10 @@ impl TreeSink for DocBuilderSink {
                 if !inner.config.preserve_whitespace && text.trim().is_empty() {
                     return;
                 }
+                // Coalesce with prev_sibling if it is itself a text node (not its last child).
                 let prev = inner.document.get(sibling_id).and_then(|n| n.prev_sibling);
-                let merged = prev.is_some_and(|prev_id| {
-                    inner.document.try_append_text_to_last_child(prev_id, &text)
-                });
+                let merged = prev
+                    .is_some_and(|prev_id| inner.document.try_append_text_to_node(prev_id, &text));
                 if !merged {
                     let node_id = inner.document.create_text(text.to_string());
                     inner.document.insert_before(sibling_id, node_id);
@@ -313,6 +336,14 @@ impl TreeSink for DocBuilderSink {
                     inner.document.remove_from_parent(node_id);
                 }
                 inner.document.insert_before(sibling_id, node_id);
+                // Update depth_map for the inserted node and its subtree.
+                let parent_depth = inner
+                    .document
+                    .get(sibling_id)
+                    .and_then(|n| n.parent)
+                    .and_then(|p| inner.depth_map.get(&p).copied())
+                    .unwrap_or(0);
+                inner.recalc_subtree_depths(node_id, parent_depth + 1);
             }
         }
     }
@@ -387,11 +418,21 @@ impl TreeSink for DocBuilderSink {
 
     fn reparent_children(&self, node: &Self::Handle, new_parent: &Self::Handle) {
         let (Some(src), Some(dst)) = (node.node_id(), new_parent.node_id()) else { return };
-        self.inner.borrow_mut().document.reparent_children(src, dst);
+        let mut inner = self.inner.borrow_mut();
+        inner.document.reparent_children(src, dst);
+        // Recalculate depths for all moved children.
+        let dst_depth = inner.depth_map.get(&dst).copied().unwrap_or(0);
+        let mut child = inner.document.get(dst).and_then(|n| n.first_child);
+        while let Some(child_id) = child {
+            inner.recalc_subtree_depths(child_id, dst_depth + 1);
+            child = inner.document.get(child_id).and_then(|n| n.next_sibling);
+        }
     }
 
-    fn is_mathml_annotation_xml_integration_point(&self, _handle: &Self::Handle) -> bool {
-        false
+    fn is_mathml_annotation_xml_integration_point(&self, handle: &Self::Handle) -> bool {
+        handle.node_id().is_some_and(|id| {
+            self.inner.borrow().mathml_annotation_integration_points.contains(&id)
+        })
     }
 }
 
@@ -533,5 +574,40 @@ mod tests {
         assert!(!sink.same_node(&a, &c));
         assert!(sink.same_node(&SinkHandle::Document, &SinkHandle::Document));
         assert!(!sink.same_node(&SinkHandle::Document, &a));
+    }
+
+    /// Verifies that consecutive text runs inside an element are coalesced into
+    /// a single text node.  html5ever may emit multiple `AppendText` calls for
+    /// the same parent (e.g. for `<h1>Hello World</h1>`), and the sink must
+    /// merge them rather than creating sibling text nodes.
+    fn find_h1_node(doc: &crate::dom::Document, id: NodeId) -> Option<NodeId> {
+        let node = doc.get(id)?;
+        if let NodeKind::Element { name, .. } = &node.kind
+            && name == "h1"
+        {
+            return Some(id);
+        }
+        doc.children(id).find_map(|child| find_h1_node(doc, child))
+    }
+
+    #[test]
+    fn test_text_coalescing_in_h1() {
+        let config = ParseConfig { preserve_whitespace: true, ..ParseConfig::default() };
+        let doc =
+            parse_html_document("<html><body><h1>Hello World</h1></body></html>", &config, 64)
+                .expect("parse failed");
+
+        let root = doc.root().expect("document has no root");
+        let h1 = find_h1_node(&doc, root).expect("h1 not found");
+
+        let children: Vec<_> = doc.children(h1).collect();
+        assert_eq!(children.len(), 1, "expected single text child, got {}", children.len());
+        let text_node = doc.get(children[0]).expect("child node missing");
+        match &text_node.kind {
+            NodeKind::Text { content } => {
+                assert_eq!(content, "Hello World");
+            }
+            other => panic!("expected Text node, got {other:?}"),
+        }
     }
 }

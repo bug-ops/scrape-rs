@@ -247,6 +247,18 @@ impl DocumentImpl<Building> {
         false
     }
 
+    /// Appends text to `node` itself if it is a text node;
+    /// returns `true` when the text was merged, `false` when a new node is needed.
+    pub fn try_append_text_to_node(&mut self, node: NodeId, text: &str) -> bool {
+        if let Some(n) = self.arena.get_mut(node.index())
+            && let NodeKind::Text { content } = &mut n.kind
+        {
+            content.push_str(text);
+            return true;
+        }
+        false
+    }
+
     /// Transitions the document from Building to Queryable state.
     ///
     /// This is a one-way transition. Once built, the document structure
