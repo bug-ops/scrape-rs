@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace `markup5ever_rcdom` with a custom `DocBuilderSink` (`html5ever::TreeSink`) that builds
+  the internal `Document` directly, eliminating intermediate RcDom allocation and Rc/RefCell overhead
+
+### Dependencies
+
+- Bump `html5ever` 0.38 → 0.39, `markup5ever` 0.38 → 0.39
+- Remove `markup5ever_rcdom` (unmaintained, incompatible with markup5ever 0.39)
+
+### Fixed
+
+- `DocBuilderSink`: depth tracking correctly updated after `reparent_children` and `insert_before`
+  (foster parenting edge case)
+- `DocBuilderSink`: text coalescing in `append_before_sibling` now checks the sibling node itself
+  rather than its last child, matching html5ever RcDom semantics
+- `DocBuilderSink`: `is_mathml_annotation_xml_integration_point` now respects `ElementFlags`
+  instead of unconditionally returning `false`
+- `DocBuilderSink`: `create_pi` returns `Phantom` handle instead of creating an empty text node
+- Remove redundant `strip = true` from `[tool.maturin]` in `pyproject.toml` (conflicts with
+  `maturin develop` in maturin >= 1.12)
+- Add `biome.json` to exclude `.d.ts` files from biome linting (biome 2.4.7 internal panic on
+  declaration files)
+
 ## [0.2.4] - 2026-02-20
 
 ### Dependencies
