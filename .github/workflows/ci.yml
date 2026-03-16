@@ -344,7 +344,7 @@ jobs:
         working-directory: crates/scrape-wasm
         run: |
           pnpm install --no-frozen-lockfile
-          pnpm exec biome check js/
+          pnpm exec biome check --no-errors-on-unmatched js/
       - name: Install dependencies
         if: matrix.browser != 'chrome'
         working-directory: crates/scrape-wasm
