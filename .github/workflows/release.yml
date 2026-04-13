@@ -349,7 +349,7 @@ jobs:
         with:
           node-version: '22'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
@@ -404,7 +404,7 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 

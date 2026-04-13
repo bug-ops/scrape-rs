@@ -287,7 +287,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
       - uses: taiki-e/install-action@v2
@@ -331,7 +331,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
       - uses: taiki-e/install-action@v2
