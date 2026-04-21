@@ -402,7 +402,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
 
       - uses: pnpm/action-setup@v6
         with:
@@ -435,7 +434,6 @@ jobs:
       - name: Publish platform packages
         working-directory: crates/scrape-node
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
           for platform in darwin-arm64 darwin-x64 linux-arm64-gnu linux-x64-gnu linux-x64-musl win32-x64-msvc; do
             if [[ -f "npm/$platform/package.json" ]] && ls npm/$platform/*.node 1>/dev/null 2>&1; then
               echo "Publishing @fast-scrape/node-$platform"
@@ -444,14 +442,10 @@ jobs:
               cd ../..
             fi
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish main package
         working-directory: crates/scrape-node
         run: pnpm publish --access public --no-git-checks --provenance --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ==========================================================================
   # Build and publish WASM
@@ -481,7 +475,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install wasm-pack
         uses: taiki-e/install-action@v2
@@ -509,8 +502,6 @@ jobs:
       - name: Publish to npm
         working-directory: crates/scrape-wasm/pkg
         run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ==========================================================================
   # Create GitHub Release
