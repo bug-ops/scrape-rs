@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-04-21
+
+### Dependencies
+
+- Bump `selectors` 0.36 → 0.37
+- Bump `pyo3` 0.28.2 → 0.28.3
+- Bump `rustls-webpki` to 0.103.12
+- Bump `@napi-rs/cli` 3.6.1 → 3.6.2
+- Bump `@emnapi/runtime` (Node.js and WASM packages)
+- Bump `@biomejs/biome` (Node.js and WASM packages)
+- Bump `pytest` (Python package)
+- Bump CI actions: `lewagon/wait-on-check-action` 1.6.1 → 1.7.0, `actions/upload-pages-artifact` 4 → 5,
+  `softprops/action-gh-release` 2 → 3, `pnpm/action-setup` 5 → 6,
+  `dependabot/fetch-metadata` 2 → 3, `actions/deploy-pages` 4 → 5,
+  `codecov/codecov-action` 5 → 6
+
 ## [0.2.5] - 2026-03-17
 
 ### Changed
@@ -255,7 +271,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/bug-ops/scrape-rs/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/bug-ops/scrape-rs/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/bug-ops/scrape-rs/compare/v0.2.2...v0.2.3
