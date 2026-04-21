@@ -62,7 +62,7 @@
   "license": "MIT OR Apache-2.0",
   "devDependencies": {
     "@biomejs/biome": "^2.4.7",
-    "@napi-rs/cli": "^3.5.1"
+    "@napi-rs/cli": "^3.6.2"
   },
   "optionalDependencies": {
     "@fast-scrape/node-darwin-arm64": "0.2.5",
