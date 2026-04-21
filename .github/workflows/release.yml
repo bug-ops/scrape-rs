@@ -429,6 +429,9 @@ jobs:
         working-directory: crates/scrape-node
         run: pnpm install --no-frozen-lockfile
 
+      - name: Update npm for provenance
+        run: corepack enable && corepack prepare npm@latest --activate
+
       - name: Publish platform packages
         working-directory: crates/scrape-node
         run: |
@@ -499,6 +502,9 @@ jobs:
           if [ "$WASM_SIZE" -gt 512000 ]; then
             echo "Warning: WASM bundle exceeds 500KB target"
           fi
+
+      - name: Update npm for provenance
+        run: corepack enable && corepack prepare npm@latest --activate
 
       - name: Publish to npm
         working-directory: crates/scrape-wasm/pkg
