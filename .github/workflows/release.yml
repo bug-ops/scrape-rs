@@ -401,7 +401,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - uses: pnpm/action-setup@v6
         with:
@@ -427,9 +428,6 @@ jobs:
       - name: Install dependencies
         working-directory: crates/scrape-node
         run: pnpm install --no-frozen-lockfile
-
-      - name: Update npm for provenance
-        run: corepack enable && corepack prepare npm@latest --activate
 
       - name: Publish platform packages
         working-directory: crates/scrape-node
@@ -474,7 +472,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install wasm-pack
         uses: taiki-e/install-action@v2
@@ -495,9 +494,6 @@ jobs:
           if [ "$WASM_SIZE" -gt 512000 ]; then
             echo "Warning: WASM bundle exceeds 500KB target"
           fi
-
-      - name: Update npm for provenance
-        run: corepack enable && corepack prepare npm@latest --activate
 
       - name: Publish to npm
         working-directory: crates/scrape-wasm/pkg
