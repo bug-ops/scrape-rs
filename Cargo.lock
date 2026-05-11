@@ -96,9 +96,9 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "assert_cmd"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39bae1d3fa576f7c6519514180a72559268dd7d1fe104070956cb687bc6673bd"
+checksum = "2aa3a22042e45de04255c7bf3626e239f450200fd0493c1e382263544b20aea6"
 dependencies = [
  "anstyle",
  "bstr",
@@ -649,20 +649,14 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.16.1"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
 dependencies = [
  "allocator-api2",
  "equivalent",
  "foldhash 0.2.0",
 ]
-
-[[package]]
-name = "hashbrown"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
 
 [[package]]
 name = "heck"
@@ -815,20 +809,20 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "lol_html"
-version = "2.8.1"
+version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6888e8653f6e49cb2924c660fc367a8beeb6239b71e117fa082153c6ea44d427"
+checksum = "00aad58f6ec3990e795943872f13651e7a5fa59dca2c8f31a74faf8a0e0fb652"
 dependencies = [
  "bitflags",
  "cfg-if",
  "cssparser",
  "encoding_rs",
  "foldhash 0.2.0",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.0",
  "memchr",
  "mime",
  "precomputed-hash",
- "selectors 0.35.0",
+ "selectors",
  "thiserror",
 ]
 
@@ -1423,7 +1417,7 @@ dependencies = [
  "memmap2",
  "precomputed-hash",
  "rayon",
- "selectors 0.37.0",
+ "selectors",
  "serde",
  "serde_json",
  "thiserror",
@@ -1461,25 +1455,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",
-]
-
-[[package]]
-name = "selectors"
-version = "0.35.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93fdfed56cd634f04fe8b9ddf947ae3dc493483e819593d2ba17df9ad05db8b2"
-dependencies = [
- "bitflags",
- "cssparser",
- "derive_more",
- "log",
- "new_debug_unreachable",
- "phf",
- "phf_codegen",
- "precomputed-hash",
- "rustc-hash",
- "servo_arc",
- "smallvec",
 ]
 
 [[package]]
