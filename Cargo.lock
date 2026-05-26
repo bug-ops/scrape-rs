@@ -1409,7 +1409,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scrape-cli"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1428,7 +1428,7 @@ dependencies = [
 
 [[package]]
 name = "scrape-core"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "criterion",
  "cssparser 0.37.0",
@@ -1448,7 +1448,7 @@ dependencies = [
 
 [[package]]
 name = "scrape-node"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "napi",
  "napi-build",
@@ -1459,7 +1459,7 @@ dependencies = [
 
 [[package]]
 name = "scrape-py"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "pyo3",
  "rayon",
@@ -1468,7 +1468,7 @@ dependencies = [
 
 [[package]]
 name = "scrape-wasm"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "console_error_panic_hook",
  "js-sys",

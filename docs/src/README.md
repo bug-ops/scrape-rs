@@ -58,7 +58,7 @@ print(f"{name}: {price}")
 ### Node.js
 
 ```typescript
-import { Soup } from '@scrape-rs/scrape';
+import { Soup } from '@fast-scrape/node';
 
 const html = '<div class="product"><h2>Widget</h2><span class="price">$19.99</span></div>';
 const soup = new Soup(html);
@@ -73,7 +73,7 @@ console.log(`${name}: ${price}`);
 ### WASM
 
 ```typescript
-import init, { Soup } from '@scrape-rs/wasm';
+import init, { Soup } from '@fast-scrape/wasm';
 
 await init();
 
@@ -99,8 +99,8 @@ console.log(`${name}: ${price}`);
 |----------|--------|---------|
 | Rust | Stable | [`scrape-core`](https://crates.io/crates/scrape-core) |
 | Python 3.10+ | Stable | [`fast-scrape`](https://pypi.org/project/fast-scrape) |
-| Node.js 18+ | Stable | [`@scrape-rs/scrape`](https://npmjs.com/package/@scrape-rs/scrape) |
-| WASM | Stable | [`@scrape-rs/wasm`](https://npmjs.com/package/@scrape-rs/wasm) |
+| Node.js 18+ | Stable | [`@fast-scrape/node`](https://npmjs.com/package/@fast-scrape/node) |
+| WASM | Stable | [`@fast-scrape/wasm`](https://npmjs.com/package/@fast-scrape/wasm) |
 
 ## License
 
