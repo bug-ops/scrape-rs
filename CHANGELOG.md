@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-05-26
+
+### Dependencies
+
+- Bump `selectors` 0.36 → 0.38.0 and `cssparser` 0.36 → 0.37.0
+- Bump `lol_html` 2.7.2 → 2.9.0
+- Bump `napi` 3.8.5 → 3.9.0
+- Bump `napi-derive` 3.5.4 → 3.5.6
+- Bump `napi-build` 2.3.1 → 2.3.2
+- Bump `serde_json` 1.0.149 → 1.0.150
+- Bump `assert_cmd` 2.2.1 → 2.2.2
+- Bump `@biomejs/biome` (Node.js and WASM packages)
+
 ## [0.2.6] - 2026-04-21
 
 ### Dependencies
@@ -271,7 +284,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/bug-ops/scrape-rs/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/bug-ops/scrape-rs/compare/v0.2.3...v0.2.4
