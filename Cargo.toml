@@ -33,7 +33,7 @@ napi-build = "2"
 napi-derive = "3"
 precomputed-hash = "0.1"
 predicates = "3.1"
-pyo3 = "0.28"
+pyo3 = "0.29"
 rayon = "1.12"
 scrape-cli = { path = "crates/scrape-cli", version = "0.2.7" }
 scrape-core = { path = "crates/scrape-core", default-features = false, version = "0.2.7" }
