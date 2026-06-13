@@ -14,14 +14,14 @@ scrape-rs is designed to be **10-50x faster** than popular HTML parsing librarie
 - **Spec-Compliant**: Full HTML5 parsing with comprehensive CSS selector support
 - **Modern**: Support for streaming parsing, compiled selectors, and parallel processing
 
-### Performance Highlights
+### Performance
 
-| Operation | BeautifulSoup | Cheerio | scrape-rs | Speedup |
-|-----------|---------------|---------|-----------|---------|
-| Parse 1KB HTML | 0.23ms | 0.18ms | **0.024ms** | 9.7-7.5x |
-| Parse 100KB HTML | 18ms | 12ms | **1.8ms** | 10-6.7x |
-| CSS selector query | 0.80ms | 0.12ms | **0.006ms** | 133-20x |
-| Extract all links | 3.2ms | 0.85ms | **0.18ms** | 17.8-4.7x |
+| Operation | BeautifulSoup4 | Cheerio | scrape-rs | Speedup |
+|-----------|----------------|---------|-----------|---------|
+| Parse 1KB HTML | 0.23 ms | 0.42 ms | **11 µs** | 20-38x |
+| Parse 100KB HTML | 31.4 ms | 64.8 ms | **2.96 ms** | 9.5-22x |
+| Parse 1MB HTML | 1,247 ms | 2,100 ms | **15.5 ms** | 66-135x |
+| find(".class") | 797 µs | 422 µs | **20 ns** | 40,000x |
 
 ## Quick Example
 

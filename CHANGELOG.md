@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-06-13
+
+### Dependencies
+
+- Bump `pyo3` 0.28.3 → 0.29.0
+- Bump `memchr` 2.8.0 → 2.8.1 → 2.8.2
+- Bump `napi` 3.9.0 → 3.9.1, `napi-sys` 3.2.1 → 3.2.2
+- Bump `wasm-bindgen` 0.2.118 → 0.2.125 (and related crates: `wasm-bindgen-futures`, `wasm-bindgen-test`, `web-sys`, `js-sys`)
+- Bump `rustls` 0.23.38 → 0.23.40, `rustls-pki-types` 1.14.0 → 1.14.1
+- Bump `zerocopy` 0.8.48 → 0.8.52, `zeroize` 1.8.2 → 1.9.0
+- Bump `bitflags` 2.11.1 → 2.13.0, `hashbrown` 0.17.0 → 0.17.1
+- Bump `regex` 1.12.3 → 1.12.4, `regex-syntax` 0.8.10 → 0.8.11
+- Bump `shlex` 1.3.0 → 2.0.1, `smallvec` 1.15.1 → 1.15.2
+- Bump misc transitive deps: `autocfg`, `bumpalo`, `cc`, `ctor`, `either`, `http`, `libc`, `log`, `siphasher`, `unicode-segmentation`, `wasip2`
+- Bump `@biomejs/biome` (Node.js and WASM packages)
+- Bump `@emnapi/core` and `@emnapi/runtime` (Node.js package)
+- Bump `codecov/codecov-action` CI action 6 → 7
+- Bump Python dev deps: `maturin` 1.13.1 → 1.14.0, `ruff` 0.15.11 → 0.15.17, `packaging` 26.1 → 26.2
+
 ## [0.2.7] - 2026-05-26
 
 ### Dependencies
@@ -284,7 +303,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/bug-ops/scrape-rs/compare/v0.2.4...v0.2.5
