@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-06-13
+
+### Dependencies
+
+- Bump `pyo3` 0.28.3 → 0.29.0
+- Bump `memchr` 2.8.0 → 2.8.1
+- Bump `@biomejs/biome` (Node.js and WASM packages)
+- Bump `@emnapi/core` and `@emnapi/runtime` (Node.js package)
+- Bump `codecov/codecov-action` CI action 6 → 7
+
 ## [0.2.7] - 2026-05-26
 
 ### Dependencies
@@ -284,7 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/bug-ops/scrape-rs/compare/v0.2.4...v0.2.5
