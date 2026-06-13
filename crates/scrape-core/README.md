@@ -63,6 +63,9 @@ scrape-core = { version = "0.2", features = ["simd", "parallel"] }
 |---------|-------------|---------|
 | `simd` | SIMD-accelerated byte scanning (SSE4.2, AVX2, NEON, WASM SIMD128) | No |
 | `parallel` | Parallel batch processing via Rayon | No |
+| `streaming` | Streaming parser with O(1) memory via lol_html | No |
+| `mmap` | Memory-mapped file support for zero-copy parsing | No |
+| `full` | Enable all features | No |
 
 > [!TIP]
 > Start with default features for fastest compile times. Add `simd` for production workloads.

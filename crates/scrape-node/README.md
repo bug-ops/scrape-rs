@@ -121,7 +121,7 @@ Compared to Cheerio (the popular Node.js choice):
 
 | Test | @fast-scrape/node | Cheerio | Speedup |
 |------|-------------------|---------|---------|
-| Parse 100KB | 0.28 ms | 64.8 ms | **228x** |
+| Parse 100KB | 2.88 ms | 64.8 ms | **22x** |
 | find(".item") | 45 ns | 422 µs | **9,333x** |
 | select 5 levels | 0.89 µs | 4.4 µs | **4,940x** |
 | Memory (100MB) | 165 MB | 1,800 MB | **11x** |
