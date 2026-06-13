@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `@biomejs/biome` (Node.js and WASM packages)
 - Bump `@emnapi/core` and `@emnapi/runtime` (Node.js package)
 - Bump `codecov/codecov-action` CI action 6 → 7
+- Bump Python dev deps: `maturin` 1.13.1 → 1.14.0, `ruff` 0.15.11 → 0.15.17, `packaging` 26.1 → 26.2
 
 ## [0.2.7] - 2026-05-26
 
