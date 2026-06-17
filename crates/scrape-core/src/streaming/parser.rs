@@ -296,17 +296,16 @@ impl StreamingSoup<state::Processing> {
         }
 
         // Build lol_html settings
-        let settings: lol_html::Settings<'_, '_, lol_html::LocalHandlerTypes> =
-            lol_html::Settings {
-                element_content_handlers: element_handlers,
-                document_content_handlers: Vec::new(),
-                encoding: AsciiCompatibleEncoding::new(encoding_rs::UTF_8)
-                    .expect("UTF-8 is always ASCII-compatible"),
-                memory_settings: lol_html::MemorySettings::default(),
-                strict: self.inner.config.strict_mode,
-                enable_esi_tags: false,
-                adjust_charset_on_meta_tag: true,
-            };
+        let settings = element_handlers.into_iter().fold(
+            lol_html::Settings::new()
+                .with_encoding(
+                    AsciiCompatibleEncoding::new(encoding_rs::UTF_8)
+                        .expect("UTF-8 is always ASCII-compatible"),
+                )
+                .with_strict(self.inner.config.strict_mode)
+                .with_adjust_charset_on_meta_tag(true),
+            lol_html::Settings::append_element_content_handler,
+        );
 
         // Create output sink
         let mut output = Vec::new();
