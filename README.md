@@ -60,12 +60,12 @@ for (const el of soup.select("div.content")) {
 ```rust
 use scrape_core::Soup;
 
-let soup = Soup::new("<html><body><div class='content'>Hello</div></body></html>");
+let soup = Soup::parse("<html><body><div class='content'>Hello</div></body></html>");
 
-let div = soup.find("div").unwrap();
+let div = soup.find("div").unwrap().unwrap();
 println!("{}", div.text());  // Hello
 
-for el in soup.select("div.content") {
+for el in soup.select("div.content").unwrap() {
     println!("{}", el.inner_html());
 }
 ```

@@ -148,6 +148,48 @@ scrape --no-filename 'h1' *.html
 
 </details>
 
+<details>
+<summary><strong>Fetch from URL</strong></summary>
+
+```bash
+# Fetch and extract directly from a URL
+scrape -u https://example.com 'title'
+
+# Set a custom request timeout (seconds)
+scrape -u https://example.com --timeout 10 'h1'
+```
+
+</details>
+
+<details>
+<summary><strong>Explain a selector</strong></summary>
+
+```bash
+scrape --explain 'div.content > p:nth-child(2)'
+# Output: Selector: div.content > p:nth-child(2)
+#         Specificity: (0, 1, 2)
+#         Description: Elements matching a child selector
+#
+#         Optimization hints:
+#           - Consider caching this compiled selector for reuse
+```
+
+> [!TIP]
+> Use `--explain` to debug selector specificity and get optimization hints before running it against real data.
+
+</details>
+
+<details>
+<summary><strong>Interactive REPL</strong></summary>
+
+```bash
+scrape -i
+# scrape-rs interactive mode
+# Commands: :load <file>, :url <url>, :explain <selector>, :history, :help, :quit
+```
+
+</details>
+
 ## Options
 
 | Option | Short | Description |
@@ -163,6 +205,13 @@ scrape --no-filename 'h1' *.html
 | `--quiet` | `-q` | Suppress error messages |
 | `--with-filename` | `-H` | Always show filename prefix |
 | `--no-filename` | | Never show filename prefix |
+| `--url URL` | `-u` | Fetch HTML from a URL instead of a file |
+| `--timeout SECONDS` | | Request timeout for URL fetch (default: 30) |
+| `--interactive` | `-i` | Start interactive REPL mode |
+| `--explain` | | Explain selector specificity and optimization hints |
+
+> [!NOTE]
+> `--url` and `--timeout` require the `url` feature, which is enabled by default.
 
 ## Performance
 

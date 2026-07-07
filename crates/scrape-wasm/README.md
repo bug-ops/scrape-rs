@@ -109,7 +109,7 @@ import init, { Soup, Tag } from '@fast-scrape/wasm';
 await init();
 
 function extractLinks(soup: Soup): string[] {
-    return soup.select("a[href]").map(a => a.getAttribute("href") ?? "");
+    return soup.select("a[href]").map(a => a.attr("href") ?? "");
 }
 ```
 

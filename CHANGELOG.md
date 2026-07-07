@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-07-07
+
+### Fixed
+
+- Bump `crossbeam-epoch` 0.9.18 → 0.9.20 (RUSTSEC-2026-0204: invalid pointer dereference in
+  `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid)
+- Bump `anyhow` 1.0.102 → 1.0.103 (RUSTSEC: undefined behavior in `downcast_mut`)
+- Bump `memmap2` 0.9.10 → 0.9.11 (RUSTSEC-2026-0186)
+
+### Dependencies
+
+- Bump `lol_html` 2.9.0 → 3.0.0
+- Bump `selectors` 0.38.0 → 0.39.0
+- Bump `napi` 3.9.1 → 3.10.3, `napi-derive` 3.5.6 → 3.5.9 (across several rust-minor group updates)
+- Bump `@napi-rs/cli` 3.6.2 → 3.7.2
+- Bump `@emnapi/core` 1.11.0 → 1.11.2, `@emnapi/runtime` 1.11.0 → 1.11.2 (Node.js package)
+- Bump `@biomejs/biome` 2.4.16 → 2.5.2 (Node.js and WASM packages)
+- Bump CI actions: `actions/checkout` 6 → 7, `actions/cache` 5 → 6,
+  `lewagon/wait-on-check-action` 1.7.0 → 1.8.1
+
 ## [0.2.8] - 2026-06-13
 
 ### Dependencies
@@ -303,7 +323,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.9...HEAD
+[0.2.9]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/bug-ops/scrape-rs/compare/v0.2.5...v0.2.6

@@ -82,11 +82,11 @@ href = element.get("href")   # Get attribute
 <summary><strong>Batch processing</strong></summary>
 
 ```python
-from scrape_rs import Soup
+from scrape_rs import parse_batch
 
 # Process multiple documents in parallel
 documents = [html1, html2, html3]
-soups = Soup.parse_batch(documents)
+soups = parse_batch(documents)
 
 for soup in soups:
     print(soup.find("title").text)

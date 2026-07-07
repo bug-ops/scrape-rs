@@ -35,7 +35,7 @@ pub struct Args {
     /// Named selector extraction (can be repeated).
     ///
     /// Format: NAME=SELECTOR
-    /// Example: -s title='h1' -s links='a[href]'
+    /// Example: -s title='h1' -s links='a\[href\]'
     #[arg(short = 's', long = "select", value_name = "NAME=SELECTOR")]
     pub selects: Vec<String>,
 

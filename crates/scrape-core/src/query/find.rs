@@ -20,7 +20,8 @@ use crate::dom::{Document, NodeId};
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+/// syntax is invalid.
 ///
 /// # Examples
 ///
@@ -59,7 +60,8 @@ pub fn find(doc: &Document, selector: &str) -> QueryResult<Option<NodeId>> {
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+/// syntax is invalid.
 ///
 /// # Examples
 ///
@@ -100,7 +102,8 @@ pub fn find_all(doc: &Document, selector: &str) -> QueryResult<Vec<NodeId>> {
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+/// syntax is invalid.
 ///
 /// # Examples
 ///
@@ -131,7 +134,8 @@ pub fn find_within(doc: &Document, scope: NodeId, selector: &str) -> QueryResult
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+/// syntax is invalid.
 pub fn find_all_within(doc: &Document, scope: NodeId, selector: &str) -> QueryResult<Vec<NodeId>> {
     let selectors = parse_selector(selector)?;
     Ok(find_all_within_with_selector(doc, scope, &selectors))
