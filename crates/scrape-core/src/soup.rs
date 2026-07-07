@@ -277,7 +277,8 @@ impl Soup {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+    /// syntax is invalid.
     ///
     /// # Examples
     ///
@@ -296,7 +297,8 @@ impl Soup {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+    /// syntax is invalid.
     ///
     /// # Examples
     ///
@@ -319,7 +321,8 @@ impl Soup {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+    /// syntax is invalid.
     ///
     /// # Examples
     ///
@@ -377,7 +380,8 @@ impl Soup {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+    /// syntax is invalid.
     ///
     /// # Examples
     ///
@@ -398,7 +402,8 @@ impl Soup {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector
+    /// syntax is invalid.
     ///
     /// # Examples
     ///
