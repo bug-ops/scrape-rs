@@ -443,7 +443,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///
@@ -582,7 +582,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///
@@ -603,7 +603,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///
@@ -627,7 +627,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     pub fn select(&self, selector: &str) -> QueryResult<Vec<Tag<'a>>> {
         self.find_all(selector)
     }
@@ -680,7 +680,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///
@@ -703,7 +703,7 @@ impl<'a> Tag<'a> {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///

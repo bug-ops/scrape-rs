@@ -10,7 +10,7 @@ use crate::dom::{Document, NodeId, NodeKind};
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
 ///
 /// # Examples
 ///
@@ -32,7 +32,7 @@ pub fn select_text(doc: &Document, selector: &str) -> QueryResult<Vec<String>> {
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
 pub fn select_text_within(
     doc: &Document,
     root: NodeId,
@@ -51,7 +51,7 @@ pub fn select_text_within(
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
 ///
 /// # Examples
 ///
@@ -73,7 +73,7 @@ pub fn select_attr(doc: &Document, selector: &str, attr: &str) -> QueryResult<Ve
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
 pub fn select_attr_within(
     doc: &Document,
     root: NodeId,

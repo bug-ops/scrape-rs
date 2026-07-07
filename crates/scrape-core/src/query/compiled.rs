@@ -31,7 +31,7 @@ impl CompiledSelector {
     ///
     /// # Errors
     ///
-    /// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+    /// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
     ///
     /// # Examples
     ///
@@ -74,7 +74,7 @@ impl CompiledSelector {
 ///
 /// # Errors
 ///
-/// Returns [`QueryError::InvalidSelector`] if the selector syntax is invalid.
+/// Returns [`QueryError::InvalidSelector`](crate::QueryError::InvalidSelector) if the selector syntax is invalid.
 ///
 /// # Examples
 ///
