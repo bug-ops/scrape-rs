@@ -37,15 +37,15 @@ let html = r#"
     </html>
 "#;
 
-let soup = Soup::new(html);
+let soup = Soup::parse(html);
 
 // Find first element by tag
-if let Some(div) = soup.find("div") {
+if let Ok(Some(div)) = soup.find("div") {
     println!("Text: {}", div.text());
 }
 
 // CSS selectors
-for el in soup.select("div.content") {
+for el in soup.select("div.content").unwrap() {
     println!("{}", el.inner_html());
 }
 ```

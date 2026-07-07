@@ -70,7 +70,7 @@ const element = soup.find("a");
 
 const text = element.text;                    // Get text content
 const html = element.innerHTML;               // Get inner HTML
-const href = element.getAttribute("href");    // Get attribute
+const href = element.attr("href");            // Get attribute
 ```
 
 </details>
@@ -79,11 +79,11 @@ const href = element.getAttribute("href");    // Get attribute
 <summary><strong>Batch processing</strong></summary>
 
 ```typescript
-import { Soup } from '@fast-scrape/node';
+import { parseBatch } from '@fast-scrape/node';
 
 // Process multiple documents in parallel
 const documents = [html1, html2, html3];
-const soups = Soup.parseBatch(documents);
+const soups = parseBatch(documents);
 
 for (const soup of soups) {
     console.log(soup.find("title")?.text);
@@ -104,7 +104,7 @@ Full TypeScript support with exported types:
 import { Soup, Tag, type SoupOptions } from '@fast-scrape/node';
 
 function extractLinks(soup: Soup): string[] {
-    return soup.select("a[href]").map(a => a.getAttribute("href") ?? "");
+    return soup.select("a[href]").map(a => a.attr("href") ?? "");
 }
 ```
 
