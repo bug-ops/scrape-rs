@@ -721,12 +721,9 @@ impl<S: DocumentState> Iterator for DescendantsIter<'_, S> {
     fn next(&mut self) -> Option<Self::Item> {
         if !self.started {
             self.started = true;
-            if let Some(first) = self.doc.first_child(self.root) {
-                self.stack.clear();
-                self.stack.push(first);
-            } else {
-                return None;
-            }
+            let first = self.doc.first_child(self.root)?;
+            self.stack.clear();
+            self.stack.push(first);
         }
 
         let current = self.stack.pop()?;

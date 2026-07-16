@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Rewrite `if let`/`else` blocks in `DescendantsIter::next`, `find_close_tag`, and
+  `find_self_close` using the `?` operator (`clippy::question_mark`, newly enforced
+  by an updated Rust toolchain)
+
 ## [0.2.9] - 2026-07-07
 
 ### Fixed
