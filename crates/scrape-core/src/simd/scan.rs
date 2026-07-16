@@ -117,15 +117,12 @@ pub fn find_attr_delimiter(bytes: &[u8]) -> Option<usize> {
 pub fn find_close_tag(bytes: &[u8]) -> Option<usize> {
     let mut start = 0;
     while start < bytes.len() {
-        if let Some(pos) = memchr(b'<', &bytes[start..]) {
-            let absolute_pos = start + pos;
-            if absolute_pos + 1 < bytes.len() && bytes[absolute_pos + 1] == b'/' {
-                return Some(absolute_pos);
-            }
-            start = absolute_pos + 1;
-        } else {
-            return None;
+        let pos = memchr(b'<', &bytes[start..])?;
+        let absolute_pos = start + pos;
+        if absolute_pos + 1 < bytes.len() && bytes[absolute_pos + 1] == b'/' {
+            return Some(absolute_pos);
         }
+        start = absolute_pos + 1;
     }
     None
 }
@@ -148,15 +145,12 @@ pub fn find_close_tag(bytes: &[u8]) -> Option<usize> {
 pub fn find_self_close(bytes: &[u8]) -> Option<usize> {
     let mut start = 0;
     while start < bytes.len() {
-        if let Some(pos) = memchr(b'/', &bytes[start..]) {
-            let absolute_pos = start + pos;
-            if absolute_pos + 1 < bytes.len() && bytes[absolute_pos + 1] == b'>' {
-                return Some(absolute_pos);
-            }
-            start = absolute_pos + 1;
-        } else {
-            return None;
+        let pos = memchr(b'/', &bytes[start..])?;
+        let absolute_pos = start + pos;
+        if absolute_pos + 1 < bytes.len() && bytes[absolute_pos + 1] == b'>' {
+            return Some(absolute_pos);
         }
+        start = absolute_pos + 1;
     }
     None
 }
