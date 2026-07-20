@@ -242,7 +242,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: python-${{ matrix.os }}-${{ matrix.python-version }}
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v7
