@@ -74,7 +74,7 @@ if product:
 ### Node.js
 
 ```typescript
-import { Soup } from '@scrape-rs/scrape';
+import { Soup } from '@fast-scrape/node';
 
 const html = `
 <html>
@@ -324,7 +324,7 @@ def extract_title(html):
 ### Node.js
 
 ```typescript
-import { Soup, ScrapeError } from '@scrape-rs/scrape';
+import { Soup } from '@fast-scrape/node';
 
 function extractTitle(html: string): string | null {
     try {
