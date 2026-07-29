@@ -71,9 +71,9 @@ for el in soup.select("div.content > p"):
 ```python
 element = soup.find("a")
 
-text = element.text          # Get text content
-html = element.inner_html    # Get inner HTML
-href = element.get("href")   # Get attribute
+text = element.text  # Get text content
+html = element.inner_html  # Get inner HTML
+href = element.get("href")  # Get attribute
 ```
 
 </details>
@@ -104,6 +104,7 @@ Full IDE support with type stubs:
 
 ```python
 from scrape_rs import Soup, Tag
+
 
 def extract_links(soup: Soup) -> list[str]:
     return [a.get("href") for a in soup.select("a[href]")]
