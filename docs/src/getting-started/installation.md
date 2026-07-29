@@ -67,19 +67,19 @@ pip install fast-scrape
 Install via npm:
 
 ```bash
-npm install @scrape-rs/scrape
+npm install @fast-scrape/node
 ```
 
 Or with pnpm:
 
 ```bash
-pnpm add @scrape-rs/scrape
+pnpm add @fast-scrape/node
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @scrape-rs/scrape
+yarn add @fast-scrape/node
 ```
 
 ### Requirements
@@ -180,7 +180,7 @@ python -c "from scrape_rs import Soup; print(Soup('<h1>Test</h1>').find('h1').te
 ### Node.js
 
 ```bash
-node -e "const {Soup} = require('@scrape-rs/scrape'); console.log(new Soup('<h1>Test</h1>').find('h1').text)"
+node -e "const {Soup} = require('@fast-scrape/node'); console.log(new Soup('<h1>Test</h1>').find('h1').text)"
 ```
 
 ### WASM

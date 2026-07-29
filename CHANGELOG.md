@@ -7,11 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-07-29
+
 ### Fixed
 
 - Rewrite `if let`/`else` blocks in `DescendantsIter::next`, `find_close_tag`, and
   `find_self_close` using the `?` operator (`clippy::question_mark`, newly enforced
   by an updated Rust toolchain)
+- Correct Node.js package name in documentation (`@scrape-rs/scrape` → `@fast-scrape/node`)
+  in installation and quick-start guides
+
+### Dependencies
+
+- Bump `scraper` 0.26 → 0.27
+- Bump `napi` 3.10.3 → 3.12.0, `napi-derive` 3.5.9 → 3.6.1, `napi-build` 2.3.2 → 2.4.0
+  (across several rust-minor group updates)
+- Bump `clap` 4.6.1 → 4.6.4, `regex` 1.12.4 → 1.13.1, `serde` 1.0.228 → 1.0.229,
+  `serde_json` 1.0.150 → 1.0.151, `thiserror` 2.0.18 → 2.0.19, `syn` 2.0.118 → 3.0.3,
+  `anyhow` 1.0.103 → 1.0.104, `memchr` 2.8.2 → 2.8.3
+- Bump `@napi-rs/cli` 3.7.2 → 3.7.3, `@emnapi/core` 1.11.2 → 1.11.3,
+  `@emnapi/runtime` 1.11.2 → 1.11.3 (Node.js package)
+- Bump `@biomejs/biome` 2.5.2 → 2.5.6 (Node.js and WASM packages)
+- Bump CI actions: `actions/labeler` 6 → 7, `actions/setup-python` 6 → 7,
+  `actions/setup-node` 6 → 7, `lewagon/wait-on-check-action` 1.8.1 → 1.9.0
 
 ## [0.2.9] - 2026-07-07
 
@@ -329,7 +347,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.9...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.10...HEAD
+[0.2.10]: https://github.com/bug-ops/scrape-rs/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/bug-ops/scrape-rs/compare/v0.2.6...v0.2.7
