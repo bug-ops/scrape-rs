@@ -84,7 +84,7 @@ yarn add @fast-scrape/node
 
 ### Requirements
 
-- Node.js 18 or later
+- Node.js 20 or later
 - Supported platforms: Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x86_64)
 
 ### TypeScript Support

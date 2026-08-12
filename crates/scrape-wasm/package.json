@@ -1,6 +1,6 @@
 {
   "name": "@scrape-rs/wasm",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "High-performance HTML parsing library for browsers (WASM)",
   "type": "module",
   "main": "pkg/scrape_wasm.js",
@@ -52,9 +52,9 @@
   ],
   "license": "MIT OR Apache-2.0",
   "devDependencies": {
-    "@biomejs/biome": "^2.5.7"
+    "@biomejs/biome": "^2.5.8"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
