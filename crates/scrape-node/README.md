@@ -112,7 +112,7 @@ function extractLinks(soup: Soup): string[] {
 
 ## Requirements
 
-- Node.js >= 18
+- Node.js >= 20
 - Platforms: macOS (arm64, x64), Linux (x64, arm64, musl), Windows (x64)
 
 ## Performance

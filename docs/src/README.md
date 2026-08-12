@@ -99,7 +99,7 @@ console.log(`${name}: ${price}`);
 |----------|--------|---------|
 | Rust | Stable | [`scrape-core`](https://crates.io/crates/scrape-core) |
 | Python 3.10+ | Stable | [`fast-scrape`](https://pypi.org/project/fast-scrape) |
-| Node.js 18+ | Stable | [`@fast-scrape/node`](https://npmjs.com/package/@fast-scrape/node) |
+| Node.js 20+ | Stable | [`@fast-scrape/node`](https://npmjs.com/package/@fast-scrape/node) |
 | WASM | Stable | [`@fast-scrape/wasm`](https://npmjs.com/package/@fast-scrape/wasm) |
 
 ## License

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-08-12
+
+### Changed
+
+- Raise minimum supported Node.js version from 18 to 20 for `@fast-scrape/node` and
+  `@fast-scrape/wasm` packages
+
+### Dependencies
+
+- Bump `selectors` 0.39.0 → 0.40.0
+- Bump `ureq` 3.3 → 3.4
+- Bump `clap` 4.6.4 → 4.6.6, `napi-derive` 3.6.1 → 3.6.2, `pyo3` 0.29.0 → 0.29.2
+  (rust-minor group)
+- Bump `lol_html` 3.0.0 → 3.0.1 (rust-minor group)
+- Bump `@napi-rs/cli` 3.8.0 → 3.8.6, `@octokit/core` 7.0.6 → 7.0.7 (Node.js package)
+- Bump `@biomejs/biome` 2.5.6 → 2.5.8 (Node.js and WASM packages)
+- Bump `ruff` 0.16.0 → 0.16.2, `packaging` 26.2 → 26.3 (Python dev dependencies)
+- Bump CI action `taiki-e/install-action` 2 → 2.85.10
+
 ## [0.2.10] - 2026-07-29
 
 ### Fixed
@@ -347,7 +366,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.10...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.11...HEAD
+[0.2.11]: https://github.com/bug-ops/scrape-rs/compare/v0.2.10...v0.2.11
 [0.2.10]: https://github.com/bug-ops/scrape-rs/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/bug-ops/scrape-rs/compare/v0.2.7...v0.2.8

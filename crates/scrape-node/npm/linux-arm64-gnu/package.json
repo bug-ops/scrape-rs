@@ -1,6 +1,6 @@
 {
   "name": "@fast-scrape/node-linux-arm64-gnu",
-  "version": "0.2.7",
+  "version": "0.2.11",
   "description": "fast-scrape native binding for Linux ARM64 (glibc)",
   "os": [
     "linux"
@@ -32,6 +32,6 @@
   ],
   "license": "MIT OR Apache-2.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
