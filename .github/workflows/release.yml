@@ -476,7 +476,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install wasm-pack
-        uses: taiki-e/install-action@v2.86.5
+        uses: taiki-e/install-action@v2.87.0
         with:
           tool: wasm-pack
 
@@ -527,7 +527,7 @@ jobs:
           merge-multiple: true
 
       - name: Install git-cliff
-        uses: taiki-e/install-action@v2.86.5
+        uses: taiki-e/install-action@v2.87.0
         with:
           tool: git-cliff
 

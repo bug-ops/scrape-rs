@@ -70,7 +70,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - run: cargo make fmt-check
@@ -87,7 +87,7 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - run: cargo make clippy
@@ -106,7 +106,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: clippy-all-features
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - run: cargo make clippy-all-features
@@ -119,7 +119,7 @@ jobs:
     if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
     steps:
       - uses: actions/checkout@v7
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-deny,cargo-make
       - run: cargo make deny
@@ -143,7 +143,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: msrv
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - name: Check workspace (default features)
@@ -175,7 +175,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: test-${{ matrix.os }}
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: nextest,cargo-make
       - run: cargo make test
@@ -203,7 +203,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: test-all-features-${{ matrix.os }}
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: nextest,cargo-make
       - run: cargo make test-all-features
@@ -246,7 +246,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v7
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - name: Build and test
@@ -290,7 +290,7 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - name: Build and test
@@ -334,7 +334,7 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-make
       - name: Install wasm-pack
@@ -376,7 +376,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: coverage
-      - uses: taiki-e/install-action@v2.86.5
+      - uses: taiki-e/install-action@v2.87.0
         with:
           tool: cargo-llvm-cov
       - name: Generate coverage
