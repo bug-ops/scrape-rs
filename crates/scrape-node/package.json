@@ -1,6 +1,6 @@
 {
   "name": "@fast-scrape/node",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "High-performance HTML parsing library for Node.js",
   "main": "index.js",
   "module": "index.mjs",
@@ -61,22 +61,22 @@
   ],
   "license": "MIT OR Apache-2.0",
   "devDependencies": {
-    "@biomejs/biome": "^2.5.8",
-    "@napi-rs/cli": "^3.8.6"
+    "@biomejs/biome": "^2.5.11",
+    "@napi-rs/cli": "^3.9.0"
   },
   "optionalDependencies": {
-    "@fast-scrape/node-darwin-arm64": "0.2.11",
-    "@fast-scrape/node-darwin-x64": "0.2.11",
-    "@fast-scrape/node-linux-arm64-gnu": "0.2.11",
-    "@fast-scrape/node-linux-arm64-musl": "0.2.11",
-    "@fast-scrape/node-linux-x64-gnu": "0.2.11",
-    "@fast-scrape/node-linux-x64-musl": "0.2.11",
-    "@fast-scrape/node-win32-x64-msvc": "0.2.11"
+    "@fast-scrape/node-darwin-arm64": "0.2.12",
+    "@fast-scrape/node-darwin-x64": "0.2.12",
+    "@fast-scrape/node-linux-arm64-gnu": "0.2.12",
+    "@fast-scrape/node-linux-arm64-musl": "0.2.12",
+    "@fast-scrape/node-linux-x64-gnu": "0.2.12",
+    "@fast-scrape/node-linux-x64-musl": "0.2.12",
+    "@fast-scrape/node-win32-x64-msvc": "0.2.12"
   },
   "dependencies": {
     "@emnapi/core": "~1.11.3",
     "@emnapi/runtime": "1.11.3",
-    "@octokit/core": "~7.0.7",
+    "@octokit/core": "~7.0.8",
     "typanion": "^3.14.0"
   }
 }
