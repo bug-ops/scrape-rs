@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-09-02
+
+### Dependencies
+
+- Bump `napi` 3.12.1 → 3.12.2 (rust-minor group)
+- Bump `taiki-e/install-action` 2.85.10 → 2.87.0 (CI action)
+- Bump `lewagon/wait-on-check-action` 1.9.0 → 1.9.1 (CI action)
+- Bump `@biomejs/biome` 2.5.8 → 2.5.11 (Node.js and WASM packages)
+
 ## [0.2.11] - 2026-08-12
 
 ### Changed
@@ -366,7 +375,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.11...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.12...HEAD
+[0.2.12]: https://github.com/bug-ops/scrape-rs/compare/v0.2.11...v0.2.12
 [0.2.11]: https://github.com/bug-ops/scrape-rs/compare/v0.2.10...v0.2.11
 [0.2.10]: https://github.com/bug-ops/scrape-rs/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/bug-ops/scrape-rs/compare/v0.2.8...v0.2.9
