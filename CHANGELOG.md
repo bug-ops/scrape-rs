@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dependencies
+
+- Bump `html5ever` 0.39.0 → 0.40.1 and `markup5ever` 0.39.0 → 0.40.0 together to keep
+  `string_cache` versions aligned in the dependency graph
+
 ## [0.2.12] - 2026-09-02
 
 ### Dependencies
