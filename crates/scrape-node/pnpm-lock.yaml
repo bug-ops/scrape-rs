@@ -26,7 +26,7 @@ importers:
         version: 2.5.13
       '@napi-rs/cli':
         specifier: ^3.9.0
-        version: 3.9.1(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
+        version: 3.10.4(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
     optionalDependencies:
       '@fast-scrape/node-darwin-arm64':
         specifier: 0.2.12
@@ -306,8 +306,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@napi-rs/cli@3.9.1':
-    resolution: {integrity: sha512-2DYBrM2j4n00L+O7fKAS38q19rVQK2HXz5RxSuJgFyZrd9TrdVQFmHOfqvqqsRIRBTZmqiMqBd/yzn4X1a23DQ==}
+  '@napi-rs/cli@3.10.4':
+    resolution: {integrity: sha512-7yvXpu/m4p1Re1/DViAooSYAyivYEhqDrjuq66a6haXLEAKrZSzndG7B850g1irngI1pAdZS5xL4tsu0xQ8P9Q==}
     engines: {node: ^20.17.0 || ^22.13.0 || >= 23.5.0}
     hasBin: true
     peerDependencies:
@@ -791,8 +791,8 @@ packages:
     resolution: {integrity: sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  obug@2.2.1:
-    resolution: {integrity: sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q==}
+  obug@3.0.0:
+    resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
 
   safer-buffer@2.1.2:
@@ -1012,7 +1012,7 @@ snapshots:
 
   '@inquirer/type@4.1.1': {}
 
-  '@napi-rs/cli@3.9.1(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)':
+  '@napi-rs/cli@3.10.4(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)':
     dependencies:
       '@inquirer/prompts': 8.7.2
       '@napi-rs/cross-toolchain': 1.0.3
@@ -1022,7 +1022,7 @@ snapshots:
       colorette: 2.0.20
       es-toolkit: 1.52.0
       js-yaml: 5.4.1
-      obug: 2.2.1
+      obug: 3.0.0
       semver: 7.8.5
       typanion: 3.14.0
       typescript: 6.0.3
@@ -1390,7 +1390,7 @@ snapshots:
 
   mute-stream@3.0.0: {}
 
-  obug@2.2.1: {}
+  obug@3.0.0: {}
 
   safer-buffer@2.1.2: {}
 
