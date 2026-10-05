@@ -154,8 +154,6 @@ pub enum NonTSPseudoClass {
 }
 
 impl selectors::parser::NonTSPseudoClass for NonTSPseudoClass {
-    type Impl = ScrapeSelector;
-
     fn is_active_or_hover(&self) -> bool {
         false
     }
@@ -181,9 +179,7 @@ impl ToCss for NonTSPseudoClass {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PseudoElement {}
 
-impl selectors::parser::PseudoElement for PseudoElement {
-    type Impl = ScrapeSelector;
-}
+impl selectors::parser::PseudoElement for PseudoElement {}
 
 impl ToCss for PseudoElement {
     fn to_css<W>(&self, _dest: &mut W) -> fmt::Result
@@ -213,22 +209,18 @@ struct SelectorParser;
 
 impl<'i> Parser<'i> for SelectorParser {
     type Impl = ScrapeSelector;
-    type Error = SelectorParseErrorKind<'i>;
+    type Error = SelectorParseErrorKind;
 
     fn parse_non_ts_pseudo_class(
         &self,
-        location: cssparser::SourceLocation,
         name: cssparser::CowRcStr<'i>,
-    ) -> Result<NonTSPseudoClass, cssparser::ParseError<'i, Self::Error>> {
+    ) -> Result<NonTSPseudoClass, cssparser::ParseError<Self::Error>> {
         match name.as_ref() {
             "link" => Ok(NonTSPseudoClass::Link),
             "any-link" => Ok(NonTSPseudoClass::AnyLink),
-            _ => Err(cssparser::ParseError {
-                kind: cssparser::ParseErrorKind::Custom(
-                    SelectorParseErrorKind::UnsupportedPseudoClassOrElement(name),
-                ),
-                location,
-            }),
+            _ => Err(cssparser::ParseError::custom(
+                SelectorParseErrorKind::UnsupportedPseudoClassOrElement,
+            )),
         }
     }
 }
@@ -247,15 +239,15 @@ impl<'i> Parser<'i> for SelectorParser {
 /// let selectors = parse_selector("div.container > span").unwrap();
 /// ```
 pub fn parse_selector(selector: &str) -> QueryResult<SelectorList<ScrapeSelector>> {
-    let mut parser_input = cssparser::ParserInput::new(selector);
-    let mut parser = cssparser::Parser::new(&mut parser_input);
+    let mut parser = cssparser::Parser::new(selector);
 
-    SelectorList::parse(&SelectorParser, &mut parser, ParseRelative::No).map_err(|e| {
+    SelectorList::parse(&SelectorParser, &mut parser, ParseRelative::No).map_err(|_| {
         // Sanitize error messages to expose only position info, avoiding potential
         // information disclosure from internal parser state in public error messages.
+        let location = parser.current_source_location();
         QueryError::invalid_selector(format!(
             "invalid selector at line {}, column {}",
-            e.location.line, e.location.column
+            location.line, location.column
         ))
     })
 }
