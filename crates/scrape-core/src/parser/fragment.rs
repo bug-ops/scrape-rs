@@ -71,7 +71,7 @@ mod tests {
         // With multiple roots we use the body element as container
         if let crate::dom::NodeKind::Element { name, .. } = &node.kind {
             // The body element is the container in this implementation
-            assert!(!name.is_empty());
+            assert_ne!(name.len(), 0);
         } else {
             panic!("Expected element node");
         }
