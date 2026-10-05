@@ -642,7 +642,7 @@ mod tests {
     fn test_soup_empty_to_html() {
         let soup = Soup::parse("");
         let html = soup.to_html();
-        assert!(html.is_empty());
+        assert_eq!(html.len(), 0);
     }
 
     #[test]

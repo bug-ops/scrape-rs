@@ -181,7 +181,7 @@ fn test_mismatched_tags() {
     let html = "<div><span></div></span>";
     let soup = Soup::parse(html);
     let divs = soup.find_all("div").unwrap();
-    assert!(!divs.is_empty());
+    assert_ne!(divs.len(), 0);
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn test_self_closing_tags_with_content() {
     let html = r#"<img src="test.jpg">Some content</img>"#;
     let soup = Soup::parse(html);
     let images = soup.find_all("img").unwrap();
-    assert!(!images.is_empty());
+    assert_ne!(images.len(), 0);
 }
 
 // Large document tests
@@ -266,7 +266,7 @@ fn test_explain_complex_selector() {
     let result = explain("#main > ul.nav li a[href]");
     assert!(result.is_ok());
     let explanation = result.unwrap();
-    assert!(!explanation.description.is_empty());
+    assert_ne!(explanation.description.len(), 0);
 }
 
 #[test]

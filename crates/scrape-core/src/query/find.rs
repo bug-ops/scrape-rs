@@ -401,7 +401,7 @@ mod tests {
     fn test_find_all_returns_empty_when_not_found() {
         let doc = parse_doc("<div>text</div>");
         let results = find_all(&doc, "span").unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -514,7 +514,7 @@ mod tests {
     fn test_find_all_empty_document() {
         let doc = Document::new();
         let results = find_all(&doc, "div").unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -604,7 +604,7 @@ mod tests {
         let doc = parse_doc("<div class='foo'>text</div>");
 
         let results = find_all(&doc, ".notfound").unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -651,7 +651,7 @@ mod tests {
         assert!(result.is_none());
 
         let results = find_all(&doc, ".test").unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -680,7 +680,7 @@ mod tests {
         let doc = parse_doc("<div class=''>Empty</div><div>No class</div>");
 
         let results = find_all(&doc, ".foo").unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]

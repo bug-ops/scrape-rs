@@ -515,7 +515,7 @@ mod tests {
         let filter = Filter::new().tag("div");
 
         let results = find_by_filter(&doc, &filter);
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]

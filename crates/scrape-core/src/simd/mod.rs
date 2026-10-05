@@ -112,6 +112,6 @@ mod tests {
     #[test]
     fn test_simd_impl_returns_string() {
         let impl_name = simd_impl();
-        assert!(!impl_name.is_empty());
+        assert_ne!(impl_name.len(), 0);
     }
 }

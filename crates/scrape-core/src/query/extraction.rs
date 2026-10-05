@@ -150,7 +150,7 @@ mod tests {
     fn test_select_text_no_matches() {
         let soup = Soup::parse("<div>text</div>");
         let texts = select_text(soup.document(), "span").unwrap();
-        assert!(texts.is_empty());
+        assert_eq!(texts.len(), 0);
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod tests {
     fn test_select_attr_no_matches() {
         let soup = Soup::parse("<div>text</div>");
         let hrefs = select_attr(soup.document(), "a", "href").unwrap();
-        assert!(hrefs.is_empty());
+        assert_eq!(hrefs.len(), 0);
     }
 
     #[test]
@@ -242,6 +242,6 @@ mod tests {
         let soup = Soup::parse("<span>  Hello  </span>");
         let texts = select_text(soup.document(), "span").unwrap();
         // Note: depends on whitespace handling in parser
-        assert!(!texts.is_empty());
+        assert_ne!(texts.len(), 0);
     }
 }
