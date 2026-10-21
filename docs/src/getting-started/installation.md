@@ -212,7 +212,7 @@ Create a test HTML file:
 
 ### Rust: Compilation Errors
 
-If you see compilation errors, ensure you're using Rust 1.75 or later:
+If you see compilation errors, ensure you're using Rust 1.88 or later:
 
 ```bash
 rustc --version
