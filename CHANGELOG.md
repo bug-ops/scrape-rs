@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.14] - 2026-10-21
+
+### Changed
+
+- Replace `is_empty` assertions flagged by clippy `assert_is_empty` in `scrape-core` tests (#226)
+
+### Dependencies
+
+- Bump `rustls` to 0.23.46, `rustls-webpki` to 0.103.16 and `webpki-roots` to 1.0.10 to fix security advisories (#233)
+- Bump `selectors` 0.40.0 → 0.41.0, `pyo3` 0.29.2 → 0.30.1, `serde_json` 1.0.151 → 1.0.154 (#224, #223, #232, #231)
+- Bump `napi` 3.12.7 → 3.14.2, `napi-build` 2.5.0 → 2.6.0, `napi-derive` 3.6.9 → 3.6.12 (#223, #227)
+- Bump `@napi-rs/cli` 3.10.5 → 3.10.8, `@biomejs/biome` 2.5.14 → 2.5.15, `@fast-scrape/node-win32-x64-msvc` 0.2.12 → 0.2.13 (Node.js and WASM packages) (#220, #221, #222, #228)
+- Bump `taiki-e/install-action` 2.87.20 → 2.87.29 (CI action) (#225, #229, #230)
+
 ## [0.2.13] - 2026-09-30
 
 ### Dependencies
@@ -382,7 +396,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-copy DOM navigation
 - WASM bundle under 500KB gzipped
 
-[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.13...HEAD
+[Unreleased]: https://github.com/bug-ops/scrape-rs/compare/v0.2.14...HEAD
+[0.2.14]: https://github.com/bug-ops/scrape-rs/compare/v0.2.13...v0.2.14
 [0.2.13]: https://github.com/bug-ops/scrape-rs/compare/v0.2.12...v0.2.13
 [0.2.12]: https://github.com/bug-ops/scrape-rs/compare/v0.2.11...v0.2.12
 [0.2.11]: https://github.com/bug-ops/scrape-rs/compare/v0.2.10...v0.2.11
