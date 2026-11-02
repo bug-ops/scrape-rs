@@ -26,7 +26,7 @@ importers:
         version: 2.6.4
       '@napi-rs/cli':
         specifier: ^3.9.0
-        version: 3.10.8(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
+        version: 3.10.9(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
     optionalDependencies:
       '@fast-scrape/node-darwin-arm64':
         specifier: 0.2.14
@@ -318,8 +318,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@napi-rs/cli@3.10.8':
-    resolution: {integrity: sha512-hg7m8VwECTIIHxNzajDG8QgtTOEVAKiIVLCLCW90Th6Z5R/ijWjh16iaQrRvXj4ve/S2fcXYo5cctCWJ8aVxIg==}
+  '@napi-rs/cli@3.10.9':
+    resolution: {integrity: sha512-RpzJrTDlSxUi2Deo+dh4bmDTKklAVe295aSQjZspwbZyUBG7twbXbiKskL2w/bL4kNg3DdkrwbI/iQwI9kgQaQ==}
     engines: {node: ^20.17.0 || ^22.13.0 || >= 23.5.0}
     hasBin: true
     peerDependencies:
@@ -1032,7 +1032,7 @@ snapshots:
 
   '@inquirer/type@4.1.1': {}
 
-  '@napi-rs/cli@3.10.8(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)':
+  '@napi-rs/cli@3.10.9(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)':
     dependencies:
       '@inquirer/prompts': 8.7.2
       '@napi-rs/cross-toolchain': 1.0.3
