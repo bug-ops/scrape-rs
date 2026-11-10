@@ -207,15 +207,15 @@ impl SelectorImpl for ScrapeSelector {
 /// Custom selector parser for our implementation.
 struct SelectorParser;
 
-impl<'i> Parser<'i> for SelectorParser {
+impl Parser<'_> for SelectorParser {
     type Impl = ScrapeSelector;
     type Error = SelectorParseErrorKind;
 
     fn parse_non_ts_pseudo_class(
         &self,
-        name: cssparser::CowRcStr<'i>,
+        name: &str,
     ) -> Result<NonTSPseudoClass, cssparser::ParseError<Self::Error>> {
-        match name.as_ref() {
+        match name {
             "link" => Ok(NonTSPseudoClass::Link),
             "any-link" => Ok(NonTSPseudoClass::AnyLink),
             _ => Err(cssparser::ParseError::custom(
@@ -602,7 +602,7 @@ pub fn matches_selector_with_caches(
     );
 
     selectors.slice().iter().any(|selector| {
-        selectors::matching::matches_selector(selector, 0, None, &element, &mut context)
+        selectors::matching::matches_selector(selector, 0, None, element, &mut context)
     })
 }
 

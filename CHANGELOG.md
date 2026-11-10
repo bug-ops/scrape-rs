@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dependencies
 
 - Bump `ureq` 3.4 → 3.5, `napi` 3.14.2 → 3.15.0, `lol_html` 3.0.1 → 3.0.2 and other Rust lockfile dependencies (#242)
+- Bump `selectors` 0.41 → 0.42 and adapt to the new `Parser` and `matches_selector` signatures (#251)
 
 ## [0.2.14] - 2026-10-21
 
