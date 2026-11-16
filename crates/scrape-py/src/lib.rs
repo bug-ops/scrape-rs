@@ -82,7 +82,8 @@ fn compile_selector(selector: &str) -> PyResult<PyCompiledSelector> {
 
 /// Python module definition.
 #[pymodule]
-fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+#[pyo3(name = "_core")]
+fn core_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySoupConfig>()?;
     m.add_class::<PySoup>()?;
     m.add_class::<PyTag>()?;
