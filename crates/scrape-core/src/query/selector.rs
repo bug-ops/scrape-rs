@@ -177,7 +177,7 @@ impl ToCss for NonTSPseudoClass {
 
 /// Pseudo-element variants (not supported for matching).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PseudoElement {}
+pub struct PseudoElement(core::convert::Infallible);
 
 impl selectors::parser::PseudoElement for PseudoElement {}
 
@@ -186,8 +186,7 @@ impl ToCss for PseudoElement {
     where
         W: fmt::Write,
     {
-        // PseudoElement is an uninhabited type (no variants), so this is unreachable
-        unreachable!("PseudoElement has no variants")
+        match self.0 {}
     }
 }
 
